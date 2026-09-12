@@ -48,6 +48,18 @@ Umbrales: **verde ≥ 70**, **amarillo 50 a 69**, **rojo < 50**.
 
 Los márgenes son finos (1.5 a 4 puntos). **No redondear ningún input antes de calcular.** Usar el `ndvi` de 3 decimales tal cual está publicado. `expected_score` en cada escenario es para autochequeo, no es un input.
 
+## Límite de anticipo sugerido (regla `cupo-v1`)
+
+El índice de condición no es un score de crédito. Lo que se entrega a la coop es un **límite de anticipo sugerido**, calculado con reglas a la vista a partir de `lote-economics.json` (rinde de referencia, precio pizarra, tipo de cambio, haircut, cada uno con su fuente):
+
+```
+produccion_estimada_t = ha * rinde_ref_t_ha * condicion / 100
+valor_referencia_usd  = ha * rinde_ref_t_ha * precio_usd_t
+limite_usd            = valor_referencia_usd * haircut * condicion / 100     # rojo bloquea desembolsos nuevos
+```
+
+Con los valores publicados: bueno 74.4 → 52 % del valor de referencia (unos 60.800 USD, verde); mixto 68.0 → 48 % (revisar); malo 48.5 → bloqueado. El benchmark es lo que la coop hace hoy: un porcentaje plano para todos. El backend (`services/evidence-api`, `POST /score`) devuelve el límite, los factores que lo movieron, los pesos y la versión de la regla.
+
 ## La frase honesta del escenario malo
 
 Entre el 2 y el 7 de febrero el NDVI casi no baja (0.782 → 0.763): la vegetación es inercial, en cinco días la planta no se seca. Lo que tira el lote de verde a rojo es la **lluvia** (46.7 → 0.1 mm, seca real de 14 días) y las **malezas simuladas** (12 % → 65 %). El satélite solo lleva el lote a amarillo; las fotos lo llevan a rojo. Decirlo así en el pitch.

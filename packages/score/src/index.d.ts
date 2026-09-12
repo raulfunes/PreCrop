@@ -46,3 +46,42 @@ export function computeScore(inputs: ScoreInputs): ScoreResult;
 export function canonicalize(payload: Payload): string;
 export function hashPayload(payload: Payload): string;
 export function verifyReport(report: EvidenceReport): boolean;
+
+export interface Economics {
+  ha: number;
+  yield_ref_t_ha: number;
+  price_usd_t: number;
+  haircut: number;
+  fx_ars_per_usd?: number;
+  benchmark_flat_pct?: number;
+}
+
+export interface Factor {
+  name: string;
+  label: string;
+  value: number;
+  weight: number;
+  contribution: number;
+  source: string;
+  input: Record<string, number>;
+}
+
+export interface AdvanceLimit {
+  rule_version: string;
+  condition_index: number;
+  light: Light;
+  production_estimate: { yield_t_ha: number; tons: number; value_usd: number; basis: string };
+  advance_limit: {
+    pct_of_reference_value: number;
+    usd: number;
+    ars: number | null;
+    new_disbursements: "allowed" | "review" | "blocked";
+    formula: string;
+  };
+  benchmark: { flat_pct: number; usd: number; note: string };
+  reference: Economics & { reference_value_usd: number; fx_ars_per_usd: number | null };
+}
+
+export const ADVANCE_RULE_VERSION: string;
+export function explainFactors(result: ScoreResult, inputs: ScoreInputs, sources?: Partial<Record<"ndvi" | "rain" | "weeds", string>>): Factor[];
+export function advanceLimit(result: ScoreResult, econ: Economics): AdvanceLimit;

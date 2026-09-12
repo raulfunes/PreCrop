@@ -1,6 +1,7 @@
 // Builds the evidence payload for a scenario exactly like scripts/build_pack.py,
 // so that with the pinned inputs the hash equals data/evidence/<scenario>.json.
-import { computeScore, hashPayload, CANON_VERSION } from "@precrop/score";
+import { computeScore, hashPayload, CANON_VERSION, explainFactors, advanceLimit } from "@precrop/score";
+import { economicsInputs } from "./pack.js";
 
 const NDVI_METHOD = "BOA=(DN-1000)/10000; NDVI=(B08-B04)/(B08+B04)";
 const round = (x, d) => Math.round(x * 10 ** d) / 10 ** d;
@@ -62,10 +63,15 @@ export function buildEvidence(scenarioKey, pack, override = {}) {
     weeds_source: weedsSource,
   };
 
+  const sources = { ndvi: payload.ndvi_source, rain: payload.rain_source, weeds: weedsSource };
+  const advance = pack.economics ? advanceLimit(r, economicsInputs(pack.economics)) : null;
+
   return {
     scenario: scenarioKey,
     inputs,
     result: r,
+    factors: explainFactors(r, inputs, sources),
+    advance,
     evidence: {
       canonicalization: CANON_VERSION,
       pack_version: pack.pack_version,

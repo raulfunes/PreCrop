@@ -12,6 +12,7 @@ export const PUBLIC_FILES = [
   "demo-scenarios.json",
   "photo-point-presets.json",
   "lote.geojson",
+  "lote-economics.json",
   "evidence/bueno.json",
   "evidence/mixto.json",
   "evidence/malo.json",
@@ -23,9 +24,22 @@ export function loadPack() {
   const presets = readJson("lote-sentinel-presets.json");
   const scenarios = readJson("demo-scenarios.json");
   const points = readJson("photo-point-presets.json");
-  const versions = new Set([presets.pack_version, scenarios.pack_version, points.pack_version]);
+  const economics = readJson("lote-economics.json");
+  const versions = new Set([presets.pack_version, scenarios.pack_version, points.pack_version, economics.pack_version]);
   if (versions.size !== 1) throw new Error(`pack_version mismatch across files: ${[...versions].join(", ")}`);
-  return { presets, scenarios, points, pack_version: presets.pack_version };
+  return { presets, scenarios, points, economics, pack_version: presets.pack_version };
+}
+
+/** Flat numbers for the advance rule, read from lote-economics.json (each value carries its own source there). */
+export function economicsInputs(economics) {
+  return {
+    ha: economics.ha,
+    yield_ref_t_ha: economics.yield_ref_t_ha.value,
+    price_usd_t: economics.price.usd_t,
+    fx_ars_per_usd: economics.price.fx_ars_per_usd,
+    haircut: economics.haircut.value,
+    benchmark_flat_pct: economics.benchmark.flat_advance_pct,
+  };
 }
 
 export function readPublicFile(name) {

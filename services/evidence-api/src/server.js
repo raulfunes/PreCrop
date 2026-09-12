@@ -106,9 +106,47 @@ const server = createServer(async (req, res) => {
       return send(res, 200, { ...ev, anchor: { network: RPC_URL, mock: true, ...tx } });
     }
 
+    if (req.method === "POST" && url.pathname === "/disburse") {
+      // MOCK of step 3 of the Twin flow: the coop sends the approved advance in ARGt
+      // (peso stablecoin) to the producer's wallet. Twin exposes partner APIs, not a
+      // public testnet, so this returns the shape of a transfer without moving anything.
+      const body = await readBody(req);
+      const { scenario, override } = parseScoreRequest(body);
+      const ev = buildEvidence(scenario, pack, override);
+      if (!ev.advance) return send(res, 503, { error: "no lote-economics.json in pack" });
+      if (ev.advance.advance_limit.new_disbursements === "blocked") {
+        return send(res, 409, {
+          error: "disbursement blocked",
+          reason: `condition index ${ev.advance.condition_index} is rojo; new disbursements are blocked`,
+          advance: ev.advance,
+        });
+      }
+      const requested = body.amount_ars !== undefined ? Number(body.amount_ars) : ev.advance.advance_limit.ars;
+      if (!Number.isFinite(requested) || requested <= 0) return send(res, 400, { error: "amount_ars must be a positive number" });
+      if (ev.advance.advance_limit.ars !== null && requested > ev.advance.advance_limit.ars) {
+        return send(res, 409, { error: "amount above suggested limit", limit_ars: ev.advance.advance_limit.ars, requested_ars: requested });
+      }
+      return send(res, 200, {
+        mock: true,
+        rail: "Twin ARGt (EVM) via partner API; simulated here",
+        transfer: {
+          asset: "ARGt",
+          amount_ars: requested,
+          from: body.from ?? "coop-treasury-wallet (mock)",
+          to: body.to ?? "producer-wallet (mock)",
+          reference: `${ev.evidence.content_sha256.slice(0, 16)}:${scenario}`,
+          status: "simulated",
+          settled_in_seconds: 3,
+          note: "Repayment is deducted at delivery settlement; no on-chain loan.",
+        },
+        advance: ev.advance,
+        evidence_sha256: ev.evidence.content_sha256,
+      });
+    }
+
     return send(res, 404, { error: "not found" });
   } catch (err) {
-    const status = /must be|unknown scenario|invalid JSON|too large/.test(err.message) ? 400 : 500;
+    const status = /must be|unknown scenario|invalid JSON|too large|amount_ars/.test(err.message) ? 400 : 500;
     return send(res, status, { error: err.message });
   }
 });
