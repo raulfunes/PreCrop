@@ -86,70 +86,16 @@ export const ADVANCE_RULE_VERSION: string;
 export function explainFactors(result: ScoreResult, inputs: ScoreInputs, sources?: Partial<Record<"ndvi" | "rain" | "weeds", string>>): Factor[];
 export function advanceLimit(result: ScoreResult, econ: Economics): AdvanceLimit;
 
-export interface HistoryCampaign {
-  campana: string;
-  ndvi_peak: number | null;
-  ndvi_norm: number | null;
-  rain_dec_feb_mm: number;
-}
 export interface LoteHistory {
-  campaigns: HistoryCampaign[];
-}
-export interface OfficialCampaign {
-  campana: string;
-  rinde_dpto_kg_ha: number | null;
-  rinde_prov_kg_ha: number | null;
+  campaigns: Array<{
+    campaign: string;
+    peak: { date: string; scene_id: string; ndvi: number; ndvi_stats: { median: number } } | null;
+    rain_dec_feb_mm?: number | null;
+  }>;
 }
 export interface OfficialYields {
-  campaigns: OfficialCampaign[];
+  campaigns: Array<{ campana: string; rinde_dpto_kg_ha: number | null; rinde_prov_kg_ha: number | null }>;
 }
-export interface CapacitySeriesRow {
-  campana: string;
-  ndvi_peak: number | null;
-  ndvi_norm: number | null;
-  rain_dec_feb_mm: number | null;
-  yield_est_t_ha: number | null;
-  official_dpto_kg_ha: number | null;
-  official_prov_kg_ha: number | null;
-  status: "measured" | "gap";
-}
-export interface Capacity {
-  rule_version: string;
-  series: CapacitySeriesRow[];
-  coverage: { campaigns_total: number; campaigns_measured: number; campaigns_with_gap: number };
-  worst_year: {
-    campana: string;
-    yield_est_t_ha: number;
-    ndvi_peak: number | null;
-    official_dpto_kg_ha: number | null;
-    basis: string;
-  } | null;
-  stability: { cv: number | null; basis: string; note: string };
-  validation: {
-    validated: boolean;
-    worst_official_campana: string | null;
-    worst_official_kg_ha: number | null;
-    pearson_r: number | null;
-    r2: number | null;
-    min_r2: number;
-    paired_campaigns: number;
-    reasons: string[];
-    basis: string;
-  };
-  pre_sowing_limit: {
-    usd: number | null;
-    ars: number | null;
-    usd_if_validated: number | null;
-    status: "allowed" | "blocked_unvalidated";
-    formula: string;
-    basis: string;
-    note: string;
-  };
-  reference: Economics;
-}
-
-export const CAPACITY_RULE_VERSION: string;
-export function capacityFromHistory(history: LoteHistory, econ: Economics, official?: OfficialYields | null): Capacity;
 
 export interface CapacityV2SeriesRow {
   campana: string;

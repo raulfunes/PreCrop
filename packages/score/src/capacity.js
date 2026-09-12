@@ -1,188 +1,79 @@
-// Pre-sowing advance capacity, rule capacidad-v1.
-//
-// Capacity answers "how much can be advanced BEFORE sowing", sized against
-// the worst year this lote already had. Condition (cupo-v1) answers "does
-// the next disbursement go out". Different questions, different rules.
-//
-// This rule is deliberately NOT the same linear rule as cupo-v1. cupo-v1
-// uses the full condition index (0.6*ndvi + 0.25*climate - 0.15*weeds);
-// per campaign there is no weed history and the rain window is Dec-Feb
-// rather than 7 days, so capacity runs on NDVI alone and says so.
-//
-// The rule REFUSES to publish a limit it cannot back. A linear NDVI->yield
-// rule is not a calibrated model, so the estimate is validated against the
-// official yield series before any number is handed to a credit committee:
-// if the lote's worst year does not land on the official worst year, the
-// estimator has not earned the right to size an advance, and the limit
-// comes back null with the reason attached. Publishing an unvalidated
-// pre-sowing limit is the one failure mode that actually costs a coop
-// money.
+// Capacity rule capacidad-v1: what the lot produces in a bad year, how stable
+// it is, and the pre-sowing advance quota against the WORST campaign the lot
+// already had. Transparent linear rule, not a calibrated model; the contrast
+// against official department yields is what backs it.
 import { ndviNorm } from "./score.js";
 
 export const CAPACITY_RULE_VERSION = "capacidad-v1";
 
 const round = (x, d) => Math.round(x * 10 ** d) / 10 ** d;
 
-// ponytail: r2 >= 0.7 is the team's provisional floor for "the estimator
-// tracks reality", not an agronomic standard. It is a placeholder chosen to
-// be strict enough to catch a series that explains less than half the
-// variance. Ceiling: with 7 points, r2 is noisy and a single campaign moves
-// it a lot. Next step: agree the floor with an agronomist, or replace the
-// linear rule with one fitted on the official series and report its
-// out-of-sample error instead.
-const MIN_R2 = 0.7;
-
-/** Pearson correlation. Returns null when either series is constant. */
-function pearson(xs, ys) {
-  const n = xs.length;
-  if (n < 3) return null;
-  const mx = xs.reduce((a, b) => a + b, 0) / n;
-  const my = ys.reduce((a, b) => a + b, 0) / n;
-  let cov = 0, vx = 0, vy = 0;
-  for (let i = 0; i < n; i++) {
-    cov += (xs[i] - mx) * (ys[i] - my);
-    vx += (xs[i] - mx) ** 2;
-    vy += (ys[i] - my) ** 2;
-  }
-  if (vx === 0 || vy === 0) return null;
-  return cov / Math.sqrt(vx * vy);
-}
-
-/** Sample coefficient of variation: stdev / mean. */
-function coefficientOfVariation(values) {
-  const n = values.length;
-  if (n < 2) return null;
-  const mean = values.reduce((a, b) => a + b, 0) / n;
-  if (mean === 0) return null;
-  const variance = values.reduce((a, v) => a + (v - mean) ** 2, 0) / (n - 1);
-  return round(Math.sqrt(variance) / mean, 4);
-}
-
 /**
- * @param {{ campaigns: Array<{campana: string, ndvi_peak: number|null, ndvi_norm: number|null, rain_dec_feb_mm: number}> }} history
+ * @param {{ campaign: string, ndvi: number, rain_dec_feb_mm?: number, date?: string, scene_id?: string }[]} peaks one row per campaign
  * @param {{ ha: number, yield_ref_t_ha: number, price_usd_t: number, haircut: number, fx_ars_per_usd?: number }} econ
- * @param {{ campaigns: Array<{campana: string, rinde_dpto_kg_ha: number|null, rinde_prov_kg_ha: number|null}> }} [official]
+ * @param {{ [campaign: string]: number }} [officialYields] official t/ha per campaign, when available
  */
-export function capacityFromHistory(history, econ, official = null) {
-  const officialBy = new Map(
-    (official?.campaigns ?? []).map((c) => [c.campana, c]),
-  );
-
-  const series = history.campaigns.map((c) => {
-    const measured = c.ndvi_peak !== null && c.ndvi_peak !== undefined;
-    // ndvi_norm is recomputed rather than trusted from the file so the rule
-    // owns its own arithmetic and a stale JSON cannot quietly change it.
-    const norm = measured ? round(ndviNorm(c.ndvi_peak), 4) : null;
-    const off = officialBy.get(c.campana) ?? null;
+export function capacity(peaks, econ, officialYields = {}) {
+  if (!Array.isArray(peaks) || peaks.length === 0) throw new Error("capacity: at least one campaign peak is required");
+  const rows = peaks.map((p) => {
+    const norm = round(ndviNorm(p.ndvi), 2);
+    const yieldEst = round(econ.yield_ref_t_ha * (norm / 100), 2);
+    const official = officialYields[p.campaign];
     return {
-      campana: c.campana,
-      ndvi_peak: measured ? c.ndvi_peak : null,
+      campaign: p.campaign,
+      date: p.date ?? null,
+      scene_id: p.scene_id ?? null,
+      ndvi: p.ndvi,
+      ndvi_min_in_window: p.ndvi_min_in_window ?? null,
       ndvi_norm: norm,
-      rain_dec_feb_mm: c.rain_dec_feb_mm ?? null,
-      yield_est_t_ha: measured ? round(econ.yield_ref_t_ha * (norm / 100), 2) : null,
-      official_dpto_kg_ha: off?.rinde_dpto_kg_ha ?? null,
-      official_prov_kg_ha: off?.rinde_prov_kg_ha ?? null,
-      // A gap is a gap. Never 0: a cloudy February is missing evidence, not
-      // a failed crop, and a zero here would invent the worst year.
-      status: measured ? "measured" : "gap",
+      yield_est_t_ha: yieldEst,
+      tons_est: round(yieldEst * econ.ha, 1),
+      rain_dec_feb_mm: p.rain_dec_feb_mm ?? null,
+      official_yield_t_ha: official ?? null,
+      error_vs_official_pct: official ? round(((yieldEst - official) / official) * 100, 1) : null,
     };
   });
 
-  const measured = series.filter((s) => s.status === "measured");
-  const estimates = measured.map((s) => s.yield_est_t_ha);
+  const yields = rows.map((r) => r.yield_est_t_ha);
+  const worst = rows.reduce((a, b) => (b.yield_est_t_ha < a.yield_est_t_ha ? b : a));
+  const best = rows.reduce((a, b) => (b.yield_est_t_ha > a.yield_est_t_ha ? b : a));
+  const mean = yields.reduce((a, b) => a + b, 0) / yields.length;
+  const variance = yields.reduce((a, y) => a + (y - mean) ** 2, 0) / yields.length;
+  const cv = mean > 0 ? round((Math.sqrt(variance) / mean) * 100, 1) : null;
+  const stability = cv === null ? "unknown" : cv < 10 ? "alta" : cv < 20 ? "media" : "baja";
 
-  const worstEstimated = measured.length
-    ? measured.reduce((a, b) => (b.yield_est_t_ha < a.yield_est_t_ha ? b : a))
-    : null;
-
-  const withOfficial = series.filter((s) => s.official_dpto_kg_ha !== null);
-  const worstOfficial = withOfficial.length
-    ? withOfficial.reduce((a, b) => (b.official_dpto_kg_ha < a.official_dpto_kg_ha ? b : a))
-    : null;
-
-  const paired = measured.filter((s) => s.official_dpto_kg_ha !== null);
-  const r = paired.length >= 3
-    ? pearson(paired.map((s) => s.ndvi_norm), paired.map((s) => s.official_dpto_kg_ha))
-    : null;
-  const r2 = r === null ? null : round(r * r, 4);
-
-  const reasons = [];
-  if (!official) reasons.push("no official yield series supplied for contrast");
-  if (worstEstimated && worstOfficial && worstEstimated.campana !== worstOfficial.campana) {
-    reasons.push(
-      `worst estimated year (${worstEstimated.campana}) does not match worst official year (${worstOfficial.campana})`,
-    );
-  }
-  if (r2 !== null && r2 < MIN_R2) {
-    reasons.push(`estimate explains too little of the official variance (r2 ${r2} < ${MIN_R2})`);
-  }
-  if (r2 === null && official) reasons.push("not enough paired campaigns to correlate");
-  if (series.some((s) => s.status === "gap")) {
-    reasons.push("series has at least one campaign with no usable scene");
-  }
-
-  const validated = reasons.length === 0;
-
-  const worstYieldTHa = worstEstimated ? worstEstimated.yield_est_t_ha : null;
-  const limitUsd = worstYieldTHa === null
-    ? null
-    : round(econ.ha * worstYieldTHa * econ.price_usd_t * econ.haircut, 0);
+  const worstTons = round(worst.yield_est_t_ha * econ.ha, 1);
+  const worstValueUsd = round(worstTons * econ.price_usd_t, 0);
+  const quotaUsd = round(worstValueUsd * econ.haircut, 0);
   const fx = econ.fx_ars_per_usd ?? null;
+
+  const withOfficial = rows.filter((r) => r.error_vs_official_pct !== null);
+  const mae = withOfficial.length
+    ? round(withOfficial.reduce((a, r) => a + Math.abs(r.error_vs_official_pct), 0) / withOfficial.length, 1)
+    : null;
 
   return {
     rule_version: CAPACITY_RULE_VERSION,
-    series,
-    coverage: {
-      campaigns_total: series.length,
-      campaigns_measured: measured.length,
-      campaigns_with_gap: series.length - measured.length,
-    },
-    worst_year: worstEstimated
-      ? {
-          campana: worstEstimated.campana,
-          yield_est_t_ha: worstEstimated.yield_est_t_ha,
-          ndvi_peak: worstEstimated.ndvi_peak,
-          official_dpto_kg_ha: worstEstimated.official_dpto_kg_ha,
-          basis: "minimum of the estimated series; gaps excluded, never counted as zero",
-        }
-      : null,
-    stability: {
-      cv: coefficientOfVariation(estimates),
-      basis: "sample stdev / mean of the estimated yields",
-      note: "lower is steadier; a high cv means the lote's output swings between campaigns",
-    },
-    validation: {
-      validated,
-      worst_official_campana: worstOfficial ? worstOfficial.campana : null,
-      worst_official_kg_ha: worstOfficial ? worstOfficial.official_dpto_kg_ha : null,
-      pearson_r: r === null ? null : round(r, 4),
-      r2,
-      min_r2: MIN_R2,
-      paired_campaigns: paired.length,
-      reasons,
-      basis:
-        "the estimated series must land its worst year on the official worst year and track the official variance before a limit is published",
-    },
-    pre_sowing_limit: {
-      // Held back, not zeroed: null means "not backed", which is a
-      // different statement from "the lote supports nothing".
-      usd: validated ? limitUsd : null,
-      ars: validated && limitUsd !== null && fx !== null ? round(limitUsd * fx, 0) : null,
-      usd_if_validated: limitUsd,
-      status: validated ? "allowed" : "blocked_unvalidated",
-      formula: "ha * worst_year_yield_t_ha * price_usd_t * haircut",
-      basis:
-        "yield_ref_t_ha * ndvi_norm / 100, linear rule (NDVI only; no weeds or 7d-rain history per campaign) -- NOT the cupo-v1 condition index",
-      note: validated
-        ? "sized against the worst year this lote already had"
-        : "withheld: the NDVI estimator did not reproduce the official series, so this limit has no backing",
-    },
-    reference: {
-      ha: econ.ha,
-      yield_ref_t_ha: econ.yield_ref_t_ha,
-      price_usd_t: econ.price_usd_t,
+    campaigns: rows,
+    n_campaigns: rows.length,
+    worst_campaign: { campaign: worst.campaign, yield_est_t_ha: worst.yield_est_t_ha, tons_est: worstTons, ndvi: worst.ndvi },
+    best_campaign: { campaign: best.campaign, yield_est_t_ha: best.yield_est_t_ha },
+    mean_yield_t_ha: round(mean, 2),
+    stability: { cv_pct: cv, label: stability },
+    pre_sowing_quota: {
+      basis: "worst campaign the lot already had, not the best",
+      tons: worstTons,
+      value_usd: worstValueUsd,
       haircut: econ.haircut,
-      fx_ars_per_usd: fx,
+      usd: quotaUsd,
+      ars: fx === null ? null : round(quotaUsd * fx, 0),
+      pct_of_reference_value: round((quotaUsd / (econ.ha * econ.yield_ref_t_ha * econ.price_usd_t)) * 100, 1),
+      formula: "ha * yield_est(worst campaign) * price_usd_t * haircut",
+    },
+    contrast_official: {
+      campaigns_with_official: withOfficial.length,
+      mean_abs_error_pct: mae,
+      note: withOfficial.length ? "lot estimate vs official department yield, same campaigns" : "no official yields loaded yet (data/rindes-oficiales.json)",
     },
   };
 }
@@ -190,25 +81,32 @@ export function capacityFromHistory(history, econ, official = null) {
 // ---------------------------------------------------------------------------
 // capacidad-v2: the limit rests on the official series, not on NDVI.
 //
-// v1 tried to turn peak NDVI into tons and could not: it put the worst year
-// on 2023/24 while the official worst year is 2022/23, explaining r2 0.43 of
-// the official variance. The obvious repair -- keep the official series and
-// let NDVI scale it by a lote/department ratio -- fails for the same reason,
-// only less visibly: that ratio comes out at 2.36 for 2022/23, because NDVI
-// stayed high while yield collapsed. The ratio does not fix the error, it
-// absorbs it, and it does so precisely in the campaign that sets the limit.
+// capacidad-v1 above turns peak NDVI into tons with a linear rule and takes
+// the minimum. Contrasted against the official MAGyP series for Rio Segundo,
+// that estimator does not hold up: it puts the worst year on 2023/24 while
+// the official worst year is 2022/23 (1170 kg/ha, the drought), and explains
+// r2 0.43 of the official variance. Peak NDVI moves 17 pct across campaigns
+// while real yield moves 214 pct, and in 2022/23 the canopy stayed green in
+// February even though the crop never filled grain.
+//
+// The obvious repair -- keep the official series and let NDVI scale it by a
+// lote/district ratio -- fails the same way, only less visibly: that ratio
+// comes out at 2.36 for 2022/23. It does not correct the error, it absorbs
+// it, and precisely in the campaign that sets the limit. Its median moves
+// the limit 3.7 pct against a CV of 0.44, so it is noise.
 //
 // So NDVI stops multiplying anything. The worst year is the official worst
-// year, a hard number a committee can look up. NDVI answers a narrower
-// question it is actually good at: is this lote representative of the
-// district whose yield we are borrowing? That is one parameter (the median
-// ratio), robust to the 2022/23 outlier by construction, and it gates the
-// rule instead of scaling it.
+// year, a figure a committee can look up. NDVI answers a narrower question
+// it is good at: is this lote representative of the district whose yield we
+// are borrowing? One parameter, robust to the 2022/23 outlier by
+// construction, gating the rule instead of scaling it.
+//
+// capacidad-v1 is kept, not deleted: the measured reason not to read yield
+// off the satellite is part of the evidence a committee will ask for.
 export const CAPACITY_V2_RULE_VERSION = "capacidad-v2";
 
 // A lote tracking its district sits near 1. Outside this band the district
-// yield is not a fair proxy for this lote and the limit is held back rather
-// than silently borrowed.
+// yield is not a fair proxy and the limit is held back rather than borrowed.
 const REPRESENTATIVE_BAND = { min: 0.85, max: 1.15 };
 const MIN_PAIRED_CAMPAIGNS = 5;
 
@@ -219,35 +117,60 @@ function median(values) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
+function sampleCv(values) {
+  const n = values.length;
+  if (n < 2) return null;
+  const mean = values.reduce((a, b) => a + b, 0) / n;
+  if (mean === 0) return null;
+  const variance = values.reduce((a, v) => a + (v - mean) ** 2, 0) / (n - 1);
+  return round(Math.sqrt(variance) / mean, 4);
+}
+
+/** Peak NDVI per campaign out of data/lote-history.json, gaps included as null. */
+export function peaksFromHistory(history) {
+  return (history?.campaigns ?? []).map((c) => ({
+    campana: c.campaign ?? c.campana ?? null,
+    // Prefer the full-precision median over the rounded peak.ndvi.
+    ndvi_peak: c.peak?.ndvi_stats?.median ?? c.peak?.ndvi ?? c.ndvi_peak ?? null,
+    date: c.peak?.date ?? c.date ?? null,
+    rain_dec_feb_mm: c.rain_dec_feb_mm ?? null,
+  }));
+}
+
+/** Official departmental yield in kg/ha per campaign, out of data/rindes-oficiales.json. */
+export function officialByCampaign(official) {
+  const out = new Map();
+  for (const c of official?.campaigns ?? []) {
+    out.set(c.campana ?? c.campaign, c.rinde_dpto_kg_ha ?? null);
+  }
+  return out;
+}
+
 /**
- * @param {{ campaigns: Array<{campana: string, ndvi_peak: number|null}> }} history
+ * @param {object} history data/lote-history.json
  * @param {{ ha: number, price_usd_t: number, haircut: number, fx_ars_per_usd?: number }} econ
- * @param {{ campaigns: Array<{campana: string, rinde_dpto_kg_ha: number|null}> }} official
+ * @param {object} official data/rindes-oficiales.json
  */
 export function capacityFromOfficial(history, econ, official) {
-  const ndviBy = new Map(history.campaigns.map((c) => [c.campana, c.ndvi_peak ?? null]));
-  const rows = (official?.campaigns ?? []).map((c) => ({
-    campana: c.campana,
-    official_dpto_kg_ha: c.rinde_dpto_kg_ha ?? null,
-    ndvi_peak: ndviBy.get(c.campana) ?? null,
-  }));
+  const peaks = peaksFromHistory(history);
+  const officialMap = officialByCampaign(official);
 
-  const officialValues = rows.map((r) => r.official_dpto_kg_ha).filter((v) => v !== null);
-  const ndviValues = rows.map((r) => r.ndvi_peak).filter((v) => v !== null);
+  const officialValues = [...officialMap.values()].filter((v) => v !== null);
+  const ndviValues = peaks.map((p) => p.ndvi_peak).filter((v) => v !== null);
   const medianOfficial = median(officialValues);
   const medianNdvi = median(ndviValues);
 
-  // Ratio of each campaign's NDVI index to its official index. Reported per
-  // campaign for transparency, but only its MEDIAN is ever used -- the mean
-  // would be dragged by 2022/23.
-  const series = rows.map((r) => {
-    const paired = r.official_dpto_kg_ha !== null && r.ndvi_peak !== null;
-    const ndviIndex = paired ? round(r.ndvi_peak / medianNdvi, 4) : null;
-    const officialIndex = paired ? round(r.official_dpto_kg_ha / medianOfficial, 4) : null;
+  const campaigns = officialMap.size ? [...officialMap.keys()] : peaks.map((p) => p.campana);
+  const series = campaigns.map((campana) => {
+    const peak = peaks.find((p) => p.campana === campana) ?? null;
+    const officialYield = officialMap.get(campana) ?? null;
+    const paired = officialYield !== null && peak?.ndvi_peak != null;
+    const ndviIndex = paired ? round(peak.ndvi_peak / medianNdvi, 4) : null;
+    const officialIndex = paired ? round(officialYield / medianOfficial, 4) : null;
     return {
-      campana: r.campana,
-      official_dpto_kg_ha: r.official_dpto_kg_ha,
-      ndvi_peak: r.ndvi_peak,
+      campana,
+      official_dpto_kg_ha: officialYield,
+      ndvi_peak: peak?.ndvi_peak ?? null,
       ndvi_index: ndviIndex,
       official_index: officialIndex,
       lote_vs_district: paired && officialIndex !== 0 ? round(ndviIndex / officialIndex, 4) : null,
@@ -257,12 +180,10 @@ export function capacityFromOfficial(history, econ, official) {
 
   const ratios = series.map((s) => s.lote_vs_district).filter((v) => v !== null);
   const kMedian = ratios.length ? round(median(ratios), 4) : null;
-  const kCv = coefficientOfVariation(ratios);
 
-  const worst = officialValues.length
-    ? series
-        .filter((s) => s.official_dpto_kg_ha !== null)
-        .reduce((a, b) => (b.official_dpto_kg_ha < a.official_dpto_kg_ha ? b : a))
+  const withOfficial = series.filter((s) => s.official_dpto_kg_ha !== null);
+  const worst = withOfficial.length
+    ? withOfficial.reduce((a, b) => (b.official_dpto_kg_ha < a.official_dpto_kg_ha ? b : a))
     : null;
 
   const reasons = [];
@@ -297,14 +218,14 @@ export function capacityFromOfficial(history, econ, official) {
         }
       : null,
     district_volatility: {
-      cv: coefficientOfVariation(officialValues),
+      cv: sampleCv(officialValues),
       basis: "sample stdev / mean of the official departmental yields",
       note: "how hard this district swings between campaigns; the limit is set at its floor, not its average",
     },
     representativeness: {
       representative,
       lote_vs_district_median: kMedian,
-      lote_vs_district_cv: kCv,
+      lote_vs_district_cv: sampleCv(ratios),
       band: REPRESENTATIVE_BAND,
       paired_campaigns: ratios.length,
       reasons,
@@ -319,8 +240,7 @@ export function capacityFromOfficial(history, econ, official) {
       usd_if_representative: limitUsd,
       status: representative ? "allowed" : "blocked_unrepresentative",
       formula: "ha * worst_official_yield_t_ha * price_usd_t * haircut",
-      basis:
-        "the worst year the DISTRICT actually had, as published; NDVI does not enter this arithmetic",
+      basis: "the worst year the DISTRICT actually had, as published; NDVI does not enter this arithmetic",
       note: representative
         ? "sized against the worst campaign on record for the district, with the lote confirmed to track it"
         : "withheld: the lote does not track its district closely enough to borrow its yield",

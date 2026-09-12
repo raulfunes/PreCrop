@@ -1,54 +1,73 @@
-// Pre-sowing capacity for the lote.
+// Pre-sowing capacity for the lote, serving both rules.
 //
-// The ACTIVE rule is capacidad-v2: the limit is sized against the worst year
-// the district actually had, as published by MAGyP, and NDVI only gates
-// whether this lote tracks its district closely enough to borrow that
-// figure.
+// ACTIVE: capacidad-v2. The limit is sized against the worst campaign the
+// district actually had, as published by MAGyP, and NDVI only gates whether
+// this lote tracks its district closely enough to borrow that figure.
 //
-// capacidad-v1 -- estimating tons from peak NDVI -- is kept and reported
-// alongside as a rejected alternative, not deleted. A committee asking "why
-// not just read the yield off the satellite" deserves the measured answer:
-// it put the worst year on the wrong campaign and explained r2 0.43 of the
-// official variance. That contrast is part of the evidence.
-//
-// Mirrors evidence.js: the rules live in @precrop/score, this module only
-// bridges the pack files to them. Nothing here is hashed or anchored on
-// chain; canon.js requires a flat ASCII payload and these carry arrays.
-import { capacityFromOfficial, capacityFromHistory, CAPACITY_V2_RULE_VERSION } from "@precrop/score";
-import { economicsInputs } from "./pack.js";
+// REPORTED ALONGSIDE: capacidad-v1, which estimates tons per campaign from
+// peak NDVI. It is not the active rule because, contrasted against the
+// official series, it puts the worst year on 2023/24 instead of 2022/23 and
+// explains r2 0.43 of the official variance. A committee asking "why not
+// just read the yield off the satellite" deserves the measured answer, so
+// v1 is served rather than deleted -- with its own error-vs-official table,
+// which is only populated now that data/rindes-oficiales.json exists.
+import { capacity, capacityFromOfficial, CAPACITY_V2_RULE_VERSION } from "@precrop/score";
+import { economicsInputs, historyPeaks } from "./pack.js";
+
+/**
+ * capacidad-v1 wants { [campaign]: t/ha }; data/rindes-oficiales.json stores
+ * an array of rows in kg/ha. Convert here rather than in the rule, so the
+ * published file keeps the unit its source publishes.
+ */
+export function officialYieldsTHa(official) {
+  const out = {};
+  for (const row of official?.campaigns ?? []) {
+    const key = row.campana ?? row.campaign;
+    const kg = row.rinde_dpto_kg_ha;
+    if (key && kg !== null && kg !== undefined) out[key] = kg / 1000;
+  }
+  return out;
+}
 
 export function buildCapacity(pack) {
   const econ = economicsInputs(pack.economics);
-  const capacity = capacityFromOfficial(pack.history, econ, pack.official);
-  const direct = capacityFromHistory(pack.history, econ, pack.official);
+  const active = capacityFromOfficial(pack.history, econ, pack.official);
+
+  // v1 over the same peaks, now with the official yields wired in so its
+  // contrast table and mean absolute error are actually computed.
+  const peaks = historyPeaks(pack.history);
+  const direct = peaks.length ? capacity(peaks, econ, officialYieldsTHa(pack.official)) : null;
 
   return {
     pack_version: pack.pack_version,
-    lote_id: pack.history.lote_id,
+    lote_id: pack.presets.lote_id,
     rule_version: CAPACITY_V2_RULE_VERSION,
-    capacity,
-    rejected_alternative: {
-      rule_version: direct.rule_version,
-      approach: "estimate tons per campaign from peak NDVI, take the minimum",
-      validated: direct.validation.validated,
-      reasons: direct.validation.reasons,
-      r2: direct.validation.r2,
-      worst_year_estimated: direct.worst_year ? direct.worst_year.campana : null,
-      worst_year_official: direct.validation.worst_official_campana,
-      usd_it_would_have_published: direct.pre_sowing_limit.usd_if_validated,
-      note:
-        "kept as evidence of why the limit is not read off the satellite; this number was never published",
+    generated_from: {
+      history_generated_at_utc: pack.history?.generated_at_utc ?? null,
+      method: pack.history?.method ?? null,
     },
+    capacity: active,
+    rejected_alternative: direct
+      ? {
+          rule_version: direct.rule_version,
+          approach: "estimate tons per campaign from peak NDVI, take the minimum",
+          worst_campaign: direct.worst_campaign,
+          stability: direct.stability,
+          contrast_official: direct.contrast_official,
+          usd_it_would_have_published: direct.pre_sowing_quota.usd,
+          note:
+            "kept as evidence of why the limit is not read off the satellite; this number is not the published limit",
+        }
+      : null,
     sources: {
       history: {
-        refs: pack.history.method?.refs ?? [],
-        ndvi_stat: pack.history.method?.ndvi_stat ?? null,
-        generated_at_utc: pack.history.generated_at_utc ?? null,
+        refs: pack.history?.method?.refs ?? [],
+        generated_at_utc: pack.history?.generated_at_utc ?? null,
       },
       official: {
-        refs: pack.official.method?.refs ?? [],
-        license: pack.official.license ?? null,
-        generated_at_utc: pack.official.generated_at_utc ?? null,
+        refs: pack.official?.method?.refs ?? [],
+        license: pack.official?.license ?? null,
+        generated_at_utc: pack.official?.generated_at_utc ?? null,
       },
     },
     disclaimer:

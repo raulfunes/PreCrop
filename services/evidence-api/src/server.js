@@ -7,9 +7,11 @@
 //   POST /publish { scenario, weeds_pct? }  -> same + Solana memo tx (oracle)
 import { createServer } from "node:http";
 import { existsSync } from "node:fs";
-import { loadPack, readPublicFile, PUBLIC_FILES } from "./pack.js";
+import { capacity } from "@precrop/score";
+import { loadPack, readPublicFile, PUBLIC_FILES, economicsInputs, historyPeaks } from "./pack.js";
 import { buildEvidence, memoText } from "./evidence.js";
 import { buildCapacity } from "./capacity.js";
+import { committeeReport } from "./report.js";
 import { loadKeypair, publishMemo, DEFAULT_RPC_URL } from "./memo.js";
 
 const PORT = Number(process.env.PORT ?? 8787);
@@ -90,7 +92,24 @@ const server = createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && url.pathname === "/capacity") {
+      if (!pack.history) {
+        return send(res, 503, { error: "no lote-history.json in pack; run scripts/build_history.py" });
+      }
       return send(res, 200, buildCapacity(pack));
+    }
+
+    if (req.method === "GET" && url.pathname.startsWith("/report/")) {
+      const scenario = url.pathname.slice("/report/".length);
+      if (!["bueno", "mixto", "malo"].includes(scenario)) return send(res, 400, { error: "scenario must be one of bueno | mixto | malo" });
+      const q = url.searchParams;
+      const md = committeeReport(scenario, pack, {
+        weeds_pct: q.has("weeds_pct") ? Number(q.get("weeds_pct")) : undefined,
+        signature: q.get("signature") ?? undefined,
+        explorer_url: q.get("explorer_url") ?? undefined,
+        publisher: keypair ? keypair.publicKey.toBase58() : undefined,
+      });
+      return send(res, 200, md, "text/markdown");
+
     }
 
     if (req.method === "POST" && url.pathname === "/score") {
