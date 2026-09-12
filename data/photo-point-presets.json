@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "pack_version": "1.0.0",
+  "lote_id": "demo-rio-segundo-01",
+  "protocol": {
+    "nadir": true,
+    "height_m": [0.6, 1.5],
+    "gps_tolerance_m": 30,
+    "min_points_for_score": 3,
+    "aggregation": "median"
+  },
+  "points": [
+    { "point_id": "P1", "lat": -31.417, "lon": -63.722, "label": "N-O" },
+    { "point_id": "P2", "lat": -31.417, "lon": -63.718, "label": "N-E" },
+    { "point_id": "P3", "lat": -31.42, "lon": -63.72, "label": "Centro" },
+    { "point_id": "P4", "lat": -31.423, "lon": -63.722, "label": "S-O" },
+    { "point_id": "P5", "lat": -31.423, "lon": -63.718, "label": "S-E" }
+  ],
+  "weeds_ownership_note": "THIS FILE IS THE SINGLE SOURCE OF TRUTH for per-point weeds. demo-scenarios.json must never carry a weeds number.",
+  "scenarios": {
+    "bueno": {
+      "weeds_pct_by_point": { "P1": 10, "P2": 15, "P3": 8, "P4": 18, "P5": 12 },
+      "weeds_pct_lote": 12,
+      "aggregation": "median",
+      "source": "simulated",
+      "notes": "lote limpio mid-campaña"
+    },
+    "mixto": {
+      "weeds_pct_by_point": { "P1": 18, "P2": 58, "P3": 55, "P4": 62, "P5": 45 },
+      "weeds_pct_lote": 55,
+      "aggregation": "median",
+      "source": "simulated",
+      "notes": "manchones - el satélite no lo ve, las fotos sí"
+    },
+    "malo": {
+      "weeds_pct_by_point": { "P1": 55, "P2": 70, "P3": 65, "P4": 48, "P5": 72 },
+      "weeds_pct_lote": 65,
+      "aggregation": "median",
+      "source": "simulated",
+      "notes": "enmalezado / manejo flojo"
+    }
+  },
+  "aggregation_warning": "weeds_pct_lote is the median of the 5 points. If Vision returns fewer than 5 points the median changes and expected_score will not match. min_points_for_score = 3.",
+  "vision_api": {
+    "route": "/api/vision/weeds",
+    "models": ["gpt-4o-mini", "gemini-flash"],
+    "fallback": "scenario_preset_or_slider"
+  },
+  "sources": ["research/01-EVIDENCIA-PUNTOS-VISION.md"]
+}

@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "pack_version": "1.0.0",
+  "lote_id": "demo-rio-segundo-01",
+  "nombre": "Lote demo Río Segundo / Córdoba",
+  "ha": 100,
+  "cultivo": "soja",
+  "center": {
+    "lat": -31.42,
+    "lon": -63.72
+  },
+  "bbox": [
+    -63.7254,
+    -31.4245,
+    -63.7146,
+    -31.4155
+  ],
+  "bbox_note": "Raster read window. MUST equal lote.geojson polygon bounds (enforced by tests/test_pack.py).",
+  "geometry_ref": "lote.geojson",
+  "normalization": {
+    "ndvi_norm": {
+      "formula": "clip((ndvi - ndvi_floor) / (ndvi_ceiling - ndvi_floor) * 100, 0, 100)",
+      "ndvi_floor": 0.20,
+      "ndvi_ceiling": 0.85,
+      "source": "estimated",
+      "note": "Fixed agronomic anchors for soy (literature: 0.0-0.3 emergence, 0.6-0.9 full canopy). NOT derived from this lot."
+    },
+    "climate": {
+      "formula": "climate_table(rain_mm_7d)",
+      "ref": "climate_table",
+      "source": "estimated"
+    },
+    "weeds_norm": {
+      "formula": "weeds_pct",
+      "range": [0, 100],
+      "note": "pass-through",
+      "source": "simulated"
+    },
+    "superseded_concepts": ["rain_norm"],
+    "superseded_note": "rain_norm was never published. Use climate_table. Any draft referencing rain_norm is stale."
+  },
+  "climate_table": {
+    "description": "climate score from rain_mm_7d (demo heuristic, not an agrometeorological model)",
+    "comparator": "rain_mm_7d < max_mm",
+    "comparator_note": "Strict less-than, matching build_pack.climate_from_rain(): the FIRST rule where rain_mm_7d < max_mm wins (max_mm: null means \"else\", always matches last).",
+    "rules": [
+      { "max_mm": 5, "climate": 25, "label": "sequía" },
+      { "max_mm": 15, "climate": 45, "label": "seco" },
+      { "max_mm": 25, "climate": 70, "label": "aceptable" },
+      { "max_mm": 50, "climate": 90, "label": "óptimo" },
+      { "max_mm": 80, "climate": 85, "label": "húmedo" },
+      { "max_mm": null, "climate": 60, "label": "exceso" }
+    ]
+  },
+  "ndvi_method": "BOA = (DN - 1000) / 10000 for processing_baseline >= 04.00; NDVI = (B08 - B04) / (B08 + B04)",
+  "ndvi_published_stat": "median",
+  "ndvi_published_stat_why": "The ~1 km box mixes crop with roads/edges; the median represents the vegetated interior better than the mean.",
+  "presets": {
+    "fecha_buena": {
+      "label": "Fecha buena - pico soja 2025-02-02",
+      "date": "2025-02-02",
+      "ndvi": 0.782,
+      "ndvi_source": "measured",
+      "ndvi_stats": {
+        "mean": 0.727,
+        "median": 0.782,
+        "p10": 0.515,
+        "p90": 0.898,
+        "n_pixels": 10300
+      },
+      "ndvi_stats_full_precision_ref": "ndvi_recalc_results.json",
+      "rain_mm_7d": 46.7,
+      "rain_source": "measured",
+      "rain_window": {
+        "start": "2025-01-27",
+        "end": "2025-02-02"
+      },
+      "rain_provider": "Open-Meteo archive, daily=precipitation_sum, tz America/Argentina/Cordoba",
+      "sentinel2": {
+        "collection": "sentinel-2-l2a",
+        "scene_id": "S2B_MSIL2A_20250202T140709_R110_T20JML_20250202T175010",
+        "cloud_cover_pct": 0.0028,
+        "cloud_status": "verified_on_lote_bbox",
+        "processing_baseline": "05.11",
+        "stac": "https://planetarycomputer.microsoft.com/api/stac/v1"
+      },
+      "historical_note_old_wrong_formula": {
+        "method": "DN/10000 (missing BOA_ADD_OFFSET) - SUPERSEDED, do not use",
+        "mean": 0.489,
+        "median": 0.545
+      }
+    },
+    "fecha_mala": {
+      "label": "Fecha mala - misma campaña, seca corta 2025-02-07",
+      "date": "2025-02-07",
+      "ndvi": 0.763,
+      "ndvi_source": "measured",
+      "ndvi_stats": {
+        "mean": 0.698,
+        "median": 0.763,
+        "p10": 0.474,
+        "p90": 0.877,
+        "n_pixels": 10300
+      },
+      "rain_mm_7d": 0.1,
+      "rain_source": "measured",
+      "rain_window": {
+        "start": "2025-02-01",
+        "end": "2025-02-07"
+      },
+      "rain_provider": "Open-Meteo archive, daily=precipitation_sum, tz America/Argentina/Cordoba",
+      "sentinel2": {
+        "collection": "sentinel-2-l2a",
+        "scene_id": "S2C_MSIL2A_20250207T140811_R110_T20JML_20250207T174511",
+        "cloud_cover_pct": 0.3321,
+        "cloud_status": "verified_on_lote_bbox",
+        "processing_baseline": "05.11",
+        "stac": "https://planetarycomputer.microsoft.com/api/stac/v1"
+      },
+      "narrative_note": "NDVI apenas cambia en 5 días (0.782 -> 0.763): la vegetación es inercial. La caída de verde a rojo viene de la lluvia (46.7 -> 0.1 mm) y malezas SIMULADAS, no del satélite solo. Decir esto en el pitch.",
+      "historical_note_old_wrong_formula": {
+        "mean": 0.460,
+        "median": 0.519
+      }
+    },
+    "fecha_mala_agosto_barbecho": {
+      "label": "ARCHIVADO - barbecho invernal 2024-08-26",
+      "date": "2024-08-26",
+      "ndvi": 0.151,
+      "ndvi_source": "measured",
+      "ndvi_method": "DN/10000 (not offset-corrected)",
+      "ndvi_method_note": "Calculado con el método viejo DN/10000, sin el offset del baseline >= 04.00. No comparable numéricamente con los valores 2025 sin recalcular.",
+      "ndvi_published_stat": "mean",
+      "ndvi_published_stat_note": "Overrides the file-wide ndvi_published_stat (median): this archived preset predates the offset/median recalculation, so only the OLD-method mean/median pair exists for it. Published here as the OLD mean (0.151), NOT the file-wide median convention.",
+      "ndvi_old_method_median_ref": 0.135,
+      "rain_mm_7d": 6.9,
+      "rain_source": "measured",
+      "deprecated_for_pitch": true,
+      "pitch_note": "Barbecho invernal, fuera de campaña de soja. NUNCA narrar como soja dañada mid-campaña."
+    }
+  },
+  "aliases": {
+    "baseline": "fecha_buena",
+    "drought": "fecha_mala",
+    "barbecho_archived": "fecha_mala_agosto_barbecho"
+  }
+}
