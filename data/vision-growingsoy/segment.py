@@ -15,6 +15,7 @@ import sys
 import time
 
 from PIL import Image, ImageChops, ImageDraw
+from overlay import sheet
 from prepare import ROOT, PILLOW_VERSION, digest, strict_json, union_mask, validate_response, write_json
 
 MODEL = "gemini-3.8-flash"
@@ -257,6 +258,8 @@ def save_report(directory, run):
     for r in rows:
         if "comparison" in r:
             lines += [f"![{r['id']}: original, detección y referencia]({r['comparison']})", ""]
+        if "review" in r:
+            lines += [f"![{r['id']}: vista de revisión del agrónomo]({r['review']})", ""]
     lines += ["## Observaciones", "", "Revisión visual de detección pendiente; no se infieren aciertos por pruebas sintéticas.",
               "No ampliar al resto del conjunto de desarrollo ni abrir el final sin revisar esta corrida."]
     (directory / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -348,6 +351,10 @@ def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT, billing_
         if mask is not None:
             result["mask"] = f"{row['id']}.mask.png"
             mask.save(directory / result["mask"])
+            # La vista de revision sale del mismo paso y de la misma mascara que el
+            # porcentaje, para que no puedan divergir en produccion.
+            result["review"] = f"{row['id']}.review.png"
+            sheet(rgb, mask, result["weed_pct"], row["id"]).save(directory / result["review"])
         result["comparison"] = f"{row['id']}.comparison.png"
         pct = result["weed_pct"]
         comparison(rgb, mask, reference, [f"{row['id']} Original", f"Deteccion: {result['status']}" +

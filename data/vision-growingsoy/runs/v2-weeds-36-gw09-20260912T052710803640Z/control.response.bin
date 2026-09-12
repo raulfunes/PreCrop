@@ -1,0 +1,36 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"not_assessable\",\n  \"reason\": \"La fotografía es completamente uniforme y sin contenido visible, por lo que no muestra el terreno ni la vegetación para evaluar la presencia de cultivo o malezas.\",\n  \"limitations\": [\n    \"La imagen proporcionada no contiene información visual o estructura del terreno.\"\n  ],\n  \"polygons\": []\n}",
+            "thoughtSignature": "Eu8FCuwFARFNMg+eKvl3TRpRsB9CcIFzCatC4b2gTUPHBVpt2ayjTAACluNsSgtHN8ARPQ+ErhPkAZwVsaO+6LaTkDgq2OSSaw1frTX3fzapzmm8j8eTl0gVB5oSHKGM6HAPstN/UyGkdgq1RRI6mbzaYc7fEraAqCKmHgGPFMMmAtGz4DYFnPLrrEN3G0z0PqtoRG4FfqMnItr2itBhSwYy+VI7y/uo0LTQOoFb4N0iqDoFXwDdO6g3fVMZw4dhykeHG7EIYKzYBayxUs77p7Tn5Q+ByHVyiNeO/L6lqjKULVj5tfNM6kz4pEhJOh+8NgbuyjM8v0H5xWxcuJgHqzXCzfE4aNmIfpJgDajxXDPZbx5f8mtoavvykX/jsSH2CoHtFmVhwp/hzXPVqf44qDns+Gk3NpOWA8JQ9Fa4DZXhg4H3j/5xtFpo6AIqYxVQF0QkU2bdiEDllITVj0HtKAedWXVuQ6YuoGcYoxCOoYQ4xgeoskMq7KzAg+Zqi7Gt3sBd29z7aZ5Aig0VkK+5ejj2hAdHjqsjEfxBZu0cdKNUrciQ4WFtSX+8gb1gcIHRqV/08YXUyeamJOXXAAHKJnLBBP871Rgq9IR3p2mALtXd0qHGhXOkYhC3xPplj6C5JzZFhgfF/9N9adlMBNP87OEU/XcCu0IV9tEin2m2/tb95WYyfwH9P5CaLkE+icrSAIBPMIJHMmX63pEuP5Al2AFGDfADwLCIMNByfXQQ7t8sTDrTvsr1n95J3P39CBhaeHCTDiufkw0puvgWJBle8wEpdqwpgaEW7hncCaEtAmvn1FumI5XidnMJ1+OZSkChkavu878feLRkQf8o6dySL6bcxkIc6UAmKe23LGuqzq15itQnq5X6r0QLHjoA+49ccTFmYOwHCBxfcuXIXSHowwun8OtzfDqyHhsCC5e37Dasxp84RdcDjmmcxJp6ctpauHTJKaH7hh2V5rkvRdj4cJ6/GflkeXlq86gn1WdvxRhM1Q=="
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 84,
+    "totalTokenCount": 2311,
+    "promptTokensDetails": [
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      },
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      }
+    ],
+    "thoughtsTokenCount": 144,
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "v-Kkapr8G6mJz7IPpq_biQc"
+}

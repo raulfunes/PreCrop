@@ -143,7 +143,7 @@ Total histórico: cinco solicitudes de generación —una con HTTP 400, una con 
 
 ### Conjunto de desarrollo completo y control — 12-sep-2026, 02:08 ART
 
-Ocho de las nueve fotos de desarrollo de `weeds-v2` evaluadas con `gemini-3.6-flash` y el prompt v2. GW09 quedó pendiente por timeout. [Consolidado reproducible](data/vision-growingsoy/consolidate.py): `python -B data/vision-growingsoy/consolidate.py`.
+Las nueve fotos de desarrollo de `weeds-v2` evaluadas con `gemini-3.6-flash` y el prompt v2. [Consolidado reproducible](data/vision-growingsoy/consolidate.py): `python -B data/vision-growingsoy/consolidate.py`.
 
 | Foto | Referencia | Contornos | Error | IoU |
 | --- | ---: | ---: | ---: | ---: |
@@ -155,19 +155,19 @@ Ocho de las nueve fotos de desarrollo de `weeds-v2` evaluadas con `gemini-3.6-fl
 | GW06 | 2,7649% | 3,8923% | 1,1274 pp | 0,6005 |
 | GW07 | 1,8057% | 0,5366% | 1,2690 pp | 0,2280 |
 | GW08 | 1,7002% | 2,0281% | 0,3279 pp | 0,3766 |
-| GW09 | 1,2510% | — | — | — |
+| GW09 | 1,2510% | 0,6550% | 0,5959 pp | **0,0000** |
 
-**MAE 2,0634 pp · IoU media 0,4266** (mediana 0,4764; tres de ocho por debajo de 0,3).
+**MAE 1,9004 pp · IoU media 0,3792** (mediana 0,3766; cuatro de nueve por debajo de 0,3).
 
-**El MAE solo engaña.** GW04 tiene 1,6780 pp de error y **IoU 0**: el modelo marcó rastrojo del borde derecho y se perdió las dos malezas reales de la mitad inferior. El porcentaje coincidió por casualidad. Cualquier informe debe mostrar MAE e IoU juntos; con un solo número, esa foto pasa por acierto.
+**El MAE solo engaña.** GW04 tiene 1,6780 pp de error y **IoU 0**: el modelo marcó rastrojo del borde derecho y se perdió las dos malezas reales de la mitad inferior. GW09 repite el patrón con 0,5959 pp de error e IoU 0, marcando cinco manchitas sobre rastrojo y suelo. En ambas el porcentaje coincidió por casualidad. Cualquier informe debe mostrar MAE e IoU juntos; con un solo número, esa foto pasa por acierto.
 
-**La calidad depende del tamaño de la maleza.** Con referencia ≥ 10% la IoU media es 0,6453; por debajo de 10%, 0,2953. El modelo resuelve matas grandes y falla con malezas chicas y dispersas sobre rastrojo, que es justamente el caso de detección temprana con más valor agronómico.
+**La calidad depende del tamaño de la maleza.** Con referencia ≥ 10% la IoU media es 0,6453; por debajo de 10%, 0,2461, con dos fotos en cero. El modelo resuelve matas grandes y falla con malezas chicas y dispersas sobre rastrojo, que es justamente el caso de detección temprana con más valor agronómico.
 
-**Subestima de forma sistemática:** sesgo medio **−1,6996 pp**, seis de ocho fotos por debajo de la referencia. Con la transformación propuesta `componente_malezas = 100 − mediana`, subestimar malezas empuja el score hacia verde. Con peso 0,15 el efecto sobre el score es de unas 0,25 décimas, pero es sesgo, no ruido, y no debe corregirse con un factor inventado sin calibración.
+**Subestima de forma sistemática:** sesgo medio **−1,5770 pp**, siete de nueve fotos por debajo de la referencia. Con la transformación propuesta `componente_malezas = 100 − mediana`, subestimar malezas empuja el score hacia verde. Con peso 0,15 el efecto sobre el score es de unas 0,25 décimas, pero es sesgo, no ruido, y no debe corregirse con un factor inventado sin calibración.
 
-**Control aprobado:** ante la imagen uniforme el modelo devolvió `not_assessable` con cero polígonos y motivo legible, sin fabricar un cero. [Corrida](data/vision-growingsoy/runs/v2-control-36-20260912T050536404310Z/report.md).
+**Control aprobado dos veces**, en corridas separadas: ante la imagen uniforme el modelo devolvió `not_assessable` con cero polígonos y motivo legible, sin fabricar un cero. [Corrida](data/vision-growingsoy/runs/v2-control-36-20260912T050536404310Z/report.md).
 
-Límites: ocho fotos, un cultivo, un modelo y una versión de prompt. No hay comparación v1/v2 sobre el mismo conjunto y modelo, así que la mejora no se puede atribuir al prompt. Las seis fotos finales siguen cerradas y no se abren hasta congelar prompt y configuración. Esto no acredita precisión agronómica.
+Límites: nueve fotos, un cultivo, un modelo y una versión de prompt. No hay comparación v1/v2 sobre el mismo conjunto y modelo, así que la mejora no se puede atribuir al prompt. Las seis fotos finales siguen cerradas y no se abren hasta congelar prompt y configuración. Esto no acredita precisión agronómica.
 
 ### Primera detección real de malezas — 12-sep-2026, 02:01 ART
 
@@ -186,6 +186,16 @@ Los motivos devueltos citan la morfología del prompt v2 —«morfología trifol
 **El control no se comprobó:** quedó en HTTP 503 como cuarta solicitud, así que la abstención ante una imagen no interpretable sigue sin verificarse con este modelo.
 
 Camino hasta aquí: `gemini-3.8-flash` devolvió 503 en cuatro intentos y un timeout completo; `gemini-3.7-flash` también 503; `gemini-2.5-flash` respondió 404, retirado para cuentas nuevas, recomendando `gemini-3.6-flash`. El modelo quedó registrado en `run.json` y **estos resultados no son comparables con la corrida de GS08**, que usó `gemini-3.8-flash` y el prompt v1. `segment.py` acepta `--model` y `--experiment`; `--billing-acknowledged` declara que el proyecto puede facturar, sin fingir que no tiene facturación. Nada de esto acredita precisión agronómica ni generalización a otros cultivos.
+
+### Vista de revisión integrada a la corrida — 12-sep-2026, 02:27 ART
+
+[overlay.py](data/vision-growingsoy/overlay.py) · [comprobación](data/vision-growingsoy/check_overlay.py). Cada detección evaluable deja ahora `<ID>.review.png` junto a la máscara, generado **en la misma pasada y desde la misma máscara que el porcentaje**: en producción no hay anotación contra la cual comparar, y una vista producida aparte podría divergir de lo que se midió.
+
+Muestra la foto recibida junto a la misma foto con las malezas en relleno translúcido y borde, más el porcentaje rotulado como estimación sin calibrar. Una máscara vacía no pinta nada: nunca dibuja un cero que el modelo no dijo.
+
+Justifica el trabajo por sí sola en los dos casos de IoU 0. GW09 estima 0,66% frente a 1,25% de referencia —error de 0,5959 pp, aparentemente bueno— y la lámina muestra cinco manchitas sobre rastrojo y suelo, ninguna sobre una maleza. Con el número solo, esa estimación entra al score sin que nadie lo note; con la foto pintada se descarta de un vistazo. Es lo que vuelve auditable la revisión del agrónomo que el pack ya preveía.
+
+`ponytail:` el borde se engorda hasta dos píxeles hacia afuera, así que en detecciones diminutas como las de GW09 domina visualmente y exagera la región. El porcentaje sale del relleno, no del borde. Para lectura de área a ojo, dibujar el contorno hacia adentro.
 
 ## Prueba pública preparada
 

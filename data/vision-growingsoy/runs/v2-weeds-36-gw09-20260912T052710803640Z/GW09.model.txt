@@ -1,0 +1,46 @@
+{
+  "status": "assessed",
+  "reason": "Se identifican plantas de soja emergentes con trifolios bien definidos dispuestas en hileras, diferenciadas de plántulas de maleza de hoja angosta y angosta/fina presentes en el entresurco.",
+  "limitations": [
+    "La presencia de abundante rastrojo seco dificulta la detección de plántulas de malezas extremadamente pequeñas o sumergidas en la broza."
+  ],
+  "polygons": [
+    [
+      [304, 608],
+      [330, 610],
+      [380, 642],
+      [360, 652],
+      [320, 628],
+      [304, 616]
+    ],
+    [
+      [548, 484],
+      [570, 492],
+      [612, 532],
+      [600, 542],
+      [560, 520],
+      [540, 500]
+    ],
+    [
+      [272, 886],
+      [290, 886],
+      [328, 934],
+      [310, 938],
+      [280, 908]
+    ],
+    [
+      [738, 492],
+      [760, 494],
+      [770, 532],
+      [750, 532],
+      [738, 510]
+    ],
+    [
+      [958, 432],
+      [975, 432],
+      [998, 478],
+      [980, 482],
+      [960, 450]
+    ]
+  ]
+}

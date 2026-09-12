@@ -113,6 +113,13 @@ def main():
             assert run["summary"]["mae_n"] == 2
             assert run["summary"]["iou_n"] + run["summary"]["both_empty_n"] == 2
             assert run["results"][-1]["control_pass"] is True
+            # Cada deteccion evaluable deja su vista de revision, generada en la misma pasada
+            # y a partir de la misma mascara que el porcentaje.
+            masks = [r for r in run["results"] if "mask" in r]
+            assert masks and all("review" in r for r in masks)
+            assert not any("review" in r for r in run["results"] if "mask" not in r)
+            written = {q.name for q in runs.rglob("*.review.png")}
+            assert written == {r["review"] for r in masks}, written
             run = s.run_experiment(True)
             assert run["requests_sent"] == 0 and send.call_count == 4
             assert run["blocked_reason"] == "four_request_experiment_already_reserved"

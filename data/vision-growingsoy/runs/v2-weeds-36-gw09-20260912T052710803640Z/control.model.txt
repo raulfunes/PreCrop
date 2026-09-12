@@ -1,0 +1,8 @@
+{
+  "status": "not_assessable",
+  "reason": "La fotografía es completamente uniforme y sin contenido visible, por lo que no muestra el terreno ni la vegetación para evaluar la presencia de cultivo o malezas.",
+  "limitations": [
+    "La imagen proporcionada no contiene información visual o estructura del terreno."
+  ],
+  "polygons": []
+}
