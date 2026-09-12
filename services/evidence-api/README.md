@@ -25,6 +25,23 @@ npm start           # http://localhost:8787
 
 **Todas las rutas aceptan `?lote=<id>`** y usan el lote demo si no se indica. Los lotes creados en vivo se guardan en `data/lotes/` (fuera de git) y se recargan al reiniciar.
 
+## Demo de dos pantallas: coop y productor
+
+Estado por lote en `data/lotes/<id>.state.json` (fuera de git). Todas bajo `/lotes/<id>/…`; `?scenario=bueno|mixto|malo` elige la escena satelital con la que se evalúa (en la demo: primer retiro con `bueno`, segundo con `malo`).
+
+| Método | Ruta | Pantalla | Qué hace |
+|---|---|---|---|
+| GET | `/lotes/<id>/state` | ambas | Estado: cupo aprobado, fotos por punto, mediana de malezas, desembolsos, `next` (qué falta) y `preview` (índice, semáforo, disponible, `can_withdraw`) |
+| POST | `/lotes/<id>/approve` | coop | `{ "quota_usd"?: n, "approved_by"?: "..." }` aprueba el cupo. Sin `quota_usd` toma el sugerido por capacidad; nunca puede superarlo |
+| POST | `/lotes/<id>/photos` | productor | `{ "point_id": "P1", "weeds_pct": 7.2, "confidence"?: 0.5, "source"?: "model", "synthetic"?: true }` guarda el resultado de visión de un punto (Front lo manda después de `/api/vision/weeds`) |
+| DELETE | `/lotes/<id>/photos` | productor | Borra las fotos para una nueva ronda |
+| POST | `/lotes/<id>/disburse` | productor | `{ "scenario": "bueno", "amount_usd"?: n }` solicita el retiro. Verifica cupo aprobado, ≥ 3 puntos con foto (`protocol.min_points_for_score`), semáforo no rojo y saldo. 200 con recibo `paid`, o 409 con recibo `rejected` y el motivo. Todo queda en `disbursements[]` |
+| DELETE | `/lotes/<id>/state` | ensayo | Reset total del lote para volver a correr la demo |
+
+Regla del monto: `liberado = cupo_aprobado × índice / 100`; `disponible = liberado − ya_pagado`; rojo → 0. La mediana de malezas de las fotos reemplaza al valor simulado del pack en cuanto hay 3 puntos con foto.
+
+Guion verificado sobre el lote demo: aprobar (45.173) → 3 fotos buenas (5/7/10 %) → índice 75,2 verde → retiro 1 pagado 33.958 USD → 3 fotos malas (80/90/85 %) con escena `malo` → índice 45,5 rojo → retiro 2 rechazado (409). Fotos generadas con IA: mandar `synthetic: true` y mostrarlas como "foto de ejemplo".
+
 `weeds_pct` es opcional: si Visión lo manda, se usa y queda etiquetado `estimated`; si no, se usa el valor simulado del pack.
 
 ### El cupo de `/score` cuelga del techo de `/capacity`
