@@ -27,3 +27,5 @@ data/lotes/
 data/cache/
 data/fotos-prueba/
 services/evidence-api/api.*.log
+next.*.log
+api/vision.*.log
