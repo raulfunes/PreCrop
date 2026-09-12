@@ -102,18 +102,54 @@ export function approveQuota(lot, state, body = {}) {
   return saveState(state);
 }
 
+/** Great-circle distance in metres (haversine); fine at field scale. */
+function distanceM(lat1, lon1, lat2, lon2) {
+  const R = 6371000, toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+/**
+ * Which sampling point a photo belongs to, from its GPS metadata (EXIF in
+ * production, mocked in the demo): nearest point within protocol.gps_tolerance_m.
+ */
+export function resolvePointByGps(lot, lat, lon) {
+  const tol = lot.points.protocol?.gps_tolerance_m ?? 30;
+  const ranked = lot.points.points
+    .map((p) => ({ point_id: p.point_id, label: p.label, distance_m: round(distanceM(lat, lon, p.lat, p.lon), 1) }))
+    .sort((a, b) => a.distance_m - b.distance_m);
+  const nearest = ranked[0];
+  return { ...nearest, tolerance_m: tol, within_tolerance: nearest.distance_m <= tol, ranked };
+}
+
 export function recordPhoto(lot, state, body = {}) {
   const ids = new Set(lot.points.points.map((p) => p.point_id));
-  if (!ids.has(body.point_id)) throw Object.assign(new Error(`point_id must be one of ${[...ids].join(", ")}`), { status: 400 });
   const w = Number(body.weeds_pct);
   if (!Number.isFinite(w) || w < 0 || w > 100) throw Object.assign(new Error("weeds_pct must be a number between 0 and 100"), { status: 400 });
-  state.photos[body.point_id] = {
+
+  // Assignment by metadata: gps {lat, lon} (EXIF or mocked) wins over an explicit point_id.
+  let pointId = body.point_id ?? null;
+  let gps = null;
+  const lat = Number(body.gps?.lat ?? body.lat), lon = Number(body.gps?.lon ?? body.lon);
+  if (Number.isFinite(lat) && Number.isFinite(lon)) {
+    const r = resolvePointByGps(lot, lat, lon);
+    if (!r.within_tolerance) {
+      throw Object.assign(new Error(`La foto esta a ${r.distance_m} m del punto mas cercano (${r.point_id}); el protocolo admite ${r.tolerance_m} m. No se asigna.`), { status: 422, nearest: r });
+    }
+    pointId = r.point_id;
+    gps = { lat: round(lat, 6), lon: round(lon, 6), distance_m: r.distance_m, tolerance_m: r.tolerance_m, source: body.gps?.source ?? body.gps_source ?? "exif" };
+  }
+  if (!ids.has(pointId)) throw Object.assign(new Error(`point_id must be one of ${[...ids].join(", ")}, or send gps {lat, lon}`), { status: 400 });
+
+  state.photos[pointId] = {
     weeds_pct: round(w, 2),
     confidence: body.confidence ?? null,
     source: body.source ?? "model",
     model: body.model ?? null,
     file: body.file ?? null,
     synthetic: Boolean(body.synthetic),
+    gps,
     at: now(),
   };
   return saveState(state);

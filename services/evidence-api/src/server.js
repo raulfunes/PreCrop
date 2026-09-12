@@ -13,7 +13,7 @@ import { buildEvidence, memoText } from "./evidence.js";
 import { buildCapacity } from "./capacity.js";
 import { committeeReport } from "./report.js";
 import { registerDemo, resolveDemoDepartment, getLot, listLots, createLot } from "./lotes.js";
-import { loadState, describeState, approveQuota, recordPhoto, clearPhotos, resetState, requestDisbursement } from "./state.js";
+import { loadState, describeState, approveQuota, recordPhoto, clearPhotos, resetState, requestDisbursement, resolvePointByGps } from "./state.js";
 import { loadKeypair, publishMemo, publisherBalanceSol, DEFAULT_RPC_URL } from "./memo.js";
 
 const PORT = Number(process.env.PORT ?? 8787);
@@ -83,13 +83,18 @@ const server = createServer(async (req, res) => {
       return send(res, 200, { default: pack.presets.lote_id, lotes: listLots().map((l) => ({ ...l, state: describeState(getLot(l.id), loadState(l.id)).next })) });
     }
     // ---- two-role workflow: /lotes/<id>/{state,approve,photos,disburse}
-    const wf = /^\/lotes\/([^/]+)\/(state|approve|photos|disburse)$/.exec(url.pathname);
+    const wf = /^\/lotes\/([^/]+)\/(state|approve|photos|disburse|locate)$/.exec(url.pathname);
     if (wf) {
       const one = getLot(wf[1]);
       if (!one) return send(res, 404, { error: "unknown lote" });
       const state = loadState(one.lote.id);
       const scenario = url.searchParams.get("scenario") ?? "bueno";
       try {
+        if (wf[2] === "locate" && req.method === "GET") {
+          const lat = Number(url.searchParams.get("lat")), lon = Number(url.searchParams.get("lon"));
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) return send(res, 400, { error: "lat and lon query params are required" });
+          return send(res, 200, resolvePointByGps(one, lat, lon));
+        }
         if (wf[2] === "state" && req.method === "GET") return send(res, 200, describeState(one, state, scenario));
         if (wf[2] === "state" && req.method === "DELETE") return send(res, 200, describeState(one, resetState(one.lote.id), scenario));
         if (wf[2] === "approve" && req.method === "POST") return send(res, 200, describeState(one, approveQuota(one, state, await readBody(req)), scenario));
