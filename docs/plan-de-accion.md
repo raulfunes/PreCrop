@@ -51,11 +51,11 @@ El MVP ya usa la misma fórmula y lee los JSON de `data/`. Ajustes:
 3. **Pantalla Capacidad** (cuando esté `/capacity`): barras por campaña con el rinde estimado del lote y el oficial al lado, el año malo resaltado, el cupo pre-siembra en grande con la frase "contra el peor año que este lote ya tuvo".
 4. **Vista Informe**: renderiza `/report` con botón de imprimir.
 
-### Tercera persona — rindes oficiales, pitch, video (unas 8 h)
+### Tercera persona — rindes oficiales y pitch (unas 7 h)
 
 1. **Tabla de rindes oficiales** (3 h). Rinde de soja de Río Segundo (o provincial si no está el departamental) para cada campaña 2018/19 a 2024/25, desde los informes de la Bolsa de Cereales de Córdoba, con link por fila. Dejarla en `data/rindes-oficiales.json`. Es lo que Franco necesita para el contraste y lo que la coop reconoce como "el mapa oficial".
 2. **Pitch** (3 h). Reescribir `docs/pitch-90s.md` con la tesis nueva: capacidad antes de sembrar contra el peor año, condición durante la campaña, la coop firma, Twin paga. Ensayar con cronómetro. Respuestas listas para "¿validado contra qué?", "¿y si riega?", "¿esto ya existe?".
-3. **Fotos y video** (2 h). Las cinco fotos a `data/presets/fotos/` con los nombres del pack. Grabar la demo con las tres escenas por si el día D no hay red.
+3. **Fotos** (30 min). Las cinco fotos a `data/presets/fotos/` con los nombres del pack. No hay video: la demo se corre en vivo, y como el pack es JSON estático no depende de la red salvo para la firma en devnet.
 
 ## Próximas 24 h
 
@@ -63,7 +63,7 @@ El MVP ya usa la misma fórmula y lee los JSON de `data/`. Ajustes:
 |---|---|---|---|
 | 0–4 h | Historial por campaña | `advance` de `/score` + botones | Tabla de rindes oficiales |
 | 4–8 h | Regla capacidad + `/capacity` + contraste | Pantalla Capacidad | Pitch nuevo |
-| 8–12 h | Informe comité + firma devnet | Vista Informe + carteles | Fotos + video |
+| 8–12 h | Informe comité + firma devnet | Vista Informe + carteles | Fotos + ensayo del pitch |
 | 12–16 h | Pitch y ensayo | Pitch y ensayo | Pitch y ensayo |
 | 16–20 h | Freeze | Freeze | Freeze |
 
