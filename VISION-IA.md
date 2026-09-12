@@ -1,12 +1,12 @@
 # Visión IA — MVP PreCrop
 
-**Etapa actual — 11-sep-2026:** primera prueba experimental de detección y repintado con Gemini `gemini-3.8-flash`, limitada a GS08, GS11, GS15 y un control. Implementación y comprobaciones locales disponibles; inferencia real bloqueada por falta de `GEMINI_API_KEY`. Entrada: foto RGB + cultivo esperado «soja». Sin pantallas, score ni validación agronómica; no acredita funcionamiento en otros cultivos.
+**Etapa actual — 11-sep-2026:** primera prueba experimental de detección y repintado con Gemini `gemini-3.8-flash`, limitada a GS08, GS11, GS15 y un control. Implementación y comprobaciones locales disponibles; la primera solicitud real devolvió HTTP 400 (`INVALID_ARGUMENT`) y detuvo la corrida. Entrada: foto RGB + cultivo esperado «soja». Sin pantallas, score ni validación agronómica; no acredita funcionamiento en otros cultivos.
 
 El UPDATE Builder anterior incluye visión dentro del futuro MVP, con revisión del agrónomo, partner de solo lectura y fallback manual/presets. Sus nombres de modelos son antecedentes, no una selección. Las propuestas de integración y score de las secciones siguientes siguen fuera de esta etapa. Alcance general: [PRECROP-LEER-ESTO.md](PRECROP-LEER-ESTO.md).
 
 ## Experimento de segmentación v1 — implementación y resultado
 
-[Script REST](data/vision-growingsoy/segment.py) · [Prompt de segmentación v1](data/vision-growingsoy/prompt-segmentation-v1.txt) · [Comprobación ejecutable sin red](data/vision-growingsoy/check_segment.py) · [Reporte observado y comparaciones](data/vision-growingsoy/runs/segmentation-v1-20260912T021845560808Z/report.md).
+[Script REST](data/vision-growingsoy/segment.py) · [Prompt de segmentación v1](data/vision-growingsoy/prompt-segmentation-v1.txt) · [Comprobación ejecutable sin red](data/vision-growingsoy/check_segment.py) · [Último reporte observado y comparaciones](data/vision-growingsoy/runs/segmentation-v1-20260912T024646050376Z/report.md).
 
 Esta ampliación reemplaza la etapa de «sin API ni proveedor» únicamente para este experimento local. Conserva intactos `prepare.py`, `prompt.txt` y el contrato anterior de estimación de porcentajes. No implementa aplicación, pantallas ni score.
 
@@ -60,7 +60,7 @@ try {
 }
 ```
 
-### Resultado observado — 11-sep-2026, 23:18 ART
+### Comprobación previa sin clave — 11-sep-2026, 23:18 ART
 
 La [corrida registrada](data/vision-growingsoy/runs/segmentation-v1-20260912T021845560808Z/run.json) quedó bloqueada por `missing_GEMINI_API_KEY`: **0/4 solicitudes**, cuatro estados `blocked`, porcentajes/MAE/IoU nulos. El nombre del directorio usa 12-sep en UTC. Se conserva también la primera comprobación de bloqueo de las 23:17 ART; ninguna consumió solicitudes. No hay respuestas ni máscaras de Gemini, ni aciertos/errores de detección que se puedan atribuir al modelo. La disponibilidad de cuota gratuita del proyecto permanece sin verificar.
 
@@ -73,7 +73,24 @@ La [corrida registrada](data/vision-growingsoy/runs/segmentation-v1-20260912T021
 
 Se inspeccionaron visualmente el [repintado sintético](data/vision-growingsoy/runs/offline-mask-check.png) y la [comparación GS15](data/vision-growingsoy/runs/segmentation-v1-20260912T021845560808Z/GS15.comparison.png). El primero mantiene orientación y bordes; la comprobación automática confirma que cambian exactamente los píxeles de la máscara. GS15 muestra correctamente el panel de detección ausente y la referencia pintada. El dibujo sintético no procede de IA ni integra métricas del experimento.
 
-Pendiente para cerrar la hipótesis: configurar acceso gratuito, ejecutar las cuatro solicitudes y revisar ejemplos de falsos positivos (especialmente GS08), omisiones y contornos (GS11/GS15), junto con la abstención del control. Un incumplimiento del contrato o mala detección se documentará como resultado. **No ampliar automáticamente a las nueve fotos de desarrollo.** Otros cultivos requieren referencias propias; las seis finales siguen reservadas.
+El siguiente intento real se registra abajo. **No ampliar automáticamente a las nueve fotos de desarrollo.** Otros cultivos requieren referencias propias; las seis finales siguen reservadas.
+
+### Primera solicitud real — 11-sep-2026, 23:46 ART
+
+El usuario proporcionó la clave en `.env` y pidió ejecutar la prueba. Se cargó únicamente en el entorno del proceso, sin mostrarla, bajo la condición de proyecto sin facturación acordada para esta prueba. `.gitignore` excluye el `.env` de la raíz. No se comprobó por separado la facturación del proyecto mediante una API administrativa.
+
+La [corrida real](data/vision-growingsoy/runs/segmentation-v1-20260912T024646050376Z/run.json) realizó **1/4 solicitudes**: GS08 recibió HTTP 400 en 8,18 segundos. La respuesta original conservada indica `INVALID_ARGUMENT` y `Request contains an invalid argument.`; no identifica qué argumento falló ni aporta una detección. El error no permite atribuir la causa a la clave, el modelo, la configuración o el esquema. No hubo reintentos ni cambio de proveedor/modelo.
+
+| Foto | Estado | Contornos % | Error absoluto / IoU |
+| --- | --- | --- | --- |
+| GS08 | `api_error` / HTTP 400 | `null` | `null` / `null` |
+| GS11 | `blocked`; no enviada | `null` | `null` / `null` |
+| GS15 | `blocked`; no enviada | `null` | `null` / `null` |
+| Control uniforme | `blocked`; no enviado | `null` | No aplicable |
+
+**Resultado:** la solicitud fue rechazada por la API antes de obtener una respuesta de segmentación. No hay aciertos, errores de localización, máscaras predichas ni porcentajes del modelo que evaluar; MAE e IoU permanecen nulos. Los PNG muestran la foto y referencia con panel central sin resultado. La respuesta HTTP, tiempo, configuración, hashes y estado por foto quedan en el [reporte](data/vision-growingsoy/runs/segmentation-v1-20260912T024646050376Z/report.md).
+
+Se conserva `runs/segmentation-v1.started.json`: el presupuesto quedó reservado y el script no retomará automáticamente las otras tres solicitudes. Próximo paso: revisar el rechazo de la API y acordar una prueba corregida antes de enviar más imágenes; no interpretar este fallo de integración como evidencia de mala calidad de detección. Las seis fotos finales siguen reservadas.
 
 ## Prueba pública preparada
 
