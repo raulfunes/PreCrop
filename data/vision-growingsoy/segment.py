@@ -170,13 +170,13 @@ def payload(image_bytes, mime, prompt):
          "data": base64.b64encode(image_bytes).decode("ascii")}}]}], "generationConfig": CONFIG}
 
 
-def http_once(body, key):
+def http_once(body, key, endpoint=None):
     start = time.monotonic()
     result = {"http_status": None, "api_error": None}
     raw = b""
     connection = http.client.HTTPSConnection(HOST, timeout=TIMEOUT)
     try:
-        connection.request("POST", ENDPOINT, json.dumps(body).encode("utf-8"),
+        connection.request("POST", endpoint or ENDPOINT, json.dumps(body).encode("utf-8"),
                            {"Content-Type": "application/json", "x-goog-api-key": key})
         response = connection.getresponse()
         result["http_status"] = response.status
@@ -196,13 +196,14 @@ def http_once(body, key):
     return result, clean
 
 
-def request_once(body, key):
+def request_once(body, key, endpoint=None):
     start = time.monotonic()
     # A child process gives DNS/connect/read a single wall-clock deadline, even on Windows.
     # The credential travels only through an anonymous pipe, never argv or files.
     try:
         child = subprocess.run([sys.executable, "-B", str(Path(__file__).resolve()), "--transport"],
-                               input=json.dumps({"body": body, "key": key}), capture_output=True,
+                               input=json.dumps({"body": body, "key": key,
+                                                 "endpoint": endpoint or ENDPOINT}), capture_output=True,
                                text=True, encoding="utf-8", timeout=TIMEOUT,
                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         if child.returncode != 0:
@@ -242,7 +243,7 @@ def save_report(directory, run):
     write_json(directory / "run.json", run)
     def number(v):
         return "—" if v is None else f"{v:.4f}"
-    lines = [f"# Segmentación — {run['experiment']}", "", f"Modelo: `{MODEL}`. Fecha UTC: {run['started_at']}.",
+    lines = [f"# Segmentación — {run['experiment']}", "", f"Modelo: `{run['model']}`. Fecha UTC: {run['started_at']}.",
              f"Solicitudes realizadas: {run['requests_sent']}/4. Bloqueo: {run['blocked_reason'] or 'ninguno'}.", "",
              "| Foto | Estado | Referencia % | Contornos % | Error pp | IoU | Ambas vacías |",
              "| --- | --- | ---: | ---: | ---: | ---: | --- |"]
@@ -261,7 +262,9 @@ def save_report(directory, run):
     (directory / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT):
+def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT, billing_acknowledged=False,
+                   model=MODEL):
+    endpoint = f"/v1beta/models/{model}:generateContent"
     manifest = strict_json((SET / "manifest.json").read_text(encoding="utf-8"))
     selected = [dict(next(r for r in manifest["images"] if r["id"] == name and r["split"] == "desarrollo"),
                      base=SET) for name in IDS]
@@ -295,8 +298,10 @@ def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT):
     (directory / PROMPT.name).write_bytes(PROMPT.read_bytes())
     prompt = render_prompt(PROMPT, "soja")
     key = os.environ.get("GEMINI_API_KEY", "").strip()
+    # Una de las dos declaraciones del operador: proyecto sin facturacion, o gasto asumido.
     blocked = "missing_GEMINI_API_KEY" if not key else (
-        None if free_project_confirmed else "project_without_billing_not_confirmed")
+        None if (free_project_confirmed or billing_acknowledged)
+        else "project_without_billing_not_confirmed")
     budget = RUNS / f"{experiment}.started.json"
     if not blocked:
         try:
@@ -304,10 +309,11 @@ def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT):
                 json.dump({"run": directory.name, "maximum_requests": 4}, file)
         except FileExistsError:
             blocked = "four_request_experiment_already_reserved"
-    run = {"experiment": experiment, "started_at": now.isoformat(), "model": MODEL, "provider": "Google Gemini API",
-           "endpoint": f"https://{HOST}{ENDPOINT}", "configuration": CONFIG, "timeout_seconds": TIMEOUT,
+    run = {"experiment": experiment, "started_at": now.isoformat(), "model": model, "provider": "Google Gemini API",
+           "endpoint": f"https://{HOST}{endpoint}", "configuration": CONFIG, "timeout_seconds": TIMEOUT,
            "automatic_retries": 0, "max_requests": 4, "expected_crop": "soja",
            "free_project_confirmed_by_operator": free_project_confirmed,
+           "billing_acknowledged_by_operator": billing_acknowledged,
            "prompt_sha256": digest(PROMPT), "script_sha256": digest(Path(__file__)),
            "manifest_sha256": digest(SET / "manifest.json"), "pillow": PILLOW_VERSION,
            "requests_sent": 0, "blocked_reason": blocked, "results": []}
@@ -320,7 +326,7 @@ def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT):
         if not blocked:
             run["requests_sent"] += 1
             save_report(directory, run)  # Persist attempted count before network activity.
-            transport, raw = request_once(payload(data, mime, prompt), key)
+            transport, raw = request_once(payload(data, mime, prompt), key, endpoint)
             result.update(transport)
             raw_name = f"{row['id']}.response.bin"
             (directory / raw_name).write_bytes(raw)
@@ -358,7 +364,7 @@ def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT):
 if __name__ == "__main__":
     if sys.argv[1:] == ["--transport"]:
         request = strict_json(sys.stdin.read())
-        result, raw = http_once(request["body"], request["key"])
+        result, raw = http_once(request["body"], request["key"], request.get("endpoint"))
         print(json.dumps([result, base64.b64encode(raw).decode("ascii")]))
         sys.exit(0)
     parser = argparse.ArgumentParser(description=__doc__)
@@ -366,5 +372,8 @@ if __name__ == "__main__":
                         help="Nombre del experimento; su reserva impide repetirlo.")
     parser.add_argument("--free-project-confirmed", action="store_true",
                         help="Operator has verified this key belongs to a project WITHOUT billing in AI Studio")
+    parser.add_argument("--billing-acknowledged", action="store_true",
+                        help="Operator accepts this key may bill a project with credits or billing enabled")
+    parser.add_argument("--model", default=MODEL, help="Identificador exacto del modelo; queda en run.json")
     args = parser.parse_args()
-    run_experiment(args.free_project_confirmed, args.experiment)
+    run_experiment(args.free_project_confirmed, args.experiment, args.billing_acknowledged, args.model)

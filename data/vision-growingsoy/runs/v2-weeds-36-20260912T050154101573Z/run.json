@@ -1,0 +1,499 @@
+{
+  "experiment": "v2-weeds-36",
+  "started_at": "2026-09-12T05:01:54.101573+00:00",
+  "model": "gemini-3.6-flash",
+  "provider": "Google Gemini API",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+  "configuration": {
+    "candidateCount": 1,
+    "maxOutputTokens": 8192,
+    "thinkingConfig": {
+      "thinkingLevel": "LOW"
+    },
+    "responseMimeType": "application/json",
+    "responseJsonSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason",
+        "limitations",
+        "polygons"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "assessed",
+            "not_assessable"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "timeout_seconds": 30,
+  "automatic_retries": 0,
+  "max_requests": 4,
+  "expected_crop": "soja",
+  "free_project_confirmed_by_operator": false,
+  "billing_acknowledged_by_operator": true,
+  "prompt_sha256": "4639e220b8a5f4c6d84ae3a8ea310f8b4c9351bf486e403b180eec677be1a983",
+  "script_sha256": "ff57e5858cb6acb540146d9bf38cd919b05563c4e5eb2037e49e612131e87db9",
+  "manifest_sha256": "c9663bb73ed2e61b45f863d26bbcdd19a1fbb470536b59e955c50d60cd01157c",
+  "pillow": "12.3.0",
+  "requests_sent": 4,
+  "blocked_reason": "HTTP_503",
+  "results": [
+    {
+      "id": "GW02",
+      "status": "assessed",
+      "image_path": "images/desarrollo/GW02.jpg",
+      "image_sha256": "e46ae8281690cfe9872f31c8d8f5ea8472b1ffa44756d39aee078957da2693dc",
+      "reference_pct": 19.3505859375,
+      "reference_sha256": "f8c0a208c55adb9551a5ac90f409cabdf680dbc0911531c8fae5843f3b91939f",
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 7.863506900000175,
+      "credential_redacted": false,
+      "raw_api_response": "GW02.response.bin",
+      "response": {
+        "status": "assessed",
+        "reason": "Se identificó vegetación correspondiente a soja en hileras bien delimitadas, así como una mata de maleza de hoja ancha con bordes dentados y morfología claramente diferenciable del cultivo en la sección central-inferior de la imagen.",
+        "limitations": [
+          "Presencia de rastrojo y objetos de señalización (cintas rojas/naranjas y cinta métrica) que parcial o totalmente ocluyen zonas del suelo y hojas."
+        ],
+        "polygons": [
+          [
+            [
+              409,
+              603
+            ],
+            [
+              430,
+              602
+            ],
+            [
+              457,
+              638
+            ],
+            [
+              489,
+              588
+            ],
+            [
+              512,
+              575
+            ],
+            [
+              509,
+              520
+            ],
+            [
+              519,
+              478
+            ],
+            [
+              564,
+              442
+            ],
+            [
+              602,
+              489
+            ],
+            [
+              640,
+              502
+            ],
+            [
+              639,
+              532
+            ],
+            [
+              600,
+              560
+            ],
+            [
+              677,
+              513
+            ],
+            [
+              715,
+              508
+            ],
+            [
+              747,
+              538
+            ],
+            [
+              744,
+              597
+            ],
+            [
+              754,
+              627
+            ],
+            [
+              710,
+              650
+            ],
+            [
+              752,
+              672
+            ],
+            [
+              747,
+              735
+            ],
+            [
+              712,
+              792
+            ],
+            [
+              695,
+              825
+            ],
+            [
+              667,
+              858
+            ],
+            [
+              640,
+              830
+            ],
+            [
+              624,
+              878
+            ],
+            [
+              602,
+              915
+            ],
+            [
+              644,
+              960
+            ],
+            [
+              630,
+              998
+            ],
+            [
+              569,
+              1000
+            ],
+            [
+              564,
+              967
+            ],
+            [
+              530,
+              995
+            ],
+            [
+              489,
+              990
+            ],
+            [
+              484,
+              953
+            ],
+            [
+              474,
+              908
+            ],
+            [
+              425,
+              905
+            ],
+            [
+              449,
+              857
+            ],
+            [
+              497,
+              830
+            ],
+            [
+              484,
+              762
+            ],
+            [
+              447,
+              755
+            ],
+            [
+              427,
+              703
+            ],
+            [
+              412,
+              655
+            ]
+          ]
+        ]
+      },
+      "weed_pct": 11.840576171875,
+      "absolute_error_pp": 7.510009765625,
+      "iou": 0.5762207910775532,
+      "both_empty": false,
+      "mask": "GW02.mask.png",
+      "comparison": "GW02.comparison.png"
+    },
+    {
+      "id": "GW01",
+      "status": "assessed",
+      "image_path": "images/desarrollo/GW01.jpg",
+      "image_sha256": "8098bf00a38ca29b78117295f7f08ad124caec8a149dd26c45772fc00df71dbc",
+      "reference_pct": 19.640625,
+      "reference_sha256": "174dfa6f237190e9e2f1d85088f29ccb8fd6b183ff274f3df3a8752292b710e9",
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 7.299800600000253,
+      "credential_redacted": false,
+      "raw_api_response": "GW01.response.bin",
+      "response": {
+        "status": "assessed",
+        "reason": "Se identificó exitosamente vegetación de malezas (principalmente latifoliadas no correspondientes a la morfología trifoliada de la soja) coexistiendo con el cultivo emergente de soja.",
+        "limitations": [
+          "Presencia de objetos de muestreo (cartel con número '205', cinta métrica, marcadores de color) parcialmente cubriendo la vegetación."
+        ],
+        "polygons": [
+          [
+            [
+              154,
+              0
+            ],
+            [
+              365,
+              0
+            ],
+            [
+              599,
+              58
+            ],
+            [
+              572,
+              222
+            ],
+            [
+              527,
+              461
+            ],
+            [
+              429,
+              574
+            ],
+            [
+              362,
+              451
+            ],
+            [
+              234,
+              437
+            ],
+            [
+              250,
+              240
+            ],
+            [
+              194,
+              187
+            ]
+          ],
+          [
+            [
+              748,
+              690
+            ],
+            [
+              825,
+              680
+            ],
+            [
+              825,
+              786
+            ],
+            [
+              770,
+              843
+            ],
+            [
+              754,
+              755
+            ]
+          ]
+        ]
+      },
+      "weed_pct": 17.500244140625,
+      "absolute_error_pp": 2.140380859375,
+      "iou": 0.7444585870400312,
+      "both_empty": false,
+      "mask": "GW01.mask.png",
+      "comparison": "GW01.comparison.png"
+    },
+    {
+      "id": "GW03",
+      "status": "assessed",
+      "image_path": "images/desarrollo/GW03.jpg",
+      "image_sha256": "0a17f51b685140eec1b6d52c627d13e2726b7e41c542b6da3f5f1a8bda8803ac",
+      "reference_pct": 10.204345703125,
+      "reference_sha256": "74f1736ccca654f4cee7bc6582f72cedbc28c845aed1ed161bf392f82208b8b5",
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 10.854449800000111,
+      "credential_redacted": false,
+      "raw_api_response": "GW03.response.bin",
+      "response": {
+        "status": "assessed",
+        "reason": "Se identifican plantas de cultivo de soja dispuestas en surcos junto a parches de malezas de hoja angosta (gramíneas) y algunas de hoja ancha no correspondientes al cultivo.",
+        "limitations": [],
+        "polygons": [
+          [
+            [
+              536,
+              0
+            ],
+            [
+              710,
+              0
+            ],
+            [
+              715,
+              78
+            ],
+            [
+              715,
+              160
+            ],
+            [
+              705,
+              273
+            ],
+            [
+              680,
+              375
+            ],
+            [
+              675,
+              470
+            ],
+            [
+              670,
+              570
+            ],
+            [
+              640,
+              580
+            ],
+            [
+              580,
+              545
+            ],
+            [
+              590,
+              430
+            ],
+            [
+              565,
+              305
+            ],
+            [
+              540,
+              195
+            ],
+            [
+              530,
+              95
+            ]
+          ],
+          [
+            [
+              470,
+              860
+            ],
+            [
+              575,
+              875
+            ],
+            [
+              590,
+              960
+            ],
+            [
+              560,
+              1000
+            ],
+            [
+              460,
+              1000
+            ],
+            [
+              460,
+              925
+            ]
+          ]
+        ]
+      },
+      "weed_pct": 9.426513671875,
+      "absolute_error_pp": 0.77783203125,
+      "iou": 0.6151373935400932,
+      "both_empty": false,
+      "mask": "GW03.mask.png",
+      "comparison": "GW03.comparison.png"
+    },
+    {
+      "id": "control",
+      "status": "api_error",
+      "image_path": "controls/no-interpretable.png",
+      "image_sha256": "56e4cd36830ae94733b8e1c3b2fd5141df5ea90bb7a58b4770987fae5b9fcf31",
+      "reference_pct": null,
+      "reference_sha256": null,
+      "http_status": 503,
+      "api_error": "HTTP_503",
+      "elapsed_seconds": 7.020056199999999,
+      "credential_redacted": false,
+      "raw_api_response": "control.response.bin",
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "control_pass": null,
+      "comparison": "control.comparison.png"
+    }
+  ],
+  "summary": {
+    "counts": {
+      "assessed": 3,
+      "api_error": 1
+    },
+    "mae_pp": 3.47607421875,
+    "mae_n": 3,
+    "mean_iou": 0.6452722572192259,
+    "iou_n": 3,
+    "both_empty_n": 0
+  }
+}

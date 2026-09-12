@@ -124,6 +124,14 @@ def main():
             assert run["experiment"] == "otro-experimento" and run["requests_sent"] == 4
             assert (runs / "otro-experimento.started.json").exists()
             assert (runs / f"{s.EXPERIMENT}.started.json").exists()
+        # La declaracion de gasto asumido tambien abre la puerta, y queda registrada aparte.
+        with (patch.object(s, "RUNS", runs),
+              patch.dict(s.os.environ, {"GEMINI_API_KEY": "synthetic-secret"}),
+              patch.object(s, "request_once", side_effect=list(synthetic))):
+            run = s.run_experiment(False, "con-facturacion", billing_acknowledged=True)
+            assert run["blocked_reason"] != "project_without_billing_not_confirmed"
+            assert run["billing_acknowledged_by_operator"] is True
+            assert run["free_project_confirmed_by_operator"] is False
         with patch.object(s, "RUNS", runs / "failure"), patch.dict(s.os.environ, {"GEMINI_API_KEY": "synthetic-secret"}), patch.object(
                 s, "request_once", return_value=({"http_status": 429, "api_error": "HTTP_429"}, b"quota")) as send:
             run = s.run_experiment(True)

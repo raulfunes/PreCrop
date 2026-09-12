@@ -141,6 +141,24 @@ Total histórico: cinco solicitudes de generación —una con HTTP 400, una con 
 
 `segment.py` acepta `--experiment` para nombrar la corrida sin editar el código, porque cada reintento necesita una reserva nueva. La protección no cambia: un nombre ya reservado sigue bloqueado, y `check_segment.py` comprueba ambas cosas. No se amplió la selección ni se abrieron las fotos del lado final.
 
+### Primera detección real de malezas — 12-sep-2026, 02:01 ART
+
+**`gemini-3.6-flash`, prompt v2, conjunto `weeds-v2`: 4/4 solicitudes, tres fotos evaluadas, MAE 3,4761 pp e IoU media 0,6453.** [Reporte y comparaciones](data/vision-growingsoy/runs/v2-weeds-36-20260912T050154101573Z/report.md).
+
+| Foto | Referencia | Contornos | Error | IoU | Tiempo |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GW02 | 19,3506% | 11,8406% | 7,5100 pp | 0,5762 | 7,9 s |
+| GW01 | 19,6406% | 17,5002% | 2,1404 pp | 0,7445 | 7,3 s |
+| GW03 | 10,2043% | 9,4265% | 0,7778 pp | 0,6151 | 10,9 s |
+
+Es el primer resultado del proyecto con detección de malezas evaluable. En GW01 el modelo marcó la mata grande de amaranto y la pequeña del borde inferior, sin marcar la soja circundante; la diferencia con la referencia es de contorno, no de localización: usa polígonos envolventes donde la anotación sigue el borde de cada hoja, que es la limitación ya anotada como `ponytail:` en el contrato. En GW02 subestimó: 11,84% frente a 19,35%.
+
+Los motivos devueltos citan la morfología del prompt v2 —«morfología trifoliada de la soja», «hoja ancha con bordes dentados», «hoja angosta (gramíneas)»—, lo que sugiere que las pistas discriminantes se usaron. Tres fotos no permiten atribuir la mejora al prompt: falta la comparación v1/v2 sobre el mismo conjunto y modelo.
+
+**El control no se comprobó:** quedó en HTTP 503 como cuarta solicitud, así que la abstención ante una imagen no interpretable sigue sin verificarse con este modelo.
+
+Camino hasta aquí: `gemini-3.8-flash` devolvió 503 en cuatro intentos y un timeout completo; `gemini-3.7-flash` también 503; `gemini-2.5-flash` respondió 404, retirado para cuentas nuevas, recomendando `gemini-3.6-flash`. El modelo quedó registrado en `run.json` y **estos resultados no son comparables con la corrida de GS08**, que usó `gemini-3.8-flash` y el prompt v1. `segment.py` acepta `--model` y `--experiment`; `--billing-acknowledged` declara que el proyecto puede facturar, sin fingir que no tiene facturación. Nada de esto acredita precisión agronómica ni generalización a otros cultivos.
+
 ## Prueba pública preparada
 
 [Conjunto y tabla de comparación](data/vision-growingsoy/EVALUACION.md) · [Manifiesto](data/vision-growingsoy/manifest.json) · [Prompt v1](data/vision-growingsoy/prompt.txt) · [Preparación y comprobación](data/vision-growingsoy/prepare.py).

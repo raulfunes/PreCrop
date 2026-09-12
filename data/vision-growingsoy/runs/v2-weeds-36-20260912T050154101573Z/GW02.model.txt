@@ -1,0 +1,52 @@
+{
+  "status": "assessed",
+  "reason": "Se identificó vegetación correspondiente a soja en hileras bien delimitadas, así como una mata de maleza de hoja ancha con bordes dentados y morfología claramente diferenciable del cultivo en la sección central-inferior de la imagen.",
+  "limitations": [
+    "Presencia de rastrojo y objetos de señalización (cintas rojas/naranjas y cinta métrica) que parcial o totalmente ocluyen zonas del suelo y hojas."
+  ],
+  "polygons": [
+    [
+      [409, 603],
+      [430, 602],
+      [457, 638],
+      [489, 588],
+      [512, 575],
+      [509, 520],
+      [519, 478],
+      [564, 442],
+      [602, 489],
+      [640, 502],
+      [639, 532],
+      [600, 560],
+      [677, 513],
+      [715, 508],
+      [747, 538],
+      [744, 597],
+      [754, 627],
+      [710, 650],
+      [752, 672],
+      [747, 735],
+      [712, 792],
+      [695, 825],
+      [667, 858],
+      [640, 830],
+      [624, 878],
+      [602, 915],
+      [644, 960],
+      [630, 998],
+      [569, 1000],
+      [564, 967],
+      [530, 995],
+      [489, 990],
+      [484, 953],
+      [474, 908],
+      [425, 905],
+      [449, 857],
+      [497, 830],
+      [484, 762],
+      [447, 755],
+      [427, 703],
+      [412, 655]
+    ]
+  ]
+}

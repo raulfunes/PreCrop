@@ -1,0 +1,28 @@
+{
+  "status": "assessed",
+  "reason": "Se identificó exitosamente vegetación de malezas (principalmente latifoliadas no correspondientes a la morfología trifoliada de la soja) coexistiendo con el cultivo emergente de soja.",
+  "limitations": [
+    "Presencia de objetos de muestreo (cartel con número '205', cinta métrica, marcadores de color) parcialmente cubriendo la vegetación."
+  ],
+  "polygons": [
+    [
+      [154, 0],
+      [365, 0],
+      [599, 58],
+      [572, 222],
+      [527, 461],
+      [429, 574],
+      [362, 451],
+      [234, 437],
+      [250, 240],
+      [194, 187]
+    ],
+    [
+      [748, 690],
+      [825, 680],
+      [825, 786],
+      [770, 843],
+      [754, 755]
+    ]
+  ]
+}

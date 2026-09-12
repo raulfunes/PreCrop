@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"Se identificó vegetación correspondiente a soja en hileras bien delimitadas, así como una mata de maleza de hoja ancha con bordes dentados y morfología claramente diferenciable del cultivo en la sección central-inferior de la imagen.\",\n  \"limitations\": [\n    \"Presencia de rastrojo y objetos de señalización (cintas rojas/naranjas y cinta métrica) que parcial o totalmente ocluyen zonas del suelo y hojas.\"\n  ],\n  \"polygons\": [\n    [\n      [409, 603],\n      [430, 602],\n      [457, 638],\n      [489, 588],\n      [512, 575],\n      [509, 520],\n      [519, 478],\n      [564, 442],\n      [602, 489],\n      [640, 502],\n      [639, 532],\n      [600, 560],\n      [677, 513],\n      [715, 508],\n      [747, 538],\n      [744, 597],\n      [754, 627],\n      [710, 650],\n      [752, 672],\n      [747, 735],\n      [712, 792],\n      [695, 825],\n      [667, 858],\n      [640, 830],\n      [624, 878],\n      [602, 915],\n      [644, 960],\n      [630, 998],\n      [569, 1000],\n      [564, 967],\n      [530, 995],\n      [489, 990],\n      [484, 953],\n      [474, 908],\n      [425, 905],\n      [449, 857],\n      [497, 830],\n      [484, 762],\n      [447, 755],\n      [427, 703],\n      [412, 655]\n    ]\n  ]\n}",
+            "thoughtSignature": "EmcKZQERTTIP0FHbQgRN2cyVpVmQHwsQINMPJKlT/ED6NFsF9sZ3RjAlNWJshIOo+IH3AZfu6+89OxUPbmxtWmBSdH5YOxMyUTBWwlTpJzLDAnlLbWlMphGgyOUEaDhHqK7nnVYjHrnB"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 629,
+    "totalTokenCount": 2712,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "xNykatK4C8D7qtsPjraskAk"
+}

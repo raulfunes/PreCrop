@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"Se identifican plantas de cultivo de soja dispuestas en surcos junto a parches de malezas de hoja angosta (gramíneas) y algunas de hoja ancha no correspondientes al cultivo.\",\n  \"limitations\": [],\n  \"polygons\": [\n    [\n      [536, 0],\n      [710, 0],\n      [715, 78],\n      [715, 160],\n      [705, 273],\n      [680, 375],\n      [675, 470],\n      [670, 570],\n      [640, 580],\n      [580, 545],\n      [590, 430],\n      [565, 305],\n      [540, 195],\n      [530, 95]\n    ],\n    [\n      [470, 860],\n      [575, 875],\n      [590, 960],\n      [560, 1000],\n      [460, 1000],\n      [460, 925]\n    ]\n  ]\n}",
+            "thoughtSignature": "EmcKZQERTTIPvFBP2BAZViZ2zanv9qc3LDijkbOuhAJBAEUhzIuL2efUijoVWjTBaI0obs3esE1E2t9txHakvxxNFEeC4C7CQVYrdb4aAIS45mN49T5OuMucBGlCnNZSJWP+jql58eJd"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 324,
+    "totalTokenCount": 2407,
+    "promptTokensDetails": [
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      },
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "09ykap2cM9mHz7IPy43AuQo"
+}
