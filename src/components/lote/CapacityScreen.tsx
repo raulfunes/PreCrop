@@ -208,7 +208,11 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
                   <span>Pico NDVI lote: {c.ndvi_peak !== null ? c.ndvi_peak.toFixed(3) : 's/d'}</span>
                   <span>Índice NDVI lote: {c.ndvi_index !== null ? c.ndvi_index.toFixed(3) : 's/d'}</span>
                   <span>Índice rinde dpto: {c.official_index !== null ? c.official_index.toFixed(3) : 's/d'}</span>
-                  <span>Desvío lote/dpto: {c.lote_vs_district !== null ? `${(c.lote_vs_district * 100).toFixed(2)} %` : 's/d'}</span>
+                  {c.lote_vs_district !== null ? (
+                    <span>Relación lote/dpto: {c.lote_vs_district.toFixed(4)}× · {(c.lote_vs_district - 1) > 0 ? '+' : ''}{((c.lote_vs_district - 1) * 100).toFixed(2)} %</span>
+                  ) : (
+                    <span>Relación lote/dpto: s/d</span>
+                  )}
                 </div>
               </div>
             );
@@ -220,7 +224,8 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
             <Info size={14} className="text-[var(--color-text-muted)] shrink-0 mt-0.5" />
             <div className="text-[12px] text-[var(--color-text-muted)] space-y-2">
               <p><strong className="text-[var(--color-ink)]">Representatividad estadística:</strong> {representativeness.basis} {representativeness.note}</p>
-              <p>Campañas pareadas: {representativeness.paired_campaigns}. Mediana desvío: {representativeness.lote_vs_district_median !== null ? `${(representativeness.lote_vs_district_median * 100).toFixed(2)} %` : 's/d'}. CV de los desvíos: {representativeness.lote_vs_district_cv !== null ? `${(representativeness.lote_vs_district_cv * 100).toFixed(2)} %` : 's/d'}. Banda aceptada: ±{(representativeness.band.max * 100).toFixed(0)}%.</p>
+              <p>Campañas pareadas: {representativeness.paired_campaigns}. Relación mediana lote/departamento: {representativeness.lote_vs_district_median !== null ? `${representativeness.lote_vs_district_median.toFixed(4)}×` : 's/d'}. Desvío mediano respecto del departamento: {representativeness.lote_vs_district_median !== null ? `${(representativeness.lote_vs_district_median - 1) > 0 ? '+' : ''}${((representativeness.lote_vs_district_median - 1) * 100).toFixed(2)} %` : 's/d'}. CV de los desvíos: {representativeness.lote_vs_district_cv !== null ? `${(representativeness.lote_vs_district_cv * 100).toFixed(2)} %` : 's/d'}.</p>
+              <p>Banda aceptada: {representativeness.band.min.toFixed(2)}×–{representativeness.band.max.toFixed(2)}×. Equivale a un desvío de {((representativeness.band.min - 1) * 100).toFixed(0)} % a {((representativeness.band.max - 1) * 100) > 0 ? '+' : ''}{((representativeness.band.max - 1) * 100).toFixed(0)} %.</p>
             </div>
           </div>
         </div>
@@ -247,7 +252,7 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
                 <AlertCircle size={20} className="text-[var(--color-danger)] shrink-0 mt-0.5" />
                 <div className="flex-1 space-y-3 text-[13px] text-[var(--color-ink)]">
                   <p>
-                    El enfoque puramente satelital (<span className="font-mono">{rejected_alternative.rule_version}</span>) fue descartado porque los modelos puramente basados en clima y NDVI del lote tienen un error inaceptable al contrastarlos con la realidad oficial medible a escala departamental.
+                    El enfoque que estimaba el rinde directamente desde el pico de NDVI (<span className="font-mono">{rejected_alternative.rule_version}</span>) fue descartado al contrastarlo con la serie oficial departamental.
                   </p>
 
                   <div className="bg-white/60 p-3 rounded border border-[var(--color-danger)]/10 text-[12px]">
