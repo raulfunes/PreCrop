@@ -156,7 +156,6 @@ export default function HomePage() {
                     publish={publish} 
                     disburse={disburse} 
                     advance={scoreData?.advance || null} 
-                    actionKey={actionKey}
                     disabled={isActionDisabled}
                   />
                 </DashSection>
