@@ -18,6 +18,7 @@ from PIL import Image, ImageChops, ImageDraw
 from prepare import ROOT, PILLOW_VERSION, digest, strict_json, union_mask, validate_response, write_json
 
 MODEL = "gemini-3.8-flash"
+EXPERIMENT = "segmentation-v1-request-v2"
 HOST = "generativelanguage.googleapis.com"
 ENDPOINT = f"/v1beta/models/{MODEL}:generateContent"
 IDS = ("GS08", "GS11", "GS15")
@@ -25,16 +26,17 @@ PROMPT = ROOT / "prompt-segmentation-v1.txt"
 RUNS = ROOT / "runs"
 TIMEOUT = 30
 MAX_RESPONSE = 1024 * 1024
+# ponytail: keep the provider grammar small; all size/range/geometry limits remain
+# in detection(). If provider limits become explicit, add only supported constraints here.
 SCHEMA = {
     "type": "object", "additionalProperties": False,
     "required": ["status", "reason", "limitations", "polygons"],
     "properties": {
         "status": {"type": "string", "enum": ["assessed", "not_assessable"]},
         "reason": {"type": "string"},
-        "limitations": {"type": "array", "maxItems": 8,
-                        "items": {"type": "string"}},
-        "polygons": {"type": "array", "maxItems": 64, "items": {
-            "type": "array", "minItems": 3, "maxItems": 128, "items": {
+        "limitations": {"type": "array", "items": {"type": "string"}},
+        "polygons": {"type": "array", "items": {
+            "type": "array", "items": {
                 "type": "array", "minItems": 2, "maxItems": 2,
                 "items": {"type": "number", "minimum": 0, "maximum": 1000}}}},
     },
@@ -225,7 +227,7 @@ def save_report(directory, run):
     write_json(directory / "run.json", run)
     def number(v):
         return "—" if v is None else f"{v:.4f}"
-    lines = ["# Segmentación v1 — primera prueba", "", f"Modelo: `{MODEL}`. Fecha UTC: {run['started_at']}.",
+    lines = [f"# Segmentación — {run['experiment']}", "", f"Modelo: `{MODEL}`. Fecha UTC: {run['started_at']}.",
              f"Solicitudes realizadas: {run['requests_sent']}/4. Bloqueo: {run['blocked_reason'] or 'ninguno'}.", "",
              "| Foto | Estado | Referencia % | Contornos % | Error pp | IoU | Ambas vacías |",
              "| --- | --- | ---: | ---: | ---: | ---: | --- |"]
@@ -272,21 +274,21 @@ def run_experiment(free_project_confirmed=False):
                 raise ValueError("Reference percentage mismatch")
         inputs.append((row, data, mime, rgb, reference))
     now = datetime.now(timezone.utc)
-    directory = RUNS / now.strftime("segmentation-v1-%Y%m%dT%H%M%S%fZ")
+    directory = RUNS / (EXPERIMENT + now.strftime("-%Y%m%dT%H%M%S%fZ"))
     directory.mkdir(parents=True)
     (directory / PROMPT.name).write_bytes(PROMPT.read_bytes())
     prompt = PROMPT.read_text(encoding="utf-8").replace("{{CULTIVO_ESPERADO}}", "soja")
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     blocked = "missing_GEMINI_API_KEY" if not key else (
         None if free_project_confirmed else "project_without_billing_not_confirmed")
-    budget = RUNS / "segmentation-v1.started.json"
+    budget = RUNS / f"{EXPERIMENT}.started.json"
     if not blocked:
         try:
             with budget.open("x", encoding="utf-8") as file:
                 json.dump({"run": directory.name, "maximum_requests": 4}, file)
         except FileExistsError:
             blocked = "four_request_experiment_already_reserved"
-    run = {"started_at": now.isoformat(), "model": MODEL, "provider": "Google Gemini API",
+    run = {"experiment": EXPERIMENT, "started_at": now.isoformat(), "model": MODEL, "provider": "Google Gemini API",
            "endpoint": f"https://{HOST}{ENDPOINT}", "configuration": CONFIG, "timeout_seconds": TIMEOUT,
            "automatic_retries": 0, "max_requests": 4, "expected_crop": "soja",
            "free_project_confirmed_by_operator": free_project_confirmed,

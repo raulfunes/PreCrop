@@ -1,12 +1,12 @@
 # Visión IA — MVP PreCrop
 
-**Etapa actual — 11-sep-2026:** primera prueba experimental de detección y repintado con Gemini `gemini-3.8-flash`, limitada a GS08, GS11, GS15 y un control. Implementación y comprobaciones locales disponibles; la primera solicitud real devolvió HTTP 400 (`INVALID_ARGUMENT`) y detuvo la corrida. Entrada: foto RGB + cultivo esperado «soja». Sin pantallas, score ni validación agronómica; no acredita funcionamiento en otros cultivos.
+**Etapa actual — 11-sep-2026:** prueba experimental de detección y repintado con Gemini `gemini-3.8-flash`, limitada a GS08, GS11, GS15 y un control. Tras revisar y simplificar el esquema enviado, GS08 devolvió contornos evaluables (0,6350% frente a referencia 0%; IoU 0). GS11 devolvió HTTP 503 por alta demanda y detuvo la corrida; GS15 y el control siguen pendientes. Entrada: foto RGB + cultivo esperado «soja». Sin pantallas, score ni validación agronómica; no acredita funcionamiento en otros cultivos.
 
 El UPDATE Builder anterior incluye visión dentro del futuro MVP, con revisión del agrónomo, partner de solo lectura y fallback manual/presets. Sus nombres de modelos son antecedentes, no una selección. Las propuestas de integración y score de las secciones siguientes siguen fuera de esta etapa. Alcance general: [PRECROP-LEER-ESTO.md](PRECROP-LEER-ESTO.md).
 
 ## Experimento de segmentación v1 — implementación y resultado
 
-[Script REST](data/vision-growingsoy/segment.py) · [Prompt de segmentación v1](data/vision-growingsoy/prompt-segmentation-v1.txt) · [Comprobación ejecutable sin red](data/vision-growingsoy/check_segment.py) · [Último reporte observado y comparaciones](data/vision-growingsoy/runs/segmentation-v1-20260912T024646050376Z/report.md).
+[Script REST](data/vision-growingsoy/segment.py) · [Prompt de segmentación v1](data/vision-growingsoy/prompt-segmentation-v1.txt) · [Comprobación ejecutable sin red](data/vision-growingsoy/check_segment.py) · [Último reporte observado y comparaciones](data/vision-growingsoy/runs/segmentation-v1-request-v2-20260912T025323507337Z/report.md).
 
 Esta ampliación reemplaza la etapa de «sin API ni proveedor» únicamente para este experimento local. Conserva intactos `prepare.py`, `prompt.txt` y el contrato anterior de estimación de porcentajes. No implementa aplicación, pantallas ni score.
 
@@ -20,7 +20,7 @@ La tabla de [precios oficial](https://ai.google.dev/gemini-api/docs/pricing), co
 
 Máximo cuatro solicitudes secuenciales en el experimento, sin reintentos ni redirecciones HTTP. Un proceso hijo de Python limita cada transporte completo (DNS/conexión/lectura) a 30 segundos; el padre termina y espera ese proceso ante timeout. La respuesta HTTP se acota a 1 MiB. Cualquier fallo HTTP, de transporte o exceso de tamaño detiene las solicitudes restantes. Una respuesta que incumple el contrato se registra y permite continuar con la siguiente foto dentro del presupuesto.
 
-Al iniciar la primera corrida con clave y proyecto confirmado, crea exclusivamente `runs/segmentation-v1.started.json`; otra ejecución no puede reservar el mismo experimento, ni siquiera si la primera se interrumpe. La reserva no se elimina automáticamente. Esto evita exceder cuatro solicitudes al relanzar o ejecutar simultáneamente. Una corrida bloqueada antes del acceso no consume la reserva. Revisar resultados y acordar otro experimento antes de habilitar más solicitudes; no borrar la reserva para reintentar esta prueba.
+Al iniciar una corrida con clave y proyecto confirmado, crea exclusivamente `runs/<EXPERIMENT>.started.json`; otra ejecución no puede reservar el mismo experimento, ni siquiera si la primera se interrumpe. La reserva no se elimina automáticamente. Esto evita exceder cuatro solicitudes al relanzar o ejecutar simultáneamente. Una corrida bloqueada antes del acceso no consume la reserva. La primera revisión conserva `segmentation-v1.started.json`; el reintento solicitado por el usuario usa `segmentation-v1-request-v2.started.json`. Revisar resultados y acordar otro experimento antes de habilitar más solicitudes; no borrar las reservas para reintentar.
 
 ### Contrato de segmentación y cálculo
 
@@ -91,6 +91,29 @@ La [corrida real](data/vision-growingsoy/runs/segmentation-v1-20260912T024646050
 **Resultado:** la solicitud fue rechazada por la API antes de obtener una respuesta de segmentación. No hay aciertos, errores de localización, máscaras predichas ni porcentajes del modelo que evaluar; MAE e IoU permanecen nulos. Los PNG muestran la foto y referencia con panel central sin resultado. La respuesta HTTP, tiempo, configuración, hashes y estado por foto quedan en el [reporte](data/vision-growingsoy/runs/segmentation-v1-20260912T024646050376Z/report.md).
 
 Se conserva `runs/segmentation-v1.started.json`: el presupuesto quedó reservado y el script no retomará automáticamente las otras tres solicitudes. Próximo paso: revisar el rechazo de la API y acordar una prueba corregida antes de enviar más imágenes; no interpretar este fallo de integración como evidencia de mala calidad de detección. Las seis fotos finales siguen reservadas.
+
+### Reintento autorizado con solicitud revisada — 11-sep-2026, 23:53 ART
+
+El usuario pidió volver a intentarlo revisando el envío. Se consultaron las guías oficiales de [imágenes](https://ai.google.dev/gemini-api/docs/image-understanding), [generateContent](https://ai.google.dev/api/generate-content), [modelos](https://ai.google.dev/api/models) y [salida estructurada](https://ai.google.dev/gemini-api/docs/structured-output#limitations). La [consulta real de metadatos](data/vision-growingsoy/runs/model-access-check.json) devolvió HTTP 200 para `gemini-3.8-flash` y confirmó `generateContent` entre sus métodos. Comprueba acceso al modelo, no estado de facturación.
+
+La documentación advierte que el proveedor puede rechazar esquemas complejos. Se simplificó solo el esquema enviado: se quitaron `maxItems: 64` para contornos, `minItems: 3` / `maxItems: 128` para vértices y `maxItems: 8` para limitaciones. Se conservó el par `[x,y]` y sus rangos en el esquema. Todos los límites siguen en el prompt y la validación local, con comprobaciones ejecutables de exceso de contornos/vértices. Modelo, endpoint, JSON estructurado, razonamiento LOW, tokens e imágenes permanecen iguales.
+
+**El esquema reducido fue aceptado para GS08.** Esto respalda la hipótesis de rechazo por complejidad, pero no identifica con certeza qué restricción produjo el HTTP 400 anterior. No se necesita un SDK ni una API diferente para obtener respuesta con esta clave.
+
+| Foto | Resultado | Cobertura de contornos | Error absoluto | IoU |
+| --- | --- | ---: | ---: | ---: |
+| GS08 | HTTP 200, `assessed`, dos contornos | 0,635009765625% | 0,635009765625 pp | 0 |
+| GS11 | HTTP 503, alta demanda (`UNAVAILABLE`) | `null` | `null` | `null` |
+| GS15 | No enviada tras el fallo de GS11 | `null` | `null` | `null` |
+| Control | No enviado tras el fallo de GS11 | `null` | No aplicable | No aplicable |
+
+[Reporte y comparación](data/vision-growingsoy/runs/segmentation-v1-request-v2-20260912T025323507337Z/report.md) · [Máscara GS08](data/vision-growingsoy/runs/segmentation-v1-request-v2-20260912T025323507337Z/GS08.mask.png) · [Respuesta del modelo](data/vision-growingsoy/runs/segmentation-v1-request-v2-20260912T025323507337Z/GS08.model.txt).
+
+En GS08 la referencia es vacía: los 2.601 píxeles marcados son falsos positivos respecto de las anotaciones. La inspección muestra dos regiones sobre vegetación central que incluyen partes del fondo/rastrojo; no hay un ejemplo de maleza correctamente localizada en esta corrida. Se comprobó que la máscara PNG coincide exactamente con la rasterización de los polígonos y con los 2.601 píxeles repintados. La representación y el cálculo funcionan; la clasificación de esta foto falla contra la referencia. No se ha validado agronómicamente.
+
+El MAE (0,6350 pp) y la IoU media (0) incluyen **solo 1/3 fotos**, por lo que no permiten evaluar calidad global ni abstención del control. El HTTP 503 de GS11 es un fallo de disponibilidad reportado por Google, distinto del HTTP 400 de la corrida anterior. Se hicieron dos solicitudes de generación en esta corrida, sin reintentos automáticos; total histórico: tres solicitudes de generación más una consulta de metadatos. Todas las corridas y reservas quedan preservadas. No se enviaron referencias, overlays ni fotos finales.
+
+Próximo trabajo, tras revisar estos resultados: una nueva ejecución autorizada para las fotos pendientes cuando el servicio esté disponible; no repetir GS08 para escoger una respuesta más favorable ni ampliar automáticamente a las nueve de desarrollo.
 
 ## Prueba pública preparada
 

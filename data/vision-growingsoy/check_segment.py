@@ -38,7 +38,8 @@ def main():
     assert s.metrics(mixed, mask)["iou"] == 14 / (60 - mixed.histogram()[0])
     _, abstain = s.detection(response([], "not_assessable"), mask.size)
     assert abstain is None and s.metrics(abstain, mask)["weed_pct"] is None
-    invalid = [response([triangle], "not_assessable"), response([], "estimated"), "{}", "null", "[]",
+    invalid = [response([triangle] * 65), response([triangle * 43]),
+               response([triangle], "not_assessable"), response([], "estimated"), "{}", "null", "[]",
                response([]).replace('"polygons": []', '"polygons": [], "polygons": []')]
     for polygon in ([], [[0, 0], [1, 1]], [[0, 0], [1, 1], [2, 2]],
                     [[0, 0], [100, 0], [100, 100], [0, 100]],
@@ -69,6 +70,8 @@ def main():
     body = s.payload(b"image-only", "image/jpeg", "prompt soja")
     assert base64.b64decode(body["contents"][0]["parts"][1]["inlineData"]["data"]) == b"image-only"
     assert set(body) == {"contents", "generationConfig"} and len(body["contents"][0]["parts"]) == 2
+    provider_polygons = body["generationConfig"]["responseJsonSchema"]["properties"]["polygons"]
+    assert "maxItems" not in provider_polygons and "maxItems" not in provider_polygons["items"]
     with patch.object(s.http.client, "HTTPSConnection") as connection:
         connection.return_value.request.side_effect = TimeoutError
         transport, raw = s.http_once(body, "synthetic-secret")

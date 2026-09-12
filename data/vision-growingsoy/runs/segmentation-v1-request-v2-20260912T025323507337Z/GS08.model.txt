@@ -1,0 +1,32 @@
+{
+  "status": "assessed",
+  "reason": "Se observa un cultivo de soja en emergencia/estado vegetativo temprano dispuesto en hileras con cobertura de rastrojo y algunas plántulas de malezas de hoja angosta/ramificada intercaladas en el entresurco.",
+  "limitations": [
+    "Presencia de rastrojo seco abundante y objetos de señalización (cintas y estacas) en la parcela."
+  ],
+  "polygons": [
+    [
+      [507, 281],
+      [523, 277],
+      [539, 290],
+      [547, 329],
+      [572, 363],
+      [575, 412],
+      [554, 403],
+      [552, 355],
+      [515, 332]
+    ],
+    [
+      [430, 147],
+      [447, 146],
+      [457, 168],
+      [474, 192],
+      [498, 203],
+      [500, 222],
+      [474, 237],
+      [455, 222],
+      [457, 196],
+      [427, 179]
+    ]
+  ]
+}
