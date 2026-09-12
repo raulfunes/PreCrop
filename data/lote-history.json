@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "pack_version": "1.0.0",
+  "lote_id": "demo-rio-segundo-01",
+  "rule_version": "capacidad-v1",
+  "purpose": "Per-campaign NDVI peak and Dec-Feb rain for the lote. Input to the capacidad-v1 pre-sowing limit, which sizes the advance against the worst year this lote already had. Not a yield model: NDVI is turned into tons by a transparent linear rule, which is why the series is published next to official yields for contrast.",
+  "generated_at_utc": "2026-09-12T09:32:13Z",
+  "method": {
+    "aoi_bbox": [
+      -63.7254,
+      -31.4245,
+      -63.7146,
+      -31.4155
+    ],
+    "ndvi_stat": "median",
+    "ndvi_formula": "NDVI = (B08 - B04) / (B08 + B04)",
+    "boa_formula": "BOA = (DN + BOA_ADD_OFFSET) / 10000; offset = -1000 for processing_baseline >= 04.00, else 0",
+    "peak_rule": "highest per-scene NDVI median inside the campaign window",
+    "peak_window": "15-01 to 15-03 of the harvest year",
+    "rain_window": "1 Dec of the sowing year to the last day of Feb of the harvest year",
+    "cloud_max_pct": 10.0,
+    "cloud_max_pct_widened": 25.0,
+    "min_valid_pixels": 8000,
+    "gap_policy": "a campaign with no usable scene is published with ndvi_peak null and a gap_reason; gaps are never imputed or coerced to zero",
+    "refs": [
+      "https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a",
+      "https://open-meteo.com/en/docs/historical-weather-api"
+    ]
+  },
+  "coverage": {
+    "campaigns_total": 7,
+    "campaigns_measured": 7,
+    "campaigns_with_gap": 0
+  },
+  "campaigns": [
+    {
+      "campana": "2018/19",
+      "peak_window": {
+        "start": "2019-01-15",
+        "end": "2019-03-15"
+      },
+      "rain_window": {
+        "start": "2018-12-01",
+        "end": "2019-02-28"
+      },
+      "rain_dec_feb_mm": 583.7,
+      "rain_source": "measured",
+      "scenes_evaluated": 3,
+      "cloud_max_pct": 10.0,
+      "scene_id": "S2A_MSIL2A_20190219T141041_R110_T20JML_20201007T182507",
+      "date": "2019-02-19",
+      "cloud_cover_pct": 0.03,
+      "processing_baseline": "02.12",
+      "offset_applied": 0.0,
+      "crs_epsg": 32720,
+      "n_pixels": 10300,
+      "ndvi_peak": 0.8964,
+      "ndvi_norm": 100.0,
+      "ndvi_stat": "median",
+      "ndvi_source": "measured"
+    },
+    {
+      "campana": "2019/20",
+      "peak_window": {
+        "start": "2020-01-15",
+        "end": "2020-03-15"
+      },
+      "rain_window": {
+        "start": "2019-12-01",
+        "end": "2020-02-29"
+      },
+      "rain_dec_feb_mm": 411.0,
+      "rain_source": "measured",
+      "scenes_evaluated": 6,
+      "cloud_max_pct": 10.0,
+      "scene_id": "S2B_MSIL2A_20200219T140649_R110_T20JML_20200930T015337",
+      "date": "2020-02-19",
+      "cloud_cover_pct": 0.03,
+      "processing_baseline": "02.12",
+      "offset_applied": 0.0,
+      "crs_epsg": 32720,
+      "n_pixels": 10300,
+      "ndvi_peak": 0.8442,
+      "ndvi_norm": 99.1127,
+      "ndvi_stat": "median",
+      "ndvi_source": "measured"
+    },
+    {
+      "campana": "2020/21",
+      "peak_window": {
+        "start": "2021-01-15",
+        "end": "2021-03-15"
+      },
+      "rain_window": {
+        "start": "2020-12-01",
+        "end": "2021-02-28"
+      },
+      "rain_dec_feb_mm": 481.6,
+      "rain_source": "measured",
+      "scenes_evaluated": 4,
+      "cloud_max_pct": 10.0,
+      "scene_id": "S2A_MSIL2A_20210218T141051_R110_T20JML_20210219T143757",
+      "date": "2021-02-18",
+      "cloud_cover_pct": 0.08,
+      "processing_baseline": "02.12",
+      "offset_applied": 0.0,
+      "crs_epsg": 32720,
+      "n_pixels": 10300,
+      "ndvi_peak": 0.8844,
+      "ndvi_norm": 100.0,
+      "ndvi_stat": "median",
+      "ndvi_source": "measured"
+    },
+    {
+      "campana": "2021/22",
+      "peak_window": {
+        "start": "2022-01-15",
+        "end": "2022-03-15"
+      },
+      "rain_window": {
+        "start": "2021-12-01",
+        "end": "2022-02-28"
+      },
+      "rain_dec_feb_mm": 279.9,
+      "rain_source": "measured",
+      "scenes_evaluated": 6,
+      "cloud_max_pct": 10.0,
+      "scene_id": "S2A_MSIL2A_20220213T141051_R110_T20JML_20220222T204511",
+      "date": "2022-02-13",
+      "cloud_cover_pct": 0.0,
+      "processing_baseline": "04.00",
+      "offset_applied": -1000.0,
+      "crs_epsg": 32720,
+      "n_pixels": 10300,
+      "ndvi_peak": 0.8142,
+      "ndvi_norm": 94.4931,
+      "ndvi_stat": "median",
+      "ndvi_source": "measured"
+    },
+    {
+      "campana": "2022/23",
+      "peak_window": {
+        "start": "2023-01-15",
+        "end": "2023-03-15"
+      },
+      "rain_window": {
+        "start": "2022-12-01",
+        "end": "2023-02-28"
+      },
+      "rain_dec_feb_mm": 370.7,
+      "rain_source": "measured",
+      "scenes_evaluated": 6,
+      "cloud_max_pct": 10.0,
+      "scene_id": "S2A_MSIL2A_20230218T140701_R110_T20JML_20230220T193728",
+      "date": "2023-02-18",
+      "cloud_cover_pct": 0.0,
+      "processing_baseline": "04.00",
+      "offset_applied": -1000.0,
+      "crs_epsg": 32720,
+      "n_pixels": 10300,
+      "ndvi_peak": 0.7741,
+      "ndvi_norm": 88.327,
+      "ndvi_stat": "median",
+      "ndvi_source": "measured"
+    },
+    {
+      "campana": "2023/24",
+      "peak_window": {
+        "start": "2024-01-15",
+        "end": "2024-03-15"
+      },
+      "rain_window": {
+        "start": "2023-12-01",
+        "end": "2024-02-29"
+      },
+      "rain_dec_feb_mm": 508.1,
+      "rain_source": "measured",
+      "scenes_evaluated": 3,
+      "cloud_max_pct": 10.0,
+      "scene_id": "S2A_MSIL2A_20240124T140701_R110_T20JML_20240124T211301",
+      "date": "2024-01-24",
+      "cloud_cover_pct": 0.25,
+      "processing_baseline": "05.10",
+      "offset_applied": -1000.0,
+      "crs_epsg": 32720,
+      "n_pixels": 10300,
+      "ndvi_peak": 0.7633,
+      "ndvi_norm": 86.6653,
+      "ndvi_stat": "median",
+      "ndvi_source": "measured"
+    },
+    {
+      "campana": "2024/25",
+      "peak_window": {
+        "start": "2025-01-15",
+        "end": "2025-03-15"
+      },
+      "rain_window": {
+        "start": "2024-12-01",
+        "end": "2025-02-28"
+      },
+      "rain_dec_feb_mm": 247.0,
+      "rain_source": "measured",
+      "scenes_evaluated": 3,
+      "cloud_max_pct": 10.0,
+      "scene_id": "S2B_MSIL2A_20250202T140709_R110_T20JML_20250202T175010",
+      "date": "2025-02-02",
+      "cloud_cover_pct": 0.0,
+      "processing_baseline": "05.11",
+      "offset_applied": -1000.0,
+      "crs_epsg": 32720,
+      "n_pixels": 10300,
+      "ndvi_peak": 0.7823,
+      "ndvi_norm": 89.5851,
+      "ndvi_stat": "median",
+      "ndvi_source": "measured"
+    }
+  ]
+}

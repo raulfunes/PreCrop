@@ -2,12 +2,14 @@
 //   GET  /health                -> { ok, pack_version, publisher }
 //   GET  /pack                  -> list of public pack files
 //   GET  /pack/<name>           -> raw JSON from data/ (whitelisted)
+//   GET  /capacity              -> per-campaign series, worst year, pre-sowing limit
 //   POST /score   { scenario, weeds_pct? }  -> score + evidence payload + sha256
 //   POST /publish { scenario, weeds_pct? }  -> same + Solana memo tx (oracle)
 import { createServer } from "node:http";
 import { existsSync } from "node:fs";
 import { loadPack, readPublicFile, PUBLIC_FILES } from "./pack.js";
 import { buildEvidence, memoText } from "./evidence.js";
+import { buildCapacity } from "./capacity.js";
 import { loadKeypair, publishMemo, DEFAULT_RPC_URL } from "./memo.js";
 
 const PORT = Number(process.env.PORT ?? 8787);
@@ -85,6 +87,10 @@ const server = createServer(async (req, res) => {
       const raw = readPublicFile(url.pathname.slice("/pack/".length));
       if (raw === null) return send(res, 404, { error: "unknown pack file" });
       return send(res, 200, raw, "application/json", true);
+    }
+
+    if (req.method === "GET" && url.pathname === "/capacity") {
+      return send(res, 200, buildCapacity(pack));
     }
 
     if (req.method === "POST" && url.pathname === "/score") {

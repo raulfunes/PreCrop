@@ -13,6 +13,7 @@ npm start           # http://localhost:8787
 |---|---|---|
 | GET | `/health` | Versión del pack, pubkey del publicador |
 | GET | `/pack` · `/pack/<archivo>` | Los JSON de `data/` (lista blanca) |
+| GET | `/capacity` | Serie NDVI por campana (2018/19-2024/25), ano malo, estabilidad y cupo pre-siembra. Publica el cupo solo si el estimador reproduce la serie oficial de rindes; si no, lo retiene con el motivo |
 | POST | `/score` | `{ "scenario": "malo", "weeds_pct": 61 }` → score, banda, `score_bp`, payload de evidencia y `content_sha256` |
 | POST | `/publish` | Lo mismo, y además manda una transacción Memo firmada por la wallet publicadora. Devuelve `signature` y `explorer_url` |
 
