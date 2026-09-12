@@ -19,6 +19,11 @@ npm start           # http://localhost:8787
 | POST | `/disburse` | MOCK del pago por Twin en ARGt: valida rojo y límite, devuelve un recibo simulado |
 | GET | `/capacity` | Historial por campaña, peor campaña, estabilidad y cupo pre-siembra (regla `capacidad-v1`); cruza `rindes-oficiales.json` si existe |
 | GET | `/report/<escenario>` | Informe de una página en markdown para el comité (`?signature=&explorer_url=&weeds_pct=` opcionales) |
+| GET | `/lotes` | Lotes disponibles: el demo commiteado más los creados en vivo |
+| POST | `/lotes` | `{ "name": "...", "geometry": <GeoJSON Polygon> }` → crea un lote en vivo (~20 s): departamento (Georef), serie oficial (MAGyP), 7 campañas de NDVI y escenarios de la última campaña calculados por la API de estadísticas de Planetary Computer sobre el polígono. Devuelve capacidad, condición bueno/malo, puntos e historial |
+| GET | `/lotes/<id>` | Geometría, presets, puntos, serie oficial e historial de un lote |
+
+**Todas las rutas aceptan `?lote=<id>`** y usan el lote demo si no se indica. Los lotes creados en vivo se guardan en `data/lotes/` (fuera de git) y se recargan al reiniciar.
 
 `weeds_pct` es opcional: si Visión lo manda, se usa y queda etiquetado `estimated`; si no, se usa el valor simulado del pack.
 
