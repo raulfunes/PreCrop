@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       let res;
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        const timeoutId = setTimeout(() => controller.abort(), 90000);
         res = await fetch(`${backendUrl}/api/vision/weeds`, {
           method: 'POST',
           body: backendFormData,
