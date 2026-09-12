@@ -27,13 +27,18 @@ export function loadPack() {
   const scenarios = readJson("demo-scenarios.json");
   const points = readJson("photo-point-presets.json");
   const economics = readJson("lote-economics.json");
-  const versions = new Set([presets.pack_version, scenarios.pack_version, points.pack_version, economics.pack_version]);
-  if (versions.size !== 1) throw new Error(`pack_version mismatch across files: ${[...versions].join(", ")}`);
   // Optional files: the per-campaign history (scripts/build_history.py) and the
-  // official department yields the team collects by hand:
-  //   data/rindes-oficiales.json = { "source": "...", "unit": "t/ha", "campaigns": { "2018/19": 3.5, ... } }
+  // official department yields (scripts/build_rindes_oficiales.py). The service
+  // still boots without them -- /score falls back and /capacity answers 503 --
+  // but when present they must agree on pack_version like everything else.
   const history = existsSync(join(DATA_DIR, "lote-history.json")) ? readJson("lote-history.json") : null;
   const official = existsSync(join(DATA_DIR, "rindes-oficiales.json")) ? readJson("rindes-oficiales.json") : null;
+  const versions = new Set([
+    presets.pack_version, scenarios.pack_version, points.pack_version, economics.pack_version,
+    ...(history ? [history.pack_version] : []),
+    ...(official ? [official.pack_version] : []),
+  ]);
+  if (versions.size !== 1) throw new Error(`pack_version mismatch across files: ${[...versions].join(", ")}`);
   return { presets, scenarios, points, economics, history, official, pack_version: presets.pack_version };
 }
 
@@ -50,6 +55,7 @@ export function historyPeaks(history) {
       ndvi_min_in_window: c.scenes_evaluated.length ? Math.min(...c.scenes_evaluated.map((s) => s.median)) : null,
       rain_dec_feb_mm: c.rain_dec_feb_mm ?? null,
     }));
+
 }
 
 /** Flat numbers for the advance rule, read from lote-economics.json (each value carries its own source there). */

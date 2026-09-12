@@ -85,3 +85,99 @@ export interface AdvanceLimit {
 export const ADVANCE_RULE_VERSION: string;
 export function explainFactors(result: ScoreResult, inputs: ScoreInputs, sources?: Partial<Record<"ndvi" | "rain" | "weeds", string>>): Factor[];
 export function advanceLimit(result: ScoreResult, econ: Economics): AdvanceLimit;
+
+export interface LoteHistory {
+  campaigns: Array<{
+    campaign: string;
+    peak: { date: string; scene_id: string; ndvi: number; ndvi_stats: { median: number } } | null;
+    rain_dec_feb_mm?: number | null;
+  }>;
+}
+export interface OfficialYields {
+  campaigns: Array<{ campana: string; rinde_dpto_kg_ha: number | null; rinde_prov_kg_ha: number | null }>;
+}
+
+export interface CapacityV2SeriesRow {
+  campana: string;
+  official_dpto_kg_ha: number | null;
+  ndvi_peak: number | null;
+  ndvi_index: number | null;
+  official_index: number | null;
+  lote_vs_district: number | null;
+  status: "paired" | "unpaired";
+}
+export interface CapacityV2 {
+  rule_version: string;
+  series: CapacityV2SeriesRow[];
+  worst_year: {
+    campana: string;
+    official_dpto_kg_ha: number;
+    yield_t_ha: number;
+    source: string;
+    basis: string;
+  } | null;
+  district_volatility: { cv: number | null; basis: string; note: string };
+  representativeness: {
+    representative: boolean;
+    lote_vs_district_median: number | null;
+    lote_vs_district_cv: number | null;
+    band: { min: number; max: number };
+    paired_campaigns: number;
+    reasons: string[];
+    basis: string;
+    note: string;
+  };
+  pre_sowing_limit: {
+    usd: number | null;
+    ars: number | null;
+    usd_if_representative: number | null;
+    status: "allowed" | "blocked_unrepresentative";
+    formula: string;
+    basis: string;
+    note: string;
+  };
+  reference: { ha: number; price_usd_t: number; haircut: number; fx_ars_per_usd: number | null };
+}
+
+export const CAPACITY_V2_RULE_VERSION: string;
+export function capacityFromOfficial(history: LoteHistory, econ: Economics, official: OfficialYields): CapacityV2;
+
+export interface AdvanceFloor {
+  campana: string | null;
+  yield_t_ha: number | null;
+  source?: string;
+  available: boolean;
+}
+export interface AdvanceLimitV2 {
+  rule_version: string;
+  condition_index: number;
+  light: Light;
+  floor: {
+    campana: string | null;
+    yield_t_ha: number | null;
+    value_usd: number | null;
+    source: string;
+    available: boolean;
+    basis: string;
+  };
+  advance_limit: {
+    usd: number | null;
+    ars: number | null;
+    ceiling_usd: number | null;
+    pct_of_ceiling: number;
+    new_disbursements: "allowed" | "review" | "blocked" | "blocked_no_capacity";
+    formula: string;
+    note: string;
+  };
+  benchmark: { flat_pct: number; usd: number | null; note: string };
+  reference: {
+    ha: number;
+    price_usd_t: number;
+    haircut: number;
+    fx_ars_per_usd: number | null;
+    floor_value_usd: number | null;
+  };
+}
+
+export const ADVANCE_V2_RULE_VERSION: string;
+export function advanceLimitFromFloor(result: ScoreResult, econ: Economics, floor: AdvanceFloor | null): AdvanceLimitV2;

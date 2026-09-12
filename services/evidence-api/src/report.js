@@ -1,7 +1,7 @@
 // One-page committee report (markdown). What a coop credit committee signs:
 // capacity (pre-sowing quota against the worst campaign), current condition
 // (index, factors, suggested limit), sources, rule versions, evidence hash.
-import { capacity } from "@precrop/score";
+import { capacityFromOfficial } from "@precrop/score";
 import { buildEvidence, memoText } from "./evidence.js";
 import { economicsInputs, historyPeaks } from "./pack.js";
 
@@ -19,8 +19,9 @@ export function committeeReport(scenario, pack, opts = {}) {
   const ev = buildEvidence(scenario, pack, override);
   const econ = economicsInputs(pack.economics);
   const peaks = historyPeaks(pack.history);
+  const peaksByCampaign = new Map(peaks.map((p) => [p.campaign, p]));
   const official = pack.official?.campaigns ?? {};
-  const cap = peaks.length ? capacity(peaks, econ, official) : null;
+  const cap = pack.history && pack.official ? capacityFromOfficial(pack.history, econ, pack.official) : null;
   const sat = pack.presets.presets[pack.scenarios.scenarios[scenario].satellite_preset];
   const today = new Date().toISOString().slice(0, 10);
   const L = [];
@@ -37,21 +38,26 @@ export function committeeReport(scenario, pack, opts = {}) {
   if (!cap) {
     L.push("_Sin historial cargado (`data/lote-history.json`)._");
   } else {
-    L.push("| Campaña | Pico NDVI | Mín. en ventana | Lluvia dic–feb | Rinde estimado | Rinde oficial | Desvío |");
-    L.push("|---|---|---|---|---|---|---|");
-    for (const r of cap.campaigns) {
-      const mark = r.campaign === cap.worst_campaign.campaign ? " **(peor)**" : "";
+    L.push("| Campaña | Rinde oficial dpto. | Pico NDVI | Lluvia dic–feb | Lote / dpto. |");
+    L.push("|---|---|---|---|---|");
+    for (const r of cap.series) {
+      const mark = r.campana === cap.worst_year?.campana ? " **(peor)**" : "";
+      const peak = peaksByCampaign.get(r.campana);
       L.push(
-        `| ${r.campaign}${mark} | ${r.ndvi.toFixed(3)} | ${r.ndvi_min_in_window === null ? "s/d" : r.ndvi_min_in_window.toFixed(3)} | ${r.rain_dec_feb_mm === null ? "s/d" : r.rain_dec_feb_mm + " mm"} | ${r.yield_est_t_ha.toFixed(2)} t/ha | ${r.official_yield_t_ha === null ? "s/d" : r.official_yield_t_ha.toFixed(2) + " t/ha"} | ${r.error_vs_official_pct === null ? "s/d" : r.error_vs_official_pct + " %"} |`,
+        `| ${r.campana}${mark} | ${r.official_dpto_kg_ha === null ? "s/d" : r.official_dpto_kg_ha + " kg/ha"} | ${r.ndvi_peak === null ? "s/d" : r.ndvi_peak.toFixed(3)} | ${peak?.rain_dec_feb_mm == null ? "s/d" : peak.rain_dec_feb_mm + " mm"} | ${r.lote_vs_district === null ? "s/d" : r.lote_vs_district.toFixed(2)} |`,
       );
     }
     L.push("");
-    L.push(`- Campañas evaluadas: ${cap.n_campaigns}. Rinde medio estimado: ${cap.mean_yield_t_ha} t/ha. Estabilidad: ${cap.stability.label} (CV ${cap.stability.cv_pct} %).`);
-    L.push(`- **Peor campaña: ${cap.worst_campaign.campaign}**, ${cap.worst_campaign.yield_est_t_ha} t/ha → ${cap.worst_campaign.tons_est} t.`);
-    L.push(`- **Cupo pre-siembra sugerido: ${fmtUsd(cap.pre_sowing_quota.usd)} (${fmtArs(cap.pre_sowing_quota.ars)})**, ${cap.pre_sowing_quota.pct_of_reference_value} % del valor de referencia. Fórmula: ${cap.pre_sowing_quota.formula}, haircut ${cap.pre_sowing_quota.haircut}.`);
-    L.push(`- Contraste oficial: ${cap.contrast_official.campaigns_with_official ? `${cap.contrast_official.campaigns_with_official} campañas, error medio ${cap.contrast_official.mean_abs_error_pct} %` : "pendiente (falta data/rindes-oficiales.json)"}.`);
+    L.push(`- Campañas pareadas: ${cap.representativeness.paired_campaigns}. Volatilidad del departamento: CV ${cap.district_volatility.cv}.`);
+    L.push(`- **Peor campaña del departamento: ${cap.worst_year.campana}**, ${cap.worst_year.official_dpto_kg_ha} kg/ha (${cap.worst_year.yield_t_ha} t/ha), rinde publicado por el MAGyP, no estimado.`);
+    if (cap.pre_sowing_limit.usd === null) {
+      L.push(`- **Cupo pre-siembra: retenido.** ${cap.pre_sowing_limit.note} Motivos: ${cap.representativeness.reasons.join("; ")}.`);
+    } else {
+      L.push(`- **Cupo pre-siembra sugerido: ${fmtUsd(cap.pre_sowing_limit.usd)} (${fmtArs(cap.pre_sowing_limit.ars)})**. Fórmula: ${cap.pre_sowing_limit.formula}, haircut ${cap.reference.haircut}.`);
+    }
+    L.push(`- El lote sigue a su departamento (relación mediana ${cap.representativeness.lote_vs_district_median}, banda ${cap.representativeness.band.min}–${cap.representativeness.band.max}), que es lo que habilita usar el rinde departamental como piso. El NDVI habilita la regla; no multiplica el cupo.`);
     L.push("");
-    L.push("_El pico de NDVI mide canopia, no llenado de grano: una seca de enero puede verse en la columna \"mín. en ventana\" y no en el pico. Por eso el contraste con los rindes oficiales no es decorativo._");
+    L.push("_El cupo no se lee del satélite. Estimar toneladas desde el pico de NDVI (regla `capacidad-v1`) ubica el peor año en 2023/24 y no en 2022/23, con un error medio del 28,6 % contra los rindes oficiales: el pico mide canopia, no llenado de grano. Por eso el piso sale de la serie oficial y el NDVI solo verifica que el lote siga a su departamento._");
   }
   L.push("");
 
@@ -65,8 +71,12 @@ export function committeeReport(scenario, pack, opts = {}) {
   L.push("");
   if (ev.advance) {
     const a = ev.advance;
-    L.push(`- Producción estimada a esta condición: ${a.production_estimate.tons} t (${a.production_estimate.yield_t_ha} t/ha).`);
-    L.push(`- **Límite de anticipo sugerido: ${fmtUsd(a.advance_limit.usd)} (${fmtArs(a.advance_limit.ars)})**, ${a.advance_limit.pct_of_reference_value} % del valor de referencia. Nuevos desembolsos: **${a.advance_limit.new_disbursements}**.`);
+    if (a.advance_limit.usd === null) {
+      L.push(`- **Límite de anticipo: retenido.** ${a.advance_limit.note}`);
+    } else {
+      L.push(`- Piso: peor campaña del departamento (${a.floor.campana}), ${a.floor.yield_t_ha} t/ha → ${fmtUsd(a.floor.value_usd)}. Techo tras haircut: ${fmtUsd(a.advance_limit.ceiling_usd)}.`);
+      L.push(`- **Límite de anticipo sugerido: ${fmtUsd(a.advance_limit.usd)} (${fmtArs(a.advance_limit.ars)})**, ${a.advance_limit.pct_of_ceiling} % del techo. Nuevos desembolsos: **${a.advance_limit.new_disbursements}**.`);
+    }
     L.push(`- Benchmark (porcentaje plano ${a.benchmark.flat_pct} %): ${fmtUsd(a.benchmark.usd)}.`);
   }
   L.push("");
@@ -76,7 +86,7 @@ export function committeeReport(scenario, pack, opts = {}) {
   L.push("## 3. Reglas y versiones");
   L.push("");
   L.push(`- Índice de condición: \`${pack.scenarios.scoring.formula}\`; umbrales verde ≥ 70, amarillo 50–69, rojo < 50. NDVI normalizado con anclas ${pack.presets.normalization.ndvi_norm.ndvi_floor}–${pack.presets.normalization.ndvi_norm.ndvi_ceiling}; clima por tabla de lluvia de 7 días.`);
-  L.push(`- Límite de anticipo: regla \`${ev.advance?.rule_version ?? "cupo-v1"}\`. Capacidad: regla \`${cap?.rule_version ?? "capacidad-v1"}\`. Hash de evidencia: \`${ev.evidence.canonicalization}\`. Pack \`${pack.pack_version}\`.`);
+  L.push(`- Límite de anticipo: regla \`${ev.advance?.rule_version ?? "cupo-v2"}\`. Capacidad: regla \`${cap?.rule_version ?? "capacidad-v2"}\`. Hash de evidencia: \`${ev.evidence.canonicalization}\`. Pack \`${pack.pack_version}\`.`);
   L.push("");
 
   L.push("## 4. Evidencia y firma");

@@ -2,6 +2,7 @@
 //   GET  /health                -> { ok, pack_version, publisher }
 //   GET  /pack                  -> list of public pack files
 //   GET  /pack/<name>           -> raw JSON from data/ (whitelisted)
+//   GET  /capacity              -> per-campaign series, worst year, pre-sowing limit
 //   POST /score   { scenario, weeds_pct? }  -> score + evidence payload + sha256
 //   POST /publish { scenario, weeds_pct? }  -> same + Solana memo tx (oracle)
 import { createServer } from "node:http";
@@ -9,6 +10,7 @@ import { existsSync } from "node:fs";
 import { capacity } from "@precrop/score";
 import { loadPack, readPublicFile, PUBLIC_FILES, economicsInputs, historyPeaks } from "./pack.js";
 import { buildEvidence, memoText } from "./evidence.js";
+import { buildCapacity } from "./capacity.js";
 import { committeeReport } from "./report.js";
 import { loadKeypair, publishMemo, DEFAULT_RPC_URL } from "./memo.js";
 
@@ -90,14 +92,10 @@ const server = createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && url.pathname === "/capacity") {
-      const peaks = historyPeaks(pack.history);
-      if (!peaks.length) return send(res, 503, { error: "no lote-history.json in pack; run scripts/build_history.py" });
-      return send(res, 200, {
-        lote_id: pack.presets.lote_id,
-        pack_version: pack.pack_version,
-        generated_from: { history_generated_at_utc: pack.history.generated_at_utc, method: pack.history.method },
-        ...capacity(peaks, economicsInputs(pack.economics), pack.official?.campaigns ?? {}),
-      });
+      if (!pack.history) {
+        return send(res, 503, { error: "no lote-history.json in pack; run scripts/build_history.py" });
+      }
+      return send(res, 200, buildCapacity(pack));
     }
 
     if (req.method === "GET" && url.pathname.startsWith("/report/")) {
@@ -111,6 +109,7 @@ const server = createServer(async (req, res) => {
         publisher: keypair ? keypair.publicKey.toBase58() : undefined,
       });
       return send(res, 200, md, "text/markdown");
+
     }
 
     if (req.method === "POST" && url.pathname === "/score") {
