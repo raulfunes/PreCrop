@@ -41,6 +41,8 @@
   },
   "climate_table": {
     "description": "climate score from rain_mm_7d (demo heuristic, not an agrometeorological model)",
+    "comparator": "rain_mm_7d < max_mm",
+    "comparator_note": "Strict less-than, matching build_pack.climate_from_rain(): the FIRST rule where rain_mm_7d < max_mm wins (max_mm: null means \"else\", always matches last).",
     "rules": [
       { "max_mm": 5, "climate": 25, "label": "sequía" },
       { "max_mm": 15, "climate": 45, "label": "seco" },
@@ -128,6 +130,9 @@
       "ndvi_source": "measured",
       "ndvi_method": "DN/10000 (not offset-corrected)",
       "ndvi_method_note": "Calculado con el método viejo DN/10000, sin el offset del baseline >= 04.00. No comparable numéricamente con los valores 2025 sin recalcular.",
+      "ndvi_published_stat": "mean",
+      "ndvi_published_stat_note": "Overrides the file-wide ndvi_published_stat (median): this archived preset predates the offset/median recalculation, so only the OLD-method mean/median pair exists for it. Published here as the OLD mean (0.151), NOT the file-wide median convention.",
+      "ndvi_old_method_median_ref": 0.135,
       "rain_mm_7d": 6.9,
       "rain_source": "measured",
       "deprecated_for_pitch": true,

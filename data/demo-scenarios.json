@@ -2,12 +2,14 @@
   "schema_version": 2,
   "pack_version": "1.0.0",
   "lote_id": "demo-rio-segundo-01",
-  "how_to_use": "Front picks a scenario key, resolves satellite_preset against lote-sentinel-presets.json and weeds against photo-point-presets.json, then computes the score with the scoring block below. expected_score is a self-check, not an input.",
+  "how_to_use": "Front picks a scenario key, resolves satellite_preset against lote-sentinel-presets.json and weeds against photo-point-presets.json, then computes the score with the scoring block below. expected_score is a self-check, not an input. All photos[].file paths are relative to data/ (e.g. presets/fotos/limpio_1.jpg means data/presets/fotos/limpio_1.jpg).",
   "scoring": {
     "owner": "front",
     "formula": "score = 0.6 * ndvi_norm + 0.25 * climate - 0.15 * weeds_pct",
     "weights": { "ndvi_norm": 0.6, "climate": 0.25, "weeds_pct": -0.15 },
     "thresholds": { "verde_min": 70, "amarillo_min": 50, "rojo_below": 50 },
+    "score_bp_formula": "score_bp = floor(score_exact * 100 + 0.5)",
+    "score_bp_note": "HALF-UP rounding, not banker's rounding: Python's round() rounds .5 ties to even, JS's Math.round() always rounds .5 up. floor(x + 0.5) matches Math.round for these positive scores, so both languages produce the same integer from the same float.",
     "precision_warning": "Margins are 1.5 to 4.4 points. Use the published 3-decimal ndvi as-is. Do NOT round any input before scoring."
   },
   "scenarios": {
