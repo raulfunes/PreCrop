@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { RefreshCw, AlertCircle, TrendingUp, BarChart3, Info, AlertTriangle } from 'lucide-react';
+import React, { useState } from 'react';
+import { RefreshCw, AlertCircle, TrendingUp, BarChart3, Info, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { formatUSD } from '@/lib/scoreUtils';
 import type { CapacityResponse, ApiError } from '@/types';
@@ -14,6 +14,8 @@ interface CapacityScreenProps {
 }
 
 export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScreenProps) {
+  const [showRejected, setShowRejected] = useState(false);
+
   if (isLoading && !data) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3 text-[var(--color-text-muted)]">
@@ -45,7 +47,10 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
     );
   }
 
-  if (data.campaigns.length === 0) {
+  const { capacity, rejected_alternative, sources, generated_from } = data;
+  const { series, worst_year, representativeness, pre_sowing_limit, reference, district_volatility } = capacity;
+
+  if (series.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3 text-[var(--color-text-muted)]">
         <BarChart3 size={24} />
@@ -54,171 +59,254 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
     );
   }
 
-  const { pre_sowing_quota, worst_campaign, stability, campaigns, rule_version } = data;
-  const maxYield = Math.max(...campaigns.map(c => c.yield_est_t_ha));
+  const maxYield = Math.max(...series.map(c => c.official_dpto_kg_ha || 0));
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Demo banner */}
-      <div className="p-3 bg-[var(--color-warning-soft)] rounded-[var(--radius-badge)] border border-[var(--color-warning)]/20 text-center">
-        <span className="text-[12px] font-semibold text-[var(--color-warning)]">DEMO · Regla no calibrada</span>
-      </div>
-
       {/* Cupo pre-siembra */}
       <section className="bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-5 md:p-6">
         <h2 className="text-[13px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-4">
           Cupo pre-siembra sugerido
         </h2>
-        <div className="flex items-baseline gap-2 mb-2">
-          <TrendingUp size={18} className="text-[var(--color-brand-primary)]" />
-          <span className="text-[32px] font-bold tabular-nums text-[var(--color-brand-primary)]">
-            {formatUSD(pre_sowing_quota.usd)}
-          </span>
-        </div>
-        {pre_sowing_quota.ars !== null && (
-          <p className="text-[15px] font-semibold text-[var(--color-ink)] mb-1">
-            ARGt {pre_sowing_quota.ars.toLocaleString('es-AR')}
-          </p>
-        )}
-        {pre_sowing_quota.ars === null && (
-          <p className="text-[13px] text-[var(--color-text-muted)] mb-1">Conversión a ARGt no disponible</p>
-        )}
-        <p className="text-[13px] text-[var(--color-text-muted)] mb-3">
-          {pre_sowing_quota.pct_of_reference_value}% del valor de referencia · Haircut {pre_sowing_quota.haircut}
-        </p>
-        <p className="text-[14px] font-medium text-[var(--color-ink)] mb-3">
-          Contra el peor año que este lote ya tuvo
-        </p>
 
-        <div className="grid grid-cols-2 gap-3 text-[13px]">
-          <div className="bg-[var(--color-neutral-soft)] p-3 rounded border border-[var(--color-border)]">
-            <span className="text-[var(--color-text-muted)]">Peor campaña</span>
-            <p className="font-bold text-[var(--color-ink)] mt-0.5">{worst_campaign.campaign}</p>
-          </div>
-          <div className="bg-[var(--color-neutral-soft)] p-3 rounded border border-[var(--color-border)]">
-            <span className="text-[var(--color-text-muted)]">Rinde del peor año</span>
-            <p className="font-bold text-[var(--color-ink)] mt-0.5">{worst_campaign.yield_est_t_ha} t/ha</p>
-          </div>
-          <div className="bg-[var(--color-neutral-soft)] p-3 rounded border border-[var(--color-border)]">
-            <span className="text-[var(--color-text-muted)]">Toneladas estimadas</span>
-            <p className="font-bold text-[var(--color-ink)] mt-0.5">{worst_campaign.tons_est} t</p>
-          </div>
-          <div className="bg-[var(--color-neutral-soft)] p-3 rounded border border-[var(--color-border)]">
-            <span className="text-[var(--color-text-muted)]">Estabilidad</span>
-            <p className="font-bold text-[var(--color-ink)] mt-0.5 capitalize">
-              {stability.label}{stability.cv_pct !== null ? ` (CV ${stability.cv_pct}%)` : ''}
+        {representativeness.representative ? (
+          <>
+            <div className="flex items-baseline gap-2 mb-2">
+              <TrendingUp size={18} className="text-[var(--color-brand-primary)]" />
+              <span className="text-[32px] font-bold tabular-nums text-[var(--color-brand-primary)]">
+                {pre_sowing_limit.usd !== null ? formatUSD(pre_sowing_limit.usd) : 'N/A'}
+              </span>
+            </div>
+            {pre_sowing_limit.ars !== null && (
+              <p className="text-[15px] font-semibold text-[var(--color-ink)] mb-1">
+                ARGt {pre_sowing_limit.ars.toLocaleString('es-AR')}
+              </p>
+            )}
+            <p className="text-[14px] font-medium text-[var(--color-ink)] mb-3">
+              Contra el peor año que el departamento realmente tuvo
             </p>
+          </>
+        ) : (
+          <div className="mb-4">
+            <div className="p-3 bg-[var(--color-warning-soft)] border border-[var(--color-warning)]/30 rounded mb-3">
+              <p className="text-[14px] font-bold text-[var(--color-warning)] mb-1">Sin respaldo suficiente</p>
+              <p className="text-[13px] text-[var(--color-ink)]">
+                Este lote no es estadísticamente representativo de su departamento. No se puede establecer un cupo seguro basado en la historia departamental oficial.
+              </p>
+              <ul className="list-disc pl-5 mt-2 text-[12px] text-[var(--color-text-muted)]">
+                {representativeness.reasons.map((r, i) => <li key={i}>{r}</li>)}
+              </ul>
+            </div>
+            {pre_sowing_limit.usd_if_representative !== null && (
+              <div className="opacity-60">
+                <p className="text-[11px] font-bold uppercase mb-1">Valor hipotético, no publicable</p>
+                <div className="text-[20px] font-bold tabular-nums text-[var(--color-text-muted)]">
+                  {formatUSD(pre_sowing_limit.usd_if_representative)}
+                </div>
+              </div>
+            )}
           </div>
+        )}
+
+        {worst_year && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-[13px] mb-4">
+            <div className="bg-[var(--color-neutral-soft)] p-3 rounded border border-[var(--color-border)]">
+              <span className="text-[var(--color-text-muted)]">Peor campaña oficial</span>
+              <p className="font-bold text-[var(--color-ink)] mt-0.5">{worst_year.campana}</p>
+            </div>
+            <div className="bg-[var(--color-neutral-soft)] p-3 rounded border border-[var(--color-border)]">
+              <span className="text-[var(--color-text-muted)]">Rinde dpto oficial</span>
+              <p className="font-bold text-[var(--color-ink)] mt-0.5">
+                {worst_year.official_dpto_kg_ha.toLocaleString('es-AR')} kg/ha
+                <span className="block font-normal text-[10px] text-[var(--color-text-muted)] mt-0.5">Medido</span>
+              </p>
+            </div>
+            <div className="bg-[var(--color-neutral-soft)] p-3 rounded border border-[var(--color-border)]">
+              <span className="text-[var(--color-text-muted)]">Equivalencia productiva</span>
+              <p className="font-bold text-[var(--color-ink)] mt-0.5">{worst_year.yield_t_ha} t/ha</p>
+            </div>
+            <div className="bg-[var(--color-neutral-soft)] p-3 rounded border border-[var(--color-border)]">
+              <span className="text-[var(--color-text-muted)]">Volatilidad Distrital</span>
+              <p className="font-bold text-[var(--color-ink)] mt-0.5 capitalize">
+                {district_volatility.cv !== null ? `${(district_volatility.cv * 100).toFixed(2)} %` : 's/d'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[12px] p-3 bg-white border border-[var(--color-border)] rounded mb-4">
+          <div><span className="text-[var(--color-text-muted)]">Regla:</span> <span className="font-mono">{capacity.rule_version}</span></div>
+          <div><span className="text-[var(--color-text-muted)]">Precio ref:</span> {formatUSD(reference.price_usd_t)}/t</div>
+          <div><span className="text-[var(--color-text-muted)]">Haircut:</span> {reference.haircut}</div>
+          <div><span className="text-[var(--color-text-muted)]">Superficie:</span> {reference.ha} ha</div>
         </div>
 
-        <div className="mt-4 flex items-start gap-2 p-3 bg-[var(--color-neutral-soft)] rounded-[var(--radius-badge)]">
-          <Info size={13} className="text-[var(--color-text-muted)] shrink-0 mt-0.5" />
-          <p className="text-[11px] text-[var(--color-text-muted)] leading-[17px]">
-            <strong className="text-[var(--color-ink)]">Regla del límite: {rule_version}</strong> · Pack {data.pack_version}
-          </p>
+        <div className="flex flex-col gap-2 p-3 bg-[var(--color-neutral-soft)] rounded-[var(--radius-badge)]">
+          <div className="flex items-start gap-2">
+            <Info size={14} className="text-[var(--color-text-muted)] shrink-0 mt-0.5" />
+            <div className="text-[11px] text-[var(--color-text-muted)] leading-[17px]">
+              <strong className="text-[var(--color-ink)]">Fórmula:</strong> {pre_sowing_limit.formula}<br/>
+              <strong className="text-[var(--color-ink)]">Base:</strong> {pre_sowing_limit.basis}
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Campañas */}
+      {/* Historial de campañas */}
       <section className="bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-5 md:p-6">
         <h2 className="text-[13px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-4">
-          Historial de campañas ({data.n_campaigns})
+          Serie oficial y respuesta satelital ({series.length} campañas)
         </h2>
 
         <div className="flex flex-col gap-3" role="list" aria-label="Historial de campañas">
-          {campaigns.map((c) => {
-            const isWorst = c.campaign === worst_campaign.campaign;
-            const barWidth = maxYield > 0 ? (c.yield_est_t_ha / maxYield) * 100 : 0;
-            const officialBarWidth = c.official_yield_t_ha !== null && maxYield > 0
-              ? (c.official_yield_t_ha / maxYield) * 100 : 0;
+          {series.map((c) => {
+            const isWorst = c.campana === worst_year?.campana;
+            const barWidth = c.official_dpto_kg_ha !== null && maxYield > 0
+              ? (c.official_dpto_kg_ha / maxYield) * 100 : 0;
 
             return (
               <div
-                key={c.campaign}
+                key={c.campana}
                 role="listitem"
                 className={`p-3 rounded border ${isWorst ? 'border-[var(--color-danger)]/40 bg-[var(--color-danger-soft)]' : 'border-[var(--color-border)] bg-[var(--color-neutral-soft)]'}`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className={`text-[14px] font-bold ${isWorst ? 'text-[var(--color-danger)]' : 'text-[var(--color-ink)]'}`}>
-                      {c.campaign}
+                      {c.campana}
                     </span>
                     {isWorst && (
-                      <span className="text-[10px] font-semibold text-white bg-[var(--color-danger)] px-1.5 py-0.5 rounded">PEOR</span>
+                      <span className="text-[10px] font-semibold text-white bg-[var(--color-danger)] px-1.5 py-0.5 rounded">PEOR OFICIAL</span>
+                    )}
+                    {c.status === 'unpaired' && (
+                      <span className="text-[10px] font-semibold text-[var(--color-text-muted)] bg-[var(--color-neutral)] border border-[var(--color-border)] px-1.5 py-0.5 rounded">NO PAREADA</span>
                     )}
                   </div>
-                  <span className="text-[13px] font-bold tabular-nums text-[var(--color-ink)]">{c.yield_est_t_ha} t/ha</span>
+                  <span className="text-[13px] font-bold tabular-nums text-[var(--color-ink)]">
+                    {c.official_dpto_kg_ha !== null ? `${c.official_dpto_kg_ha.toLocaleString('es-AR')} kg/ha` : 's/d'}
+                  </span>
                 </div>
 
-                {/* Barras de rinde */}
-                <div className="flex flex-col gap-1.5 mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[var(--color-text-muted)] w-[55px] shrink-0">Estimado</span>
-                    <div className="flex-1 bg-white rounded-full h-4 overflow-hidden border border-[var(--color-border)]/50">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-[10px] text-[var(--color-text-muted)] w-[50px] shrink-0">Dpto</span>
+                  <div className="flex-1 bg-white rounded-full h-4 overflow-hidden border border-[var(--color-border)]/50">
+                    {c.official_dpto_kg_ha !== null && (
                       <div
                         className={`h-full rounded-full transition-all ${isWorst ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-brand-primary)]'}`}
                         style={{ width: `${barWidth}%` }}
                         role="meter"
-                        aria-valuenow={c.yield_est_t_ha}
+                        aria-valuenow={c.official_dpto_kg_ha}
                         aria-valuemin={0}
                         aria-valuemax={maxYield}
-                        aria-label={`Rinde estimado: ${c.yield_est_t_ha} t/ha`}
+                        aria-label={`Rinde dpto: ${c.official_dpto_kg_ha} kg/ha`}
                       />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[var(--color-text-muted)] w-[55px] shrink-0">Oficial</span>
-                    <div className="flex-1 bg-white rounded-full h-4 overflow-hidden border border-[var(--color-border)]/50">
-                      {c.official_yield_t_ha !== null ? (
-                        <div
-                          className="h-full rounded-full bg-[var(--color-text-muted)]/40 transition-all"
-                          style={{ width: `${officialBarWidth}%` }}
-                          role="meter"
-                          aria-valuenow={c.official_yield_t_ha}
-                          aria-valuemin={0}
-                          aria-valuemax={maxYield}
-                          aria-label={`Rinde oficial: ${c.official_yield_t_ha} t/ha`}
-                        />
-                      ) : (
-                        <span className="text-[10px] text-[var(--color-text-muted)] px-2 leading-4">s/d</span>
-                      )}
-                    </div>
-                    <span className="text-[10px] tabular-nums text-[var(--color-text-muted)] w-[45px] text-right">
-                      {c.official_yield_t_ha !== null ? `${c.official_yield_t_ha} t/ha` : 's/d'}
-                    </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Datos adicionales */}
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--color-text-muted)]">
-                  <span>NDVI: {c.ndvi.toFixed(3)}</span>
-                  <span>Lluvia dic–feb: {c.rain_dec_feb_mm !== null ? `${c.rain_dec_feb_mm} mm` : 's/d'}</span>
-                  <span>Desvío oficial: {c.error_vs_official_pct !== null ? `${c.error_vs_official_pct}%` : 's/d'}</span>
+                  <span>Pico NDVI lote: {c.ndvi_peak !== null ? c.ndvi_peak.toFixed(3) : 's/d'}</span>
+                  <span>Índice NDVI lote: {c.ndvi_index !== null ? c.ndvi_index.toFixed(3) : 's/d'}</span>
+                  <span>Índice rinde dpto: {c.official_index !== null ? c.official_index.toFixed(3) : 's/d'}</span>
+                  <span>Desvío lote/dpto: {c.lote_vs_district !== null ? `${(c.lote_vs_district * 100).toFixed(2)} %` : 's/d'}</span>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Contraste oficial */}
         <div className="mt-4 p-3 bg-[var(--color-neutral-soft)] rounded border border-[var(--color-border)]">
           <div className="flex items-start gap-2">
-            <AlertTriangle size={14} className="text-[var(--color-warning)] shrink-0 mt-0.5" />
-            <div className="text-[12px] text-[var(--color-text-muted)]">
-              <p className="font-semibold text-[var(--color-ink)]">Contraste oficial pendiente</p>
-              <p className="mt-0.5">{data.contrast_official.note}</p>
+            <Info size={14} className="text-[var(--color-text-muted)] shrink-0 mt-0.5" />
+            <div className="text-[12px] text-[var(--color-text-muted)] space-y-2">
+              <p><strong className="text-[var(--color-ink)]">Representatividad estadística:</strong> {representativeness.basis} {representativeness.note}</p>
+              <p>Campañas pareadas: {representativeness.paired_campaigns}. Mediana desvío: {representativeness.lote_vs_district_median !== null ? `${(representativeness.lote_vs_district_median * 100).toFixed(2)} %` : 's/d'}. CV de los desvíos: {representativeness.lote_vs_district_cv !== null ? `${(representativeness.lote_vs_district_cv * 100).toFixed(2)} %` : 's/d'}. Banda aceptada: ±{(representativeness.band.max * 100).toFixed(0)}%.</p>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Caveat */}
-        <div className="mt-3 p-3 bg-[var(--color-neutral-soft)] rounded border border-[var(--color-border)]">
-          <div className="flex items-start gap-2">
-            <Info size={14} className="text-[var(--color-text-muted)] shrink-0 mt-0.5" />
-            <p className="text-[12px] text-[var(--color-text-muted)]">
-              {data.generated_from.method.caveat}
-            </p>
+      {/* Alternativa Rechazada (plegable) */}
+      <section className="bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden">
+        <button
+          onClick={() => setShowRejected(!showRejected)}
+          className="w-full p-4 flex items-center justify-between hover:bg-[var(--color-neutral-soft)] transition-colors focus:outline-none"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] font-semibold text-[var(--color-text-muted)]">
+              ¿Por qué no calculamos el rinde directamente desde NDVI?
+            </span>
           </div>
+          {showRejected ? <ChevronUp size={16} className="text-[var(--color-text-muted)]" /> : <ChevronDown size={16} className="text-[var(--color-text-muted)]" />}
+        </button>
+
+        {showRejected && (
+          <div className="p-4 pt-0 border-t border-[var(--color-border)]">
+            <div className="bg-[var(--color-danger-soft)] border border-[var(--color-danger)]/20 rounded p-4 mt-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle size={20} className="text-[var(--color-danger)] shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-3 text-[13px] text-[var(--color-ink)]">
+                  <p>
+                    El enfoque puramente satelital (<span className="font-mono">{rejected_alternative.rule_version}</span>) fue descartado porque los modelos puramente basados en clima y NDVI del lote tienen un error inaceptable al contrastarlos con la realidad oficial medible a escala departamental.
+                  </p>
+
+                  <div className="bg-white/60 p-3 rounded border border-[var(--color-danger)]/10 text-[12px]">
+                    <p className="font-bold text-[var(--color-danger)] mb-1 uppercase tracking-wider text-[10px]">
+                      NO VIGENTE · ALTERNATIVA DESCARTADA
+                    </p>
+                    <p className="text-[20px] font-bold text-[var(--color-text-muted)] line-through decoration-[var(--color-danger)]">
+                      {formatUSD(rejected_alternative.usd_it_would_have_published)}
+                    </p>
+                    <div className="mt-2 text-[var(--color-text-muted)] space-y-1">
+                      <p>Peor campaña erróneamente estimada: {rejected_alternative.worst_campaign.campaign} ({rejected_alternative.worst_campaign.yield_est_t_ha} t/ha)</p>
+                      <p>Error medio frente a oficial: {rejected_alternative.contrast_official.mean_abs_error_pct !== null ? `${rejected_alternative.contrast_official.mean_abs_error_pct}%` : 's/d'}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-[12px] text-[var(--color-text-muted)] italic">
+                    {rejected_alternative.note}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Fuentes y Disclaimer */}
+      <section className="bg-[var(--color-neutral-soft)] rounded-[var(--radius-card)] p-4 border border-[var(--color-border)] text-[11px] text-[var(--color-text-muted)] space-y-3">
+        <div>
+          <strong className="text-[var(--color-ink)]">Fuentes Oficiales</strong>
+          {sources.official.refs.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-2">
+              {sources.official.refs.map((refUrl, i) => (
+                <a key={i} href={refUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[var(--color-brand-primary)] hover:underline">
+                  Ver dataset oficial <ExternalLink size={10} />
+                </a>
+              ))}
+            </div>
+          )}
+          <p className="mt-1">Licencia: {sources.official.license}</p>
+          <p>Generado: {new Date(sources.official.generated_at_utc).toLocaleString()}</p>
+        </div>
+
+        <div>
+          <strong className="text-[var(--color-ink)]">Historia Satelital (NDVI)</strong>
+          {sources.history.refs.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-2">
+              {sources.history.refs.map((refUrl, i) => (
+                <a key={i} href={refUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[var(--color-brand-primary)] hover:underline">
+                  Ver archivo satelital <ExternalLink size={10} />
+                </a>
+              ))}
+            </div>
+          )}
+          <p className="mt-1">Generado: {new Date(sources.history.generated_at_utc).toLocaleString()}</p>
+          <p>{generated_from.method.caveat}</p>
+        </div>
+
+        <div className="pt-2 border-t border-[var(--color-border)]">
+          <p>{data.disclaimer}</p>
         </div>
       </section>
     </div>

@@ -217,31 +217,38 @@ export interface AdvanceLimitData {
   rule_version: string;
   condition_index: number;
   light: 'verde' | 'amarillo' | 'rojo';
-  production_estimate: {
-    yield_t_ha: number;
-    tons: number;
-    value_usd: number;
+  floor: {
+    campana: string | null;
+    yield_t_ha: number | null;
+    value_usd: number | null;
+    source: string;
+    available: boolean;
     basis: string;
   };
   advance_limit: {
-    usd: number;
+    usd: number | null;
     ars: number | null;
-    pct_of_reference_value: number;
-    new_disbursements: 'allowed' | 'review' | 'blocked';
+    ceiling_usd: number | null;
+    pct_of_ceiling: number;
+    new_disbursements:
+      | 'allowed'
+      | 'review'
+      | 'blocked'
+      | 'blocked_no_capacity';
     formula: string;
+    note: string;
   };
   benchmark: {
     flat_pct: number;
-    usd: number;
+    usd: number | null;
     note: string;
   };
   reference: {
     ha: number;
-    yield_ref_t_ha: number;
     price_usd_t: number;
-    fx_ars_per_usd: number | null;
     haircut: number;
-    reference_value_usd: number;
+    fx_ars_per_usd: number | null;
+    floor_value_usd: number | null;
   };
 }
 
@@ -270,6 +277,12 @@ export interface ScoreResponse {
     input: Record<string, number>;
   }>;
   advance: AdvanceLimitData | null;
+  superseded_advance: {
+    rule_version: string;
+    usd: number;
+    basis: string;
+    note: string;
+  } | null;
   evidence: {
     canonicalization: string;
     pack_version: string;
@@ -306,23 +319,87 @@ export interface DisburseResponse {
 
 // ── Capacity API Types ──────────────────────────────────────
 
-export interface CapacityCampaign {
-  campaign: string;
-  date: string | null;
-  scene_id: string | null;
-  ndvi: number;
-  ndvi_min_in_window: number | null;
-  ndvi_norm: number;
-  yield_est_t_ha: number;
-  tons_est: number;
-  rain_dec_feb_mm: number | null;
-  official_yield_t_ha: number | null;
-  error_vs_official_pct: number | null;
+export interface CapacitySeriesRow {
+  campana: string;
+  official_dpto_kg_ha: number | null;
+  ndvi_peak: number | null;
+  ndvi_index: number | null;
+  official_index: number | null;
+  lote_vs_district: number | null;
+  status: 'paired' | 'unpaired';
+}
+
+export interface CapacityV2 {
+  rule_version: 'capacidad-v2' | string;
+  series: CapacitySeriesRow[];
+  worst_year: {
+    campana: string;
+    official_dpto_kg_ha: number;
+    yield_t_ha: number;
+    source: string;
+    basis: string;
+  } | null;
+  district_volatility: {
+    cv: number | null;
+    basis: string;
+    note: string;
+  };
+  representativeness: {
+    representative: boolean;
+    lote_vs_district_median: number | null;
+    lote_vs_district_cv: number | null;
+    band: {
+      min: number;
+      max: number;
+    };
+    paired_campaigns: number;
+    reasons: string[];
+    basis: string;
+    note: string;
+  };
+  pre_sowing_limit: {
+    usd: number | null;
+    ars: number | null;
+    usd_if_representative: number | null;
+    status: 'allowed' | 'blocked_unrepresentative';
+    formula: string;
+    basis: string;
+    note: string;
+  };
+  reference: {
+    ha: number;
+    price_usd_t: number;
+    haircut: number;
+    fx_ars_per_usd: number | null;
+  };
+}
+
+export interface RejectedAlternative {
+  rule_version: string;
+  approach: string;
+  worst_campaign: {
+    campaign: string;
+    yield_est_t_ha: number;
+    tons_est: number;
+    ndvi: number;
+  };
+  stability: {
+    cv_pct: number | null;
+    label: string;
+  };
+  contrast_official: {
+    campaigns_with_official: number;
+    mean_abs_error_pct: number | null;
+    note: string;
+  };
+  usd_it_would_have_published: number;
+  note: string;
 }
 
 export interface CapacityResponse {
-  lote_id: string;
   pack_version: string;
+  lote_id: string;
+  rule_version: string;
   generated_from: {
     history_generated_at_utc: string;
     method: {
@@ -333,39 +410,20 @@ export interface CapacityResponse {
       caveat: string;
     };
   };
-  rule_version: string;
-  campaigns: CapacityCampaign[];
-  n_campaigns: number;
-  worst_campaign: {
-    campaign: string;
-    yield_est_t_ha: number;
-    tons_est: number;
-    ndvi: number;
+  capacity: CapacityV2;
+  rejected_alternative: RejectedAlternative;
+  sources: {
+    history: {
+      refs: string[];
+      generated_at_utc: string;
+    };
+    official: {
+      refs: string[];
+      license: string;
+      generated_at_utc: string;
+    };
   };
-  best_campaign: {
-    campaign: string;
-    yield_est_t_ha: number;
-  };
-  mean_yield_t_ha: number;
-  stability: {
-    cv_pct: number | null;
-    label: 'alta' | 'media' | 'baja' | 'unknown';
-  };
-  pre_sowing_quota: {
-    basis: string;
-    tons: number;
-    value_usd: number;
-    haircut: number;
-    usd: number;
-    ars: number | null;
-    pct_of_reference_value: number;
-    formula: string;
-  };
-  contrast_official: {
-    campaigns_with_official: number;
-    mean_abs_error_pct: number | null;
-    note: string;
-  };
+  disclaimer: string;
 }
 
 export interface ApiErrorResponse {

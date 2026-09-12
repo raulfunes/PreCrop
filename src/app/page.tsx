@@ -155,7 +155,7 @@ export default function HomePage() {
                 </DashSection>
 
                 <DashSection id="cupo-anticipos" titulo="Límite de anticipo sugerido">
-                  <SimulatedLimitCard advance={scoreData?.advance || null} />
+                  <SimulatedLimitCard advance={scoreData?.advance || null} superseded_advance={scoreData?.superseded_advance || undefined} />
                 </DashSection>
 
                 <DashSection id="accion-demo">

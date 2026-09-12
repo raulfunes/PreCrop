@@ -64,7 +64,8 @@ export function ActionButtons({ publish, disburse, advance, disabled }: ActionBu
 
   const disburseStatus = advance?.advance_limit.new_disbursements || 'blocked';
   const disablePublish = disabled || publishing;
-  const disableDisburse = disabled || disbursing || disburseStatus === 'blocked';
+  const isBlocked = disburseStatus === 'blocked' || disburseStatus === 'blocked_no_capacity';
+  const disableDisburse = disabled || disbursing || isBlocked;
 
   return (
     <div className="flex flex-col gap-6">
@@ -188,9 +189,9 @@ export function ActionButtons({ publish, disburse, advance, disabled }: ActionBu
               </Button>
             )}
 
-            {disburseStatus === 'blocked' && !disabled && (
+            {isBlocked && !disabled && (
               <p className="text-[12px] text-[var(--color-danger)] font-medium mt-1">
-                Motivo: El estado del cultivo bloquea los desembolsos.
+                Motivo: {disburseStatus === 'blocked_no_capacity' ? 'No se estableció un techo de capacidad respaldado.' : 'Condición roja: no se liberan nuevos desembolsos.'}
               </p>
             )}
 
