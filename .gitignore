@@ -6,3 +6,17 @@ __pycache__/
 node_modules/
 .env
 services/evidence-api/.keys/
+
+# Next.js frontend
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.env*
+!.env.example
