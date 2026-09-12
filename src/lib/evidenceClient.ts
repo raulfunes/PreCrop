@@ -91,33 +91,39 @@ async function fetchText(endpoint: string, signal?: AbortSignal): Promise<string
   return res.text();
 }
 
+/** Every route accepts ?lote=<id>; without it the API uses the committed demo lot. */
+function withLot(endpoint: string, loteId?: string): string {
+  if (!loteId) return endpoint;
+  return `${endpoint}${endpoint.includes('?') ? '&' : '?'}lote=${encodeURIComponent(loteId)}`;
+}
+
 export const evidenceClient = {
-  async score(payload: EvidenceRequestPayload, signal?: AbortSignal): Promise<ScoreResponse> {
-    return fetchWithHandling<ScoreResponse>('/score', {
+  async score(payload: EvidenceRequestPayload, signal?: AbortSignal, loteId?: string): Promise<ScoreResponse> {
+    return fetchWithHandling<ScoreResponse>(withLot('/score', loteId), {
       method: 'POST',
       body: JSON.stringify(payload),
       signal,
     });
   },
 
-  async publish(payload: EvidenceRequestPayload, signal?: AbortSignal): Promise<PublishResponse> {
-    return fetchWithHandling<PublishResponse>('/publish', {
+  async publish(payload: EvidenceRequestPayload, signal?: AbortSignal, loteId?: string): Promise<PublishResponse> {
+    return fetchWithHandling<PublishResponse>(withLot('/publish', loteId), {
       method: 'POST',
       body: JSON.stringify(payload),
       signal,
     });
   },
 
-  async disburse(payload: EvidenceRequestPayload, signal?: AbortSignal): Promise<DisburseResponse> {
-    return fetchWithHandling<DisburseResponse>('/disburse', {
+  async disburse(payload: EvidenceRequestPayload, signal?: AbortSignal, loteId?: string): Promise<DisburseResponse> {
+    return fetchWithHandling<DisburseResponse>(withLot('/disburse', loteId), {
       method: 'POST',
       body: JSON.stringify(payload),
       signal,
     });
   },
 
-  async capacity(signal?: AbortSignal): Promise<CapacityResponse> {
-    return fetchWithHandling<CapacityResponse>('/capacity', {
+  async capacity(signal?: AbortSignal, loteId?: string): Promise<CapacityResponse> {
+    return fetchWithHandling<CapacityResponse>(withLot('/capacity', loteId), {
       method: 'GET',
       signal,
     });
@@ -126,14 +132,15 @@ export const evidenceClient = {
   async report(
     scenario: 'bueno' | 'mixto' | 'malo',
     options?: { weeds_pct?: number; signature?: string; explorer_url?: string },
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    loteId?: string
   ): Promise<string> {
     const params = new URLSearchParams();
     if (options?.weeds_pct !== undefined) params.set('weeds_pct', String(options.weeds_pct));
     if (options?.signature !== undefined) params.set('signature', options.signature);
     if (options?.explorer_url !== undefined) params.set('explorer_url', options.explorer_url);
     const qs = params.toString();
-    const endpoint = `/report/${scenario}${qs ? `?${qs}` : ''}`;
+    const endpoint = withLot(`/report/${scenario}${qs ? `?${qs}` : ''}`, loteId);
     return fetchText(endpoint, signal);
   },
 };

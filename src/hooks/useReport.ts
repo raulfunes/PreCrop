@@ -12,7 +12,8 @@ interface UseReportResult {
 export function useReport(
   scenario: 'bueno' | 'mixto' | 'malo',
   enabled: boolean,
-  options?: { weeds_pct?: number; signature?: string; explorer_url?: string }
+  options?: { weeds_pct?: number; signature?: string; explorer_url?: string },
+  loteId?: string
 ): UseReportResult {
   const [markdown, setMarkdown] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +33,7 @@ export function useReport(
       setMarkdown(null);
 
       try {
-        const response = await evidenceClient.report(scenario, options, controller.signal);
+        const response = await evidenceClient.report(scenario, options, controller.signal, loteId);
         if (currentFetchId === fetchIdRef.current) {
           setMarkdown(response);
           setIsLoading(false);
@@ -52,7 +53,7 @@ export function useReport(
       controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenario, enabled, retryCount, options?.weeds_pct, options?.signature, options?.explorer_url]);
+  }, [scenario, enabled, retryCount, options?.weeds_pct, options?.signature, options?.explorer_url, loteId]);
 
   const retry = () => setRetryCount(c => c + 1);
 

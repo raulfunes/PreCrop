@@ -100,7 +100,22 @@ async function call<T>(endpoint: string, init: RequestInit = {}, okStatuses: num
   return body as T;
 }
 
+export interface LotPoint { point_id: string; label: string; lat: number; lon: number }
+
+export interface CreatedLot {
+  lote: { id: string; nombre: string; ha: number; departamento: string; provincia?: string; center: { lat: number; lon: number }; departments?: Array<{ departamento: string; share: number }> };
+  elapsed_s: number;
+  scenario_campaign: string;
+  points: LotPoint[];
+  history: Array<{ campaign: string; peak: number | null; min: number | null; rain_dec_feb_mm: number | null }>;
+  condition: Record<'bueno' | 'malo', { date: string; ndvi: number; rain_mm_7d: number; index: number; light: WorkflowLight }>;
+}
+
 export const workflowClient = {
+  /** Build a lot live from a GeoJSON polygon (about 20 s: department, official series, 7 campaigns, scenarios). */
+  createLot(body: { name?: string; geometry: { type: 'Polygon'; coordinates: number[][][] } }): Promise<CreatedLot> {
+    return call(`/lotes`, { method: 'POST', body: JSON.stringify(body) }, [201]);
+  },
   state(loteId: string, scenario: Scenario): Promise<LotStateResponse> {
     return call(`/lotes/${loteId}/state?scenario=${scenario}`);
   },

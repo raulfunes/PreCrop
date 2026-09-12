@@ -93,10 +93,10 @@ export function RoleActions({ role, lot, capacity, busy, lastReceipt, onApprove,
               tamanio="lg"
               cargando={busy === 'disburse'}
               textoCargando="Solicitando…"
-              disabled={!preview?.can_withdraw}
+              disabled={!preview}
               onClick={() => wrap(onDisburse)}
             >
-              Retirar {preview?.can_withdraw ? usd(preview.available_usd) : ''}
+              {preview?.can_withdraw ? `Retirar ${usd(preview.available_usd)}` : 'Solicitar retiro'}
             </Button>
             {photos > 0 && (
               <Button variante="secundario" tamanio="lg" cargando={busy === 'photo'} onClick={() => wrap(onClearPhotos)}>

@@ -38,6 +38,26 @@ export async function POST(request: NextRequest) {
 
     let backendUrl = process.env.VISION_BACKEND_URL;
 
+    // Fallback when no vision API answers: the preset weeds of the current scenario
+    // for that point (bueno = low, malo = high), labelled as preset, never as measured.
+    const presetFallback = (reason: string) => {
+      const typedPresets = photoPresets as unknown as PresetsData;
+      const preset = typedPresets.scenarios[scenario]?.weeds_pct_by_point?.[pointId];
+      if (preset === undefined) {
+        return NextResponse.json({ point_id: pointId, status: 'provider_error', error: reason, detail: 'Sin estimación y sin valor de ejemplo para este punto.' }, { status: 502 });
+      }
+      return NextResponse.json({
+        point_id: pointId,
+        weeds_pct: preset,
+        soy_pct: null,
+        confidence: null,
+        status: 'assessed',
+        review_url: null,
+        source: 'preset',
+        fallback_reason: reason,
+      });
+    };
+
     if (backendUrl) {
       // Normalize URL (remove trailing slash)
       backendUrl = backendUrl.replace(/\/+$/, '');
@@ -57,32 +77,18 @@ export async function POST(request: NextRequest) {
         });
         clearTimeout(timeoutId);
       } catch (err: unknown) {
-        if (err instanceof Error && err.name === 'AbortError') {
-           return NextResponse.json({
-             point_id: pointId,
-             status: 'provider_error',
-             error: 'Timeout',
-             detail: 'El servicio demoró demasiado en responder.'
-           }, { status: 502 });
-        }
-        return NextResponse.json({
-          point_id: pointId,
-          status: 'provider_error',
-          error: 'Backend de visión no disponible',
-          detail: 'No se pudo contactar al servicio de análisis visual.'
-        }, { status: 502 });
+        return presetFallback(err instanceof Error && err.name === 'AbortError' ? 'timeout' : 'vision_backend_unavailable');
       }
 
       let data;
       try {
         data = await res.json();
       } catch {
-        return NextResponse.json({
-          point_id: pointId,
-          status: 'provider_error',
-          error: 'Respuesta ilegible',
-          detail: 'El backend devolvió un formato que no es JSON válido.'
-        }, { status: 502 });
+        return presetFallback('unreadable_response');
+      }
+
+      if (!res.ok || data.status === 'provider_error') {
+        return presetFallback(String(data?.error || `HTTP_${res.status}`));
       }
 
       if (res.ok) {
@@ -99,12 +105,7 @@ export async function POST(request: NextRequest) {
         const isLimArray = Array.isArray(data.limitations);
 
         if (!(isAssessed && isPointIdStr && isWeedsValid && isSoyValid && isConfValid && isBandValid && isScopeValid && isCalibratedBool && isReviewStr && isLimArray)) {
-           return NextResponse.json({
-             point_id: pointId,
-             status: 'provider_error',
-             error: 'Respuesta JSON inválida',
-             detail: 'El backend omitió campos requeridos o los valores están fuera de rango.'
-           }, { status: 502 });
+           return presetFallback('invalid_response');
         }
       }
 

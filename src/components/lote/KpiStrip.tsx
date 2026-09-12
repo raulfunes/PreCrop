@@ -3,6 +3,7 @@
 import React from 'react';
 import type { ScoreResponse, CapacityResponse } from '@/types';
 import type { LotStateResponse } from '@/lib/workflowClient';
+import { TrafficLightGauge } from './TrafficLightGauge';
 
 const usd = (n: number | null | undefined) => (n === null || n === undefined ? '—' : `USD ${Math.round(n).toLocaleString('es-AR')}`);
 
@@ -87,12 +88,15 @@ export function KpiStrip({ capacity, score, lot }: KpiStripProps) {
         tone={light === 'rojo' ? 'danger' : light === 'amarillo' ? 'warning' : 'ink'}
         detail={observed ? <>Escena satelital del {observed} · no es un score crediticio</> : 'Esperando la escena…'}
         footer={
-          lightCfg && (
-            <span className={`inline-flex items-center gap-2 font-semibold ${lightCfg.text}`}>
-              <span className={`h-2.5 w-2.5 rounded-full ${lightCfg.dot}`} aria-hidden />
-              {lightCfg.label}
-            </span>
-          )
+          <div className="flex flex-col gap-2">
+            <TrafficLightGauge value={score?.result.score_exact ?? null} size="sm" />
+            {lightCfg && (
+              <span className={`inline-flex items-center gap-2 font-semibold ${lightCfg.text}`}>
+                <span className={`h-2.5 w-2.5 rounded-full ${lightCfg.dot}`} aria-hidden />
+                {lightCfg.label}
+              </span>
+            )}
+          </div>
         }
       />
       <Kpi

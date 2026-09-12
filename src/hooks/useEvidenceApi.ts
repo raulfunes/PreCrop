@@ -14,7 +14,8 @@ interface UseEvidenceApiResult {
 
 export function useEvidenceApi(
   scenario: 'bueno' | 'mixto' | 'malo',
-  visionResults: Record<string, VisionPointState>
+  visionResults: Record<string, VisionPointState>,
+  loteId?: string
 ): UseEvidenceApiResult {
   const [scoreData, setScoreData] = useState<ScoreResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -45,7 +46,7 @@ export function useEvidenceApi(
       payloadRef.current = payload;
 
       try {
-        const response = await evidenceClient.score(payload, controller.signal);
+        const response = await evidenceClient.score(payload, controller.signal, loteId);
         if (currentFetchId === fetchIdRef.current) {
           setScoreData(response);
           setIsLoading(false);
@@ -68,7 +69,7 @@ export function useEvidenceApi(
     };
     // Note: deliberately excluding scoreData from dependencies.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenario, validVisionKey, retryCount]);
+  }, [scenario, validVisionKey, retryCount, loteId]);
 
   const retry = () => setRetryCount(c => c + 1);
 
@@ -80,7 +81,7 @@ export function useEvidenceApi(
 
   const publish = async () => {
     checkActionPreconditions();
-    return evidenceClient.publish(payloadRef.current);
+    return evidenceClient.publish(payloadRef.current, undefined, loteId);
   };
 
   const disburse = async (amountArs?: number) => {
@@ -89,7 +90,7 @@ export function useEvidenceApi(
     if (amountArs !== undefined) {
       payload.amount_ars = amountArs;
     }
-    return evidenceClient.disburse(payload);
+    return evidenceClient.disburse(payload, undefined, loteId);
   };
 
   return {

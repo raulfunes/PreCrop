@@ -10,17 +10,18 @@ interface UseCapacityResult {
   retry: () => void;
 }
 
-export function useCapacity(enabled: boolean): UseCapacityResult {
+export function useCapacity(enabled: boolean, loteId?: string): UseCapacityResult {
   const [data, setData] = useState<CapacityResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const fetchIdRef = useRef(0);
-  const fetchedRef = useRef(false);
+  const fetchedRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
-    if (fetchedRef.current && retryCount === 0) return;
+    const key = `${loteId ?? 'demo'}:${retryCount}`;
+    if (fetchedRef.current === key) return;
 
     const controller = new AbortController();
     const currentFetchId = ++fetchIdRef.current;
@@ -30,11 +31,11 @@ export function useCapacity(enabled: boolean): UseCapacityResult {
       setError(null);
 
       try {
-        const response = await evidenceClient.capacity(controller.signal);
+        const response = await evidenceClient.capacity(controller.signal, loteId);
         if (currentFetchId === fetchIdRef.current) {
           setData(response);
           setIsLoading(false);
-          fetchedRef.current = true;
+          fetchedRef.current = key;
         }
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
@@ -50,7 +51,7 @@ export function useCapacity(enabled: boolean): UseCapacityResult {
     return () => {
       controller.abort();
     };
-  }, [enabled, retryCount]);
+  }, [enabled, retryCount, loteId]);
 
   const retry = () => setRetryCount(c => c + 1);
 
