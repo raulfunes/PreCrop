@@ -23,7 +23,10 @@ export function useLotWorkflow(loteId: string, scenario: Scenario): UseLotWorkfl
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState<UseLotWorkflowResult['busy']>(null);
-  const [lastReceipt, setLastReceipt] = useState<DisburseWorkflowResponse | null>(null);
+  // The receipt is remembered together with its lot, so switching lots never shows a stale one.
+  const [receiptFor, setReceiptFor] = useState<{ loteId: string; receipt: DisburseWorkflowResponse } | null>(null);
+  const lastReceipt = receiptFor && receiptFor.loteId === loteId ? receiptFor.receipt : null;
+  const setLastReceipt = (r: DisburseWorkflowResponse | null) => setReceiptFor(r ? { loteId, receipt: r } : null);
   const alive = useRef(true);
 
   const refresh = useCallback(async () => {

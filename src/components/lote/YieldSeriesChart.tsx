@@ -6,7 +6,7 @@ import type { CapacitySeriesRow } from '@/types';
 interface YieldSeriesChartProps {
   series: CapacitySeriesRow[];
   worstCampana?: string | null;
-  /** Pixel height of the drawing area. */
+  /** Pixel height of the bars area. */
   height?: number;
   caption?: boolean;
 }
@@ -20,35 +20,40 @@ export function YieldSeriesChart({ series, worstCampana = null, height = 120, ca
     return <p className="text-[12px] text-[var(--color-text-muted)]">Sin serie oficial para este departamento.</p>;
   }
   const max = Math.max(...rows.map((r) => r.official_dpto_kg_ha as number));
-  const padTop = 18, padBottom = 18, w = 100 / rows.length;
-  const total = height + padTop + padBottom;
   const worstRow = rows.find((r) => r.campana === worstCampana) ?? null;
 
   return (
     <figure className="m-0">
-      <svg viewBox={`0 0 100 ${total}`} preserveAspectRatio="none" className="w-full" style={{ height: total }} role="img" aria-label="Rinde oficial de soja del departamento por campaña">
-        {rows.map((r, i) => {
+      <div className="flex items-end gap-2" style={{ height: height + 20 }} role="img" aria-label="Rinde oficial de soja del departamento por campaña">
+        {rows.map((r) => {
           const v = r.official_dpto_kg_ha as number;
-          const h = (v / max) * height;
-          const x = i * w + w * 0.18;
-          const bw = w * 0.64;
           const isWorst = r.campana === worstCampana;
-          const fill = isWorst ? 'var(--color-danger)' : 'var(--color-brand-primary)';
+          const pct = Math.max(4, (v / max) * 100);
           return (
-            <g key={r.campana}>
-              <rect x={x} y={padTop + height - h} width={bw} height={h} rx={0.6} fill={fill} opacity={isWorst ? 1 : 0.85} vectorEffect="non-scaling-stroke" />
-              <text x={x + bw / 2} y={padTop + height - h - 4} textAnchor="middle" fontSize="6.2" fontWeight={isWorst ? 700 : 500} fill={isWorst ? 'var(--color-danger)' : 'var(--color-ink)'} style={{ fontFamily: 'inherit' }}>
+            <div key={r.campana} className="flex-1 min-w-0 flex flex-col items-center justify-end h-full">
+              <span className={`text-[11px] leading-4 tabular-nums ${isWorst ? 'font-bold text-[var(--color-danger)]' : 'font-medium text-[var(--color-ink)]'}`}>
                 {(v / 1000).toFixed(1)}
-              </text>
-              <text x={x + bw / 2} y={padTop + height + 12} textAnchor="middle" fontSize="6.2" fill="var(--color-text-muted)" style={{ fontFamily: 'inherit' }}>
-                {short(r.campana)}
-              </text>
-            </g>
+              </span>
+              <div className="w-full flex items-end" style={{ height }}>
+                <div
+                  className={`w-full rounded-t-[4px] ${isWorst ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-brand-primary)] opacity-85'}`}
+                  style={{ height: `${pct}%` }}
+                  title={`${r.campana}: ${v.toLocaleString('es-AR')} kg/ha`}
+                />
+              </div>
+            </div>
           );
         })}
-      </svg>
+      </div>
+      <div className="flex gap-2 mt-1">
+        {rows.map((r) => (
+          <span key={r.campana} className={`flex-1 min-w-0 text-center text-[11px] leading-4 tabular-nums ${r.campana === worstCampana ? 'font-bold text-[var(--color-danger)]' : 'text-[var(--color-text-muted)]'}`}>
+            {short(r.campana)}
+          </span>
+        ))}
+      </div>
       {caption && (
-        <figcaption className="mt-1 text-[11px] text-[var(--color-text-muted)] leading-4">
+        <figcaption className="mt-2 text-[11px] text-[var(--color-text-muted)] leading-4">
           Rinde oficial de soja del departamento, en t/ha (MAGyP).
           {worstRow && <> Peor campaña <strong className="text-[var(--color-danger)]">{worstRow.campana}</strong>: {(worstRow.official_dpto_kg_ha as number).toLocaleString('es-AR')} kg/ha, la base del cupo.</>}
         </figcaption>
