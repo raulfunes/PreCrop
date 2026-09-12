@@ -1,0 +1,21 @@
+{
+  "name": "@precrop/score",
+  "version": "1.0.0",
+  "description": "PreCrop score formula, band thresholds and precrop-canon-v1 evidence hashing. Zero dependencies.",
+  "type": "module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT"
+}
