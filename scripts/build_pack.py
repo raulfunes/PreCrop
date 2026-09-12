@@ -57,7 +57,7 @@ NDVI_CEILING = 0.85
 
 WEIGHTS = {"ndvi_norm": 0.6, "climate": 0.25, "weeds_pct": -0.15}
 
-THRESHOLDS = {"verde_min": 70, "amarillo_min": 50}
+THRESHOLDS = {"verde_min": 70, "amarillo_min": 50, "rojo_below": 50}
 
 CLIMATE_TABLE = [
     {"max_mm": 5, "climate": 25},
@@ -112,15 +112,34 @@ def write_json(path: Path, obj: Any) -> None:
 # Canonicalisation - "precrop-canon-v1" (see SOURCES.md / design)
 # ---------------------------------------------------------------------------
 
+def _canon_number(value: Any) -> Any:
+    """Normalise one payload value so Python and JS serialise it identically.
+
+    Python's `json.dumps` writes an integral float as `100.0`; JS has no
+    separate int/float number type, so `JSON.stringify` of the same
+    abstract value always writes `100`. Left uncorrected, a scenario whose
+    score happened to land on a whole number (or on `-0.0`) would hash
+    differently in the Python producer and the TS/JS verifier -- exactly
+    the kind of silent cross-language divergence T11/T10 exist to catch.
+    `float.is_integer()` is True for `-0.0` too, and `int(-0.0) == 0`, so
+    this single check folds both cases into one.
+    """
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return value
+
+
 def canonicalize_payload(payload: Dict[str, Any]) -> str:
     """Serialise a FLAT payload per the precrop-canon-v1 rule.
 
     Keys sorted ascending by Unicode code point, no whitespace anywhere,
     UTF-8 bytes, ensure_ascii=False (payload values must already be
-    ASCII-only strings so this never actually escapes anything).
+    ASCII-only strings so this never actually escapes anything). Integral
+    floats and -0.0 are coerced to plain ints first -- see `_canon_number`.
     """
+    normalised = {k: _canon_number(v) for k, v in payload.items()}
     return json.dumps(
-        payload,
+        normalised,
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
@@ -166,6 +185,17 @@ def light_for_score(score: float) -> str:
     if score >= THRESHOLDS["amarillo_min"]:
         return "amarillo"
     return "rojo"
+
+
+def score_bp_from_score(score: float) -> int:
+    """Integer basis points for Solidity: round HALF-UP, not Python's
+    banker's rounding. Python's builtin `round()` rounds .5 ties to the
+    nearest EVEN integer (round(0.5) == 0, round(1.5) == 2); JS's
+    `Math.round()` always rounds .5 UP. `floor(x + 0.5)` matches Math.round
+    for all our positive scores, so Chain's TS client reproduces the same
+    integer from the same float without a special case.
+    """
+    return math.floor(score * 100 + 0.5)
 
 
 def scene_timestamp_utc(scene_id: str) -> str:
@@ -403,7 +433,7 @@ def build_evidence(
         "scenario": scenario_key,
         "scene_id": scene_id,
         "score": round(score_exact, 4),
-        "score_bp": round(score_exact * 100),
+        "score_bp": score_bp_from_score(score_exact),
         "score_source": "computed_from_published_formula",
         "weeds_pct": weeds_pct,
         "weeds_source": "simulated",
@@ -431,6 +461,31 @@ def build_evidence_report(
     }
 
 
+def build_or_reuse_evidence_report(
+    path: Path,
+    scenario_key: str,
+    presets: Dict[str, Any],
+    scenarios: Dict[str, Any],
+    points: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Build the evidence report for `scenario_key`; if `path` already holds
+    a report with an IDENTICAL `payload`, return that report UNCHANGED
+    (same `generated_at_utc`, same bytes) instead of stamping a fresh
+    timestamp. Without this, `--write` would rewrite every evidence file
+    (and its `generated_at_utc`) on every run even when nothing about the
+    scenario actually changed, making "regenerate and diff" always dirty.
+    """
+    payload = build_evidence(scenario_key, presets, scenarios, points)
+    if path.exists():
+        try:
+            existing = read_json(path)
+        except (OSError, json.JSONDecodeError):
+            existing = None
+        if existing is not None and existing.get("payload") == payload:
+            return existing
+    return build_evidence_report(scenario_key, presets, scenarios, points)
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -447,14 +502,17 @@ def _cmd_evidence(write: bool) -> int:
     already-committed pack files. Offline: no network, no rasterio."""
     presets, scenarios, points = _load_pack_files()
     for scenario_key in scenarios["scenarios"]:
-        report = build_evidence_report(scenario_key, presets, scenarios, points)
+        path = DATA_DIR / "evidence" / f"{scenario_key}.json"
+        if write:
+            report = build_or_reuse_evidence_report(path, scenario_key, presets, scenarios, points)
+            write_json(path, report)
+        else:
+            report = build_evidence_report(scenario_key, presets, scenarios, points)
         p = report["payload"]
         print(
             f"{scenario_key}: score={p['score']} light={p['light']} "
             f"sha256={report['content_sha256']}"
         )
-        if write:
-            write_json(DATA_DIR / "evidence" / f"{scenario_key}.json", report)
     return 0
 
 
@@ -549,8 +607,9 @@ def _cmd_write() -> int:
     scenarios = read_json(DATA_DIR / "demo-scenarios.json")
     points = read_json(DATA_DIR / "photo-point-presets.json")
     for scenario_key in scenarios["scenarios"]:
-        report = build_evidence_report(scenario_key, presets, scenarios, points)
-        write_json(DATA_DIR / "evidence" / f"{scenario_key}.json", report)
+        path = DATA_DIR / "evidence" / f"{scenario_key}.json"
+        report = build_or_reuse_evidence_report(path, scenario_key, presets, scenarios, points)
+        write_json(path, report)
 
     print("wrote data/lote-sentinel-presets.json and data/evidence/*.json")
     return 0
