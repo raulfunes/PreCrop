@@ -25,3 +25,4 @@ api/reviews/
 # runtime data of the evidence API (lots created live, MAGyP cache)
 data/lotes/
 data/cache/
+data/fotos-prueba/
