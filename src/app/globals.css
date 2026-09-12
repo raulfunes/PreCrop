@@ -245,3 +245,61 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-control-border);
 }
+
+/* ============================================================
+   Print styles — Informe para comité
+   ============================================================ */
+@media print {
+  /* Hide chrome */
+  header,
+  nav,
+  footer,
+  [data-print-hide],
+  #scenario-select {
+    display: none !important;
+  }
+
+  /* Keep the demo banner inside the report visible */
+  .report-demo-banner {
+    display: block !important;
+    border: 1px solid #999 !important;
+    background: #f9f9f9 !important;
+    color: #333 !important;
+  }
+  .report-demo-banner span {
+    color: #333 !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 12pt;
+  }
+
+  #report-content {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  a {
+    color: #000 !important;
+    text-decoration: underline !important;
+  }
+}

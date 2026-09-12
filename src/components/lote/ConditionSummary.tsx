@@ -90,8 +90,8 @@ export function ConditionSummary({ scoreData, isLoading, error, onRetry }: Condi
   const { Icono } = cfg;
   const label = getLabelEstado(result.light);
 
-  const observedDate = typeof evidence?.payload?.observed_date === 'string' 
-    ? evidence.payload.observed_date 
+  const observedDate = typeof evidence?.payload?.observed_date === 'string'
+    ? evidence.payload.observed_date
     : null;
 
   return (
@@ -133,7 +133,7 @@ export function ConditionSummary({ scoreData, isLoading, error, onRetry }: Condi
         <h3 className="text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
           Composición del índice
         </h3>
-        
+
         {factors && factors.length > 0 ? (
           <div className="flex flex-col gap-2">
             {factors.map((f, i) => {

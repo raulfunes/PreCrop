@@ -304,6 +304,70 @@ export interface DisburseResponse {
   evidence_sha256: string;
 }
 
+// ── Capacity API Types ──────────────────────────────────────
+
+export interface CapacityCampaign {
+  campaign: string;
+  date: string | null;
+  scene_id: string | null;
+  ndvi: number;
+  ndvi_min_in_window: number | null;
+  ndvi_norm: number;
+  yield_est_t_ha: number;
+  tons_est: number;
+  rain_dec_feb_mm: number | null;
+  official_yield_t_ha: number | null;
+  error_vs_official_pct: number | null;
+}
+
+export interface CapacityResponse {
+  lote_id: string;
+  pack_version: string;
+  generated_from: {
+    history_generated_at_utc: string;
+    method: {
+      satellite: string;
+      ndvi: string;
+      peak: string;
+      rain: string;
+      caveat: string;
+    };
+  };
+  rule_version: string;
+  campaigns: CapacityCampaign[];
+  n_campaigns: number;
+  worst_campaign: {
+    campaign: string;
+    yield_est_t_ha: number;
+    tons_est: number;
+    ndvi: number;
+  };
+  best_campaign: {
+    campaign: string;
+    yield_est_t_ha: number;
+  };
+  mean_yield_t_ha: number;
+  stability: {
+    cv_pct: number | null;
+    label: 'alta' | 'media' | 'baja' | 'unknown';
+  };
+  pre_sowing_quota: {
+    basis: string;
+    tons: number;
+    value_usd: number;
+    haircut: number;
+    usd: number;
+    ars: number | null;
+    pct_of_reference_value: number;
+    formula: string;
+  };
+  contrast_official: {
+    campaigns_with_official: number;
+    mean_abs_error_pct: number | null;
+    note: string;
+  };
+}
+
 export interface ApiErrorResponse {
   error: string;
   status?: number;
@@ -321,4 +385,3 @@ export class ApiError extends Error {
     this.data = data;
   }
 }
-

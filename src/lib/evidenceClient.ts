@@ -1,4 +1,4 @@
-import type { VisionPointState, EvidenceRequestPayload, ScoreResponse, PublishResponse, DisburseResponse, ApiErrorResponse } from '@/types';
+import type { VisionPointState, EvidenceRequestPayload, ScoreResponse, PublishResponse, DisburseResponse, CapacityResponse, ApiErrorResponse } from '@/types';
 import { ApiError } from '@/types';
 
 function getApiUrl(): string {
@@ -65,6 +65,32 @@ async function fetchWithHandling<T>(endpoint: string, options: RequestInit): Pro
   return res.json();
 }
 
+async function fetchText(endpoint: string, signal?: AbortSignal): Promise<string> {
+  const url = `${getApiUrl()}${endpoint}`;
+  let res: Response;
+  try {
+    res = await fetch(url, { signal });
+  } catch (error) {
+    throw new ApiError({
+      error: 'Error de red',
+      detail: error instanceof Error ? error.message : 'Error desconocido de red',
+    });
+  }
+
+  if (!res.ok) {
+    let errorData: ApiErrorResponse;
+    try {
+      errorData = await res.json();
+    } catch {
+      errorData = { error: `HTTP ${res.status} ${res.statusText}` };
+    }
+    errorData.status = res.status;
+    throw new ApiError(errorData);
+  }
+
+  return res.text();
+}
+
 export const evidenceClient = {
   async score(payload: EvidenceRequestPayload, signal?: AbortSignal): Promise<ScoreResponse> {
     return fetchWithHandling<ScoreResponse>('/score', {
@@ -88,5 +114,26 @@ export const evidenceClient = {
       body: JSON.stringify(payload),
       signal,
     });
-  }
+  },
+
+  async capacity(signal?: AbortSignal): Promise<CapacityResponse> {
+    return fetchWithHandling<CapacityResponse>('/capacity', {
+      method: 'GET',
+      signal,
+    });
+  },
+
+  async report(
+    scenario: 'bueno' | 'mixto' | 'malo',
+    options?: { weeds_pct?: number; signature?: string; explorer_url?: string },
+    signal?: AbortSignal
+  ): Promise<string> {
+    const params = new URLSearchParams();
+    if (options?.weeds_pct !== undefined) params.set('weeds_pct', String(options.weeds_pct));
+    if (options?.signature !== undefined) params.set('signature', options.signature);
+    if (options?.explorer_url !== undefined) params.set('explorer_url', options.explorer_url);
+    const qs = params.toString();
+    const endpoint = `/report/${scenario}${qs ? `?${qs}` : ''}`;
+    return fetchText(endpoint, signal);
+  },
 };

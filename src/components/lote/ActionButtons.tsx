@@ -73,7 +73,7 @@ export function ActionButtons({ publish, disburse, advance, disabled }: ActionBu
         <h3 className="text-[13px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
           1. Publicar Evidencia
         </h3>
-        
+
         {!publishResult ? (
           <>
             <Button
@@ -150,7 +150,7 @@ export function ActionButtons({ publish, disburse, advance, disabled }: ActionBu
         <h3 className="text-[13px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
           2. Desembolso
         </h3>
-        
+
         {!disburseResult ? (
           <>
             {showReviewConfirm ? (
@@ -220,7 +220,7 @@ export function ActionButtons({ publish, disburse, advance, disabled }: ActionBu
                 Recibo de desembolso
               </span>
             </div>
-            
+
             <div className="flex flex-col gap-2 text-[12px] text-[var(--color-ink)] bg-white p-3 rounded shadow-sm border border-[var(--color-border)]/50">
               <div className="flex justify-between items-center border-b pb-2">
                 <span className="text-[var(--color-text-muted)]">Monto:</span>

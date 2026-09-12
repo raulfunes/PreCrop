@@ -20,7 +20,7 @@ export function useEvidenceApi(
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<ApiError | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  
+
   // We keep the payload ref up to date to use in publish and disburse
   const payloadRef = useRef<EvidenceRequestPayload>({ scenario });
   // Track active fetch to avoid race conditions overriding isLoading
@@ -35,12 +35,12 @@ export function useEvidenceApi(
   useEffect(() => {
     const controller = new AbortController();
     const currentFetchId = ++fetchIdRef.current;
-    
+
     const fetchScore = async () => {
       setIsLoading(true);
       setError(null);
       setScoreData(null); // Clear previous data explicitly on change
-      
+
       const payload = buildEvidenceRequest(scenario, visionResults);
       payloadRef.current = payload;
 
