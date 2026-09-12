@@ -216,7 +216,7 @@ export interface EvidenceRequestPayload {
 export interface AdvanceLimitData {
   rule_version: string;
   condition_index: number;
-  light: string;
+  light: 'verde' | 'amarillo' | 'rojo';
   production_estimate: {
     yield_t_ha: number;
     tons: number;
@@ -310,7 +310,7 @@ export interface ApiErrorResponse {
   reason?: string;
   hint?: string;
   detail?: string;
-  advance?: Record<string, unknown>; // To hold potential block details for disburse
+  advance?: AdvanceLimitData; // To hold potential block details for disburse
 }
 
 export class ApiError extends Error {
