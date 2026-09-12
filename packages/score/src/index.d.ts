@@ -150,3 +150,48 @@ export interface Capacity {
 
 export const CAPACITY_RULE_VERSION: string;
 export function capacityFromHistory(history: LoteHistory, econ: Economics, official?: OfficialYields | null): Capacity;
+
+export interface CapacityV2SeriesRow {
+  campana: string;
+  official_dpto_kg_ha: number | null;
+  ndvi_peak: number | null;
+  ndvi_index: number | null;
+  official_index: number | null;
+  lote_vs_district: number | null;
+  status: "paired" | "unpaired";
+}
+export interface CapacityV2 {
+  rule_version: string;
+  series: CapacityV2SeriesRow[];
+  worst_year: {
+    campana: string;
+    official_dpto_kg_ha: number;
+    yield_t_ha: number;
+    source: string;
+    basis: string;
+  } | null;
+  district_volatility: { cv: number | null; basis: string; note: string };
+  representativeness: {
+    representative: boolean;
+    lote_vs_district_median: number | null;
+    lote_vs_district_cv: number | null;
+    band: { min: number; max: number };
+    paired_campaigns: number;
+    reasons: string[];
+    basis: string;
+    note: string;
+  };
+  pre_sowing_limit: {
+    usd: number | null;
+    ars: number | null;
+    usd_if_representative: number | null;
+    status: "allowed" | "blocked_unrepresentative";
+    formula: string;
+    basis: string;
+    note: string;
+  };
+  reference: { ha: number; price_usd_t: number; haircut: number; fx_ars_per_usd: number | null };
+}
+
+export const CAPACITY_V2_RULE_VERSION: string;
+export function capacityFromOfficial(history: LoteHistory, econ: Economics, official: OfficialYields): CapacityV2;

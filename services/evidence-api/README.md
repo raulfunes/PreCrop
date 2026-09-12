@@ -13,7 +13,7 @@ npm start           # http://localhost:8787
 |---|---|---|
 | GET | `/health` | Versión del pack, pubkey del publicador |
 | GET | `/pack` · `/pack/<archivo>` | Los JSON de `data/` (lista blanca) |
-| GET | `/capacity` | Serie NDVI por campana (2018/19-2024/25), ano malo, estabilidad y cupo pre-siembra. Publica el cupo solo si el estimador reproduce la serie oficial de rindes; si no, lo retiene con el motivo |
+| GET | `/capacity` | Regla `capacidad-v2`: cupo pre-siembra contra el peor ano publicado del departamento (MAGyP). El NDVI por campana solo habilita la regla si el lote sigue a su departamento; no multiplica el cupo. Incluye `rejected_alternative` con la regla v1 (estimar toneladas desde NDVI) y por que no valido |
 | POST | `/score` | `{ "scenario": "malo", "weeds_pct": 61 }` → score, banda, `score_bp`, payload de evidencia y `content_sha256` |
 | POST | `/publish` | Lo mismo, y además manda una transacción Memo firmada por la wallet publicadora. Devuelve `signature` y `explorer_url` |
 
