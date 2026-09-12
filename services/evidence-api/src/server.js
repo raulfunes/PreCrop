@@ -23,9 +23,9 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-function send(res, status, body, type = "application/json") {
+function send(res, status, body, type = "application/json", raw = false) {
   res.writeHead(status, { "Content-Type": `${type}; charset=utf-8`, ...CORS });
-  res.end(type === "application/json" ? JSON.stringify(body, null, 2) : body);
+  res.end(raw || type !== "application/json" ? body : JSON.stringify(body, null, 2));
 }
 
 function readBody(req) {
@@ -84,7 +84,7 @@ const server = createServer(async (req, res) => {
     if (req.method === "GET" && url.pathname.startsWith("/pack/")) {
       const raw = readPublicFile(url.pathname.slice("/pack/".length));
       if (raw === null) return send(res, 404, { error: "unknown pack file" });
-      return send(res, 200, raw, "application/json");
+      return send(res, 200, raw, "application/json", true);
     }
 
     if (req.method === "POST" && url.pathname === "/score") {
