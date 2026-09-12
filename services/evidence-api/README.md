@@ -14,10 +14,36 @@ npm start           # http://localhost:8787
 | GET | `/health` | Versión del pack, pubkey del publicador |
 | GET | `/pack` · `/pack/<archivo>` | Los JSON de `data/` (lista blanca) |
 | GET | `/capacity` | Cupo **pre-siembra** contra el peor año publicado del departamento. Ver [abajo](#get-capacity) |
-| POST | `/score` | `{ "scenario": "malo", "weeds_pct": 61 }` → score, banda, `score_bp`, payload de evidencia y `content_sha256` |
+| POST | `/score` | `{ "scenario": "malo", "weeds_pct": 61 }` → score, banda, `score_bp`, cupo `cupo-v2` contra el techo de capacidad, payload de evidencia y `content_sha256` |
 | POST | `/publish` | Lo mismo, y además manda una transacción Memo firmada por la wallet publicadora. Devuelve `signature` y `explorer_url` |
 
 `weeds_pct` es opcional: si Visión lo manda, se usa y queda etiquetado `estimated`; si no, se usa el valor simulado del pack.
+
+### El cupo de `/score` cuelga del techo de `/capacity`
+
+Las dos reglas estaban dando respuestas distintas para el mismo lote: `cupo-v1` calculaba sobre el rinde de referencia a condición plena (3,2 t/ha → 116.736 USD de base) y autorizaba ~54–61k USD, mientras capacidad leía el peor año real del departamento y ponía el piso en 29.877 USD. Un comité encuentra esa contradicción enseguida.
+
+`cupo-v2` conserva **toda** la fórmula de condición —malezas de Visión incluidas, con su peso −0,15— y solo cambia la base:
+
+```
+piso   = ha × rinde_peor_año_oficial × precio   = 100 × 1,17 × 364,8 = 42.682 USD
+techo  = piso × haircut                         = 29.877 USD   ← lo que publica /capacity
+cupo   = techo × condición/100
+```
+
+**Capacidad pone el techo; condición libera una porción.** Por eso el cupo nunca puede superar lo que el lote soportó en su peor campaña registrada:
+
+| malezas (Visión) | score | cupo `cupo-v2` | % del techo | `cupo-v1` daba |
+|---|---|---|---|---|
+| 12 % | 74,4 verde | 22.235 USD | 74,4 % | 60.819 USD |
+| 65 % | 66,5 amarillo | 19.860 USD | 66,5 % | 54.282 USD |
+
+El bloque `superseded_advance` de la respuesta trae el número de `cupo-v1` para que el cambio sea auditable.
+
+**El gate se propaga.** Si capacidad no pudo establecer un piso (el lote no sigue a su departamento, o la serie es muy corta), `advance_limit.usd` vuelve `null` y `new_disbursements` es `blocked_no_capacity`. Ojo con la diferencia, que Front tiene que respetar:
+
+- `usd: 0` con `new_disbursements: "blocked"` → **cero medido**: el lote está en rojo, no sale plata.
+- `usd: null` con `blocked_no_capacity` → **no sabemos el piso**. No es cero y no debe mostrarse como cero.
 
 ## GET /capacity
 

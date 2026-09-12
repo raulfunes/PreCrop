@@ -195,3 +195,43 @@ export interface CapacityV2 {
 
 export const CAPACITY_V2_RULE_VERSION: string;
 export function capacityFromOfficial(history: LoteHistory, econ: Economics, official: OfficialYields): CapacityV2;
+
+export interface AdvanceFloor {
+  campana: string | null;
+  yield_t_ha: number | null;
+  source?: string;
+  available: boolean;
+}
+export interface AdvanceLimitV2 {
+  rule_version: string;
+  condition_index: number;
+  light: Light;
+  floor: {
+    campana: string | null;
+    yield_t_ha: number | null;
+    value_usd: number | null;
+    source: string;
+    available: boolean;
+    basis: string;
+  };
+  advance_limit: {
+    usd: number | null;
+    ars: number | null;
+    ceiling_usd: number | null;
+    pct_of_ceiling: number;
+    new_disbursements: "allowed" | "review" | "blocked" | "blocked_no_capacity";
+    formula: string;
+    note: string;
+  };
+  benchmark: { flat_pct: number; usd: number | null; note: string };
+  reference: {
+    ha: number;
+    price_usd_t: number;
+    haircut: number;
+    fx_ars_per_usd: number | null;
+    floor_value_usd: number | null;
+  };
+}
+
+export const ADVANCE_V2_RULE_VERSION: string;
+export function advanceLimitFromFloor(result: ScoreResult, econ: Economics, floor: AdvanceFloor | null): AdvanceLimitV2;

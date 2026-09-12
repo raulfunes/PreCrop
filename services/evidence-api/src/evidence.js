@@ -1,6 +1,9 @@
 // Builds the evidence payload for a scenario exactly like scripts/build_pack.py,
 // so that with the pinned inputs the hash equals data/evidence/<scenario>.json.
-import { computeScore, hashPayload, CANON_VERSION, explainFactors, advanceLimit } from "@precrop/score";
+import {
+  computeScore, hashPayload, CANON_VERSION, explainFactors,
+  advanceLimit, advanceLimitFromFloor, capacityFromOfficial,
+} from "@precrop/score";
 import { economicsInputs } from "./pack.js";
 
 const NDVI_METHOD = "BOA=(DN-1000)/10000; NDVI=(B08-B04)/(B08+B04)";
@@ -64,7 +67,29 @@ export function buildEvidence(scenarioKey, pack, override = {}) {
   };
 
   const sources = { ndvi: payload.ndvi_source, rain: payload.rain_source, weeds: weedsSource };
-  const advance = pack.economics ? advanceLimit(r, economicsInputs(pack.economics)) : null;
+  const econ = pack.economics ? economicsInputs(pack.economics) : null;
+
+  // The advance draws against the ceiling capacity established from the
+  // official series, so the two rules cannot contradict each other. If
+  // capacity could not establish a floor, the gate propagates and nothing
+  // is published here either.
+  const capacity = econ && pack.history && pack.official
+    ? capacityFromOfficial(pack.history, econ, pack.official)
+    : null;
+  const floor = capacity
+    ? {
+        campana: capacity.worst_year?.campana ?? null,
+        yield_t_ha: capacity.worst_year?.yield_t_ha ?? null,
+        source: capacity.worst_year?.source ?? "unavailable",
+        available: capacity.representativeness.representative && capacity.worst_year !== null,
+      }
+    : null;
+
+  const advance = econ ? advanceLimitFromFloor(r, econ, floor) : null;
+  // cupo-v1 kept visible, not deleted: it is the number the coop would have
+  // advanced off a full-condition reference yield, and the gap against the
+  // official floor is the point.
+  const supersededAdvance = econ ? advanceLimit(r, econ) : null;
 
   return {
     scenario: scenarioKey,
@@ -72,6 +97,14 @@ export function buildEvidence(scenarioKey, pack, override = {}) {
     result: r,
     factors: explainFactors(r, inputs, sources),
     advance,
+    superseded_advance: supersededAdvance && advance
+      ? {
+          rule_version: supersededAdvance.rule_version,
+          usd: supersededAdvance.advance_limit.usd,
+          basis: "yield_ref_t_ha at full condition, not anchored on the official floor",
+          note: "superseded by cupo-v2; shown so the change in the number is auditable",
+        }
+      : null,
     evidence: {
       canonicalization: CANON_VERSION,
       pack_version: pack.pack_version,
