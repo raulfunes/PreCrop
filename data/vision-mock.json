@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "pack_version": "1.0.0",
+  "rule_version": "vision-mock-v1",
+  "notes": "Respuestas fijas de vision para la demo, por nombre de archivo. NO son mediciones: el proxy las devuelve con source 'preset' y el front las rotula 'valor de ejemplo'. Un archivo que no este en la tabla cae al preset del punto del escenario.",
+  "delay_ms": { "min": 300, "max": 400 },
+  "weeds_pct_by_filename": {
+    "soja-brotes-sanos-01": 6,
+    "soja-brotes-sanos-02": 9,
+    "soja-brotes-sanos-03": 5,
+    "soja-brotes-sanos-04": 11,
+    "soja-brotes-maleza-01": 68,
+    "soja-brotes-maleza-02": 71,
+    "soja-brotes-maleza-03": 74,
+    "soja-brotes-maleza-04": 64
+  }
+}

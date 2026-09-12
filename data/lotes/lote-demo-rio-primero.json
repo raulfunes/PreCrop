@@ -1,0 +1,930 @@
+{
+  "lote": {
+    "id": "lote-demo-rio-primero",
+    "nombre": "Lote demo Río Primero / Córdoba",
+    "source": "live polygon",
+    "departamento": "Río Primero",
+    "departments": [
+      {
+        "departamento": "Río Primero",
+        "departamento_id": "14105",
+        "provincia": "Córdoba",
+        "share": 1,
+        "probes": 6
+      }
+    ],
+    "provincia": "Córdoba",
+    "ha": 99.9,
+    "center": {
+      "lat": -31.42,
+      "lon": -63.72
+    },
+    "created_at_utc": "2026-09-12T15:29:40.341Z"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -63.7254,
+          -31.423
+        ],
+        [
+          -63.724,
+          -31.4245
+        ],
+        [
+          -63.7146,
+          -31.4245
+        ],
+        [
+          -63.7146,
+          -31.417
+        ],
+        [
+          -63.716,
+          -31.4155
+        ],
+        [
+          -63.7254,
+          -31.4155
+        ],
+        [
+          -63.7254,
+          -31.423
+        ]
+      ]
+    ]
+  },
+  "presets": {
+    "schema_version": 1,
+    "pack_version": "1.0.0",
+    "lote_id": "lote-demo-rio-primero-jd91",
+    "nombre": "Lote demo Rio Primero",
+    "ha": 99.9,
+    "cultivo": "soja",
+    "center": {
+      "lat": -31.42,
+      "lon": -63.72
+    },
+    "bbox": [
+      -63.7254,
+      -31.4245,
+      -63.7146,
+      -31.4155
+    ],
+    "normalization": {
+      "ndvi_norm": {
+        "formula": "clip((ndvi - ndvi_floor) / (ndvi_ceiling - ndvi_floor) * 100, 0, 100)",
+        "ndvi_floor": 0.2,
+        "ndvi_ceiling": 0.85,
+        "source": "estimated",
+        "note": "Fixed agronomic anchors for soy (literature: 0.0-0.3 emergence, 0.6-0.9 full canopy). NOT derived from this lot."
+      },
+      "climate": {
+        "formula": "climate_table(rain_mm_7d)",
+        "ref": "climate_table",
+        "source": "estimated"
+      },
+      "weeds_norm": {
+        "formula": "weeds_pct",
+        "range": [
+          0,
+          100
+        ],
+        "note": "pass-through",
+        "source": "simulated"
+      },
+      "superseded_concepts": [
+        "rain_norm"
+      ],
+      "superseded_note": "rain_norm was never published. Use climate_table. Any draft referencing rain_norm is stale."
+    },
+    "climate_table": {
+      "description": "climate score from rain_mm_7d (demo heuristic, not an agrometeorological model)",
+      "comparator": "rain_mm_7d < max_mm",
+      "comparator_note": "Strict less-than, matching build_pack.climate_from_rain(): the FIRST rule where rain_mm_7d < max_mm wins (max_mm: null means \"else\", always matches last).",
+      "rules": [
+        {
+          "max_mm": 5,
+          "climate": 25,
+          "label": "sequía"
+        },
+        {
+          "max_mm": 15,
+          "climate": 45,
+          "label": "seco"
+        },
+        {
+          "max_mm": 25,
+          "climate": 70,
+          "label": "aceptable"
+        },
+        {
+          "max_mm": 50,
+          "climate": 90,
+          "label": "óptimo"
+        },
+        {
+          "max_mm": 80,
+          "climate": 85,
+          "label": "húmedo"
+        },
+        {
+          "max_mm": null,
+          "climate": 60,
+          "label": "exceso"
+        }
+      ]
+    },
+    "ndvi_method": "BOA = (DN - 1000) / 10000 for processing_baseline >= 04.00; NDVI = (B08 - B04) / (B08 + B04)",
+    "ndvi_published_stat": "median",
+    "presets": {
+      "fecha_buena": {
+        "label": "Fecha buena - pico de la campana 2024/25",
+        "date": "2025-02-02",
+        "ndvi": 0.777,
+        "ndvi_source": "measured",
+        "ndvi_stats": {
+          "mean": 0.7262,
+          "median": 0.7769,
+          "p10": 0.5151,
+          "p90": 0.8976,
+          "n_pixels": 10110
+        },
+        "rain_mm_7d": 46.7,
+        "rain_source": "measured",
+        "rain_window": {
+          "start": "2025-01-27",
+          "end": "2025-02-02"
+        },
+        "rain_provider": "open-meteo archive",
+        "sentinel2": {
+          "collection": "sentinel-2-l2a",
+          "scene_id": "S2B_MSIL2A_20250202T140709_R110_T20JML_20250202T175010",
+          "cloud_cover_pct": 0.0028,
+          "processing_baseline": "05.11",
+          "stac": "https://planetarycomputer.microsoft.com/api/stac/v1"
+        }
+      },
+      "fecha_mala": {
+        "label": "Fecha mala - minimo de la campana 2024/25",
+        "date": "2025-02-07",
+        "ndvi": 0.755,
+        "ndvi_source": "measured",
+        "ndvi_stats": {
+          "mean": 0.6973,
+          "median": 0.7553,
+          "p10": 0.4745,
+          "p90": 0.8767,
+          "n_pixels": 10110
+        },
+        "rain_mm_7d": 0.1,
+        "rain_source": "measured",
+        "rain_window": {
+          "start": "2025-02-01",
+          "end": "2025-02-07"
+        },
+        "rain_provider": "open-meteo archive",
+        "sentinel2": {
+          "collection": "sentinel-2-l2a",
+          "scene_id": "S2C_MSIL2A_20250207T140811_R110_T20JML_20250207T174511",
+          "cloud_cover_pct": null,
+          "processing_baseline": "05.11",
+          "stac": "https://planetarycomputer.microsoft.com/api/stac/v1"
+        }
+      }
+    },
+    "aliases": {
+      "baseline": "fecha_buena",
+      "drought": "fecha_mala"
+    },
+    "scenario_campaign": "2024/25"
+  },
+  "history": {
+    "schema_version": 1,
+    "generated_at_utc": "2026-09-12T15:29:39Z",
+    "method": {
+      "satellite": "Sentinel-2 L2A via Planetary Computer STAC; scene-level eo:cloud_cover < 10 %; one scene per date",
+      "ndvi": "computed server-side by Planetary Computer's statistics API over the polygon: (B08-B04)/(B08+B04-2000) for processing_baseline >= 04.00, (B08-B04)/(B08+B04) before; median over the polygon",
+      "peak": "max of the per-scene medians inside Jan 15 - Mar 15 (widened to Jan 1 - Mar 31 only when empty, flagged); min kept as the stress scene",
+      "rain": "Open-Meteo archive daily precipitation_sum at the polygon centroid; Dec 1 (previous year) .. Feb 28",
+      "caveat": "Up to three scenes per campaign. A cloudy February leaves a gap or a lower peak; gaps are shown, never filled."
+    },
+    "campaigns": [
+      {
+        "campaign": "2018/19",
+        "harvest_year": 2019,
+        "window": {
+          "start": "2019-01-15",
+          "end": "2019-03-15",
+          "widened": false
+        },
+        "scenes_evaluated": [
+          {
+            "date": "2019-02-19",
+            "scene_id": "S2A_MSIL2A_20190219T141041_R110_T20JML_20201007T182507",
+            "cloud_cover_pct": 0.0337,
+            "processing_baseline": "02.12",
+            "mean": 0.8206,
+            "median": 0.8966,
+            "p10": 0.6976,
+            "p90": 0.9301,
+            "n_pixels": 10110,
+            "offset_applied": 0
+          },
+          {
+            "date": "2019-02-14",
+            "scene_id": "S2B_MSIL2A_20190214T141049_R110_T20JML_20201007T165052",
+            "cloud_cover_pct": 0.25,
+            "processing_baseline": "02.12",
+            "mean": 0.8284,
+            "median": 0.8726,
+            "p10": 0.7246,
+            "p90": 0.9371,
+            "n_pixels": 10110,
+            "offset_applied": 0
+          },
+          {
+            "date": "2019-01-25",
+            "scene_id": "S2B_MSIL2A_20190125T141049_R110_T20JML_20201008T043856",
+            "cloud_cover_pct": 5.3362,
+            "processing_baseline": "02.12",
+            "mean": 0.6933,
+            "median": 0.6918,
+            "p10": 0.566,
+            "p90": 0.9028,
+            "n_pixels": 10110,
+            "offset_applied": 0
+          }
+        ],
+        "peak": {
+          "date": "2019-02-19",
+          "scene_id": "S2A_MSIL2A_20190219T141041_R110_T20JML_20201007T182507",
+          "cloud_cover_pct": 0.0337,
+          "processing_baseline": "02.12",
+          "ndvi_offset_applied": 0,
+          "ndvi": 0.897,
+          "ndvi_stat": "median",
+          "ndvi_stats": {
+            "mean": 0.8206,
+            "median": 0.8966,
+            "p10": 0.6976,
+            "p90": 0.9301,
+            "n_pixels": 10110
+          },
+          "source": "measured"
+        },
+        "min": {
+          "date": "2019-01-25",
+          "scene_id": "S2B_MSIL2A_20190125T141049_R110_T20JML_20201008T043856",
+          "ndvi": 0.692,
+          "processing_baseline": "02.12",
+          "ndvi_stats": {
+            "mean": 0.6933,
+            "median": 0.6918,
+            "p10": 0.566,
+            "p90": 0.9028,
+            "n_pixels": 10110
+          }
+        },
+        "rain_dec_feb_mm": 583.7,
+        "rain_source": "measured"
+      },
+      {
+        "campaign": "2019/20",
+        "harvest_year": 2020,
+        "window": {
+          "start": "2020-01-15",
+          "end": "2020-03-15",
+          "widened": false
+        },
+        "scenes_evaluated": [
+          {
+            "date": "2020-03-05",
+            "scene_id": "S2A_MSIL2A_20200305T141041_R110_T20JML_20200928T175122",
+            "cloud_cover_pct": 0.0279,
+            "processing_baseline": "02.12",
+            "mean": 0.7508,
+            "median": 0.7682,
+            "p10": 0.6803,
+            "p90": 0.8306,
+            "n_pixels": 10110,
+            "offset_applied": 0
+          },
+          {
+            "date": "2020-02-29",
+            "scene_id": "S2B_MSIL2A_20200229T141049_R110_T20JML_20200929T074106",
+            "cloud_cover_pct": 0.0281,
+            "processing_baseline": "02.12",
+            "mean": 0.7817,
+            "median": 0.8074,
+            "p10": 0.709,
+            "p90": 0.8611,
+            "n_pixels": 10110,
+            "offset_applied": 0
+          },
+          {
+            "date": "2020-01-25",
+            "scene_id": "S2A_MSIL2A_20200125T140641_R110_T20JML_20201002T100406",
+            "cloud_cover_pct": 0.0281,
+            "processing_baseline": "02.12",
+            "mean": 0.6009,
+            "median": 0.6047,
+            "p10": 0.4752,
+            "p90": 0.7294,
+            "n_pixels": 10110,
+            "offset_applied": 0
+          }
+        ],
+        "peak": {
+          "date": "2020-02-29",
+          "scene_id": "S2B_MSIL2A_20200229T141049_R110_T20JML_20200929T074106",
+          "cloud_cover_pct": 0.0281,
+          "processing_baseline": "02.12",
+          "ndvi_offset_applied": 0,
+          "ndvi": 0.807,
+          "ndvi_stat": "median",
+          "ndvi_stats": {
+            "mean": 0.7817,
+            "median": 0.8074,
+            "p10": 0.709,
+            "p90": 0.8611,
+            "n_pixels": 10110
+          },
+          "source": "measured"
+        },
+        "min": {
+          "date": "2020-01-25",
+          "scene_id": "S2A_MSIL2A_20200125T140641_R110_T20JML_20201002T100406",
+          "ndvi": 0.605,
+          "processing_baseline": "02.12",
+          "ndvi_stats": {
+            "mean": 0.6009,
+            "median": 0.6047,
+            "p10": 0.4752,
+            "p90": 0.7294,
+            "n_pixels": 10110
+          }
+        },
+        "rain_dec_feb_mm": 411,
+        "rain_source": "measured"
+      },
+      {
+        "campaign": "2020/21",
+        "harvest_year": 2021,
+        "window": {
+          "start": "2021-01-15",
+          "end": "2021-03-15",
+          "widened": false
+        },
+        "scenes_evaluated": [
+          {
+            "date": "2021-03-10",
+            "scene_id": "S2A_MSIL2A_20210310T141051_R110_T20JML_20210311T002440",
+            "cloud_cover_pct": 0.0813,
+            "processing_baseline": "02.12",
+            "mean": 0.7419,
+            "median": 0.7975,
+            "p10": 0.5567,
+            "p90": 0.9054,
+            "n_pixels": 10110,
+            "offset_applied": 0
+          },
+          {
+            "date": "2021-02-18",
+            "scene_id": "S2A_MSIL2A_20210218T141051_R110_T20JML_20210219T143757",
+            "cloud_cover_pct": 0.0841,
+            "processing_baseline": "02.12",
+            "mean": 0.7892,
+            "median": 0.8785,
+            "p10": 0.6307,
+            "p90": 0.9214,
+            "n_pixels": 10110,
+            "offset_applied": 0
+          },
+          {
+            "date": "2021-01-19",
+            "scene_id": "S2A_MSIL2A_20210119T141051_R110_T20JML_20210120T065439",
+            "cloud_cover_pct": 1.6282,
+            "processing_baseline": "02.12",
+            "mean": 0.7131,
+            "median": 0.7295,
+            "p10": 0.6235,
+            "p90": 0.8281,
+            "n_pixels": 10110,
+            "offset_applied": 0
+          }
+        ],
+        "peak": {
+          "date": "2021-02-18",
+          "scene_id": "S2A_MSIL2A_20210218T141051_R110_T20JML_20210219T143757",
+          "cloud_cover_pct": 0.0841,
+          "processing_baseline": "02.12",
+          "ndvi_offset_applied": 0,
+          "ndvi": 0.879,
+          "ndvi_stat": "median",
+          "ndvi_stats": {
+            "mean": 0.7892,
+            "median": 0.8785,
+            "p10": 0.6307,
+            "p90": 0.9214,
+            "n_pixels": 10110
+          },
+          "source": "measured"
+        },
+        "min": {
+          "date": "2021-01-19",
+          "scene_id": "S2A_MSIL2A_20210119T141051_R110_T20JML_20210120T065439",
+          "ndvi": 0.73,
+          "processing_baseline": "02.12",
+          "ndvi_stats": {
+            "mean": 0.7131,
+            "median": 0.7295,
+            "p10": 0.6235,
+            "p90": 0.8281,
+            "n_pixels": 10110
+          }
+        },
+        "rain_dec_feb_mm": 481.6,
+        "rain_source": "measured"
+      },
+      {
+        "campaign": "2021/22",
+        "harvest_year": 2022,
+        "window": {
+          "start": "2022-01-15",
+          "end": "2022-03-15",
+          "widened": false
+        },
+        "scenes_evaluated": [
+          {
+            "date": "2022-02-13",
+            "scene_id": "S2A_MSIL2A_20220213T141051_R110_T20JML_20220222T204511",
+            "cloud_cover_pct": 0.0033,
+            "processing_baseline": "04.00",
+            "mean": 0.7679,
+            "median": 0.8119,
+            "p10": 0.6376,
+            "p90": 0.9044,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          },
+          {
+            "date": "2022-02-08",
+            "scene_id": "S2B_MSIL2A_20220208T141039_R110_T20JML_20220220T121528",
+            "cloud_cover_pct": 0.0356,
+            "processing_baseline": "04.00",
+            "mean": 0.7455,
+            "median": 0.7882,
+            "p10": 0.6042,
+            "p90": 0.8793,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          },
+          {
+            "date": "2022-01-29",
+            "scene_id": "S2B_MSIL2A_20220129T141039_R110_T20JML_20220214T012931",
+            "cloud_cover_pct": 0.3967,
+            "processing_baseline": "04.00",
+            "mean": 0.7358,
+            "median": 0.7628,
+            "p10": 0.6,
+            "p90": 0.8956,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          }
+        ],
+        "peak": {
+          "date": "2022-02-13",
+          "scene_id": "S2A_MSIL2A_20220213T141051_R110_T20JML_20220222T204511",
+          "cloud_cover_pct": 0.0033,
+          "processing_baseline": "04.00",
+          "ndvi_offset_applied": -1000,
+          "ndvi": 0.812,
+          "ndvi_stat": "median",
+          "ndvi_stats": {
+            "mean": 0.7679,
+            "median": 0.8119,
+            "p10": 0.6376,
+            "p90": 0.9044,
+            "n_pixels": 10110
+          },
+          "source": "measured"
+        },
+        "min": {
+          "date": "2022-01-29",
+          "scene_id": "S2B_MSIL2A_20220129T141039_R110_T20JML_20220214T012931",
+          "ndvi": 0.763,
+          "processing_baseline": "04.00",
+          "ndvi_stats": {
+            "mean": 0.7358,
+            "median": 0.7628,
+            "p10": 0.6,
+            "p90": 0.8956,
+            "n_pixels": 10110
+          }
+        },
+        "rain_dec_feb_mm": 279.9,
+        "rain_source": "measured"
+      },
+      {
+        "campaign": "2022/23",
+        "harvest_year": 2023,
+        "window": {
+          "start": "2023-01-15",
+          "end": "2023-03-15",
+          "widened": false
+        },
+        "scenes_evaluated": [
+          {
+            "date": "2023-03-05",
+            "scene_id": "S2B_MSIL2A_20230305T140709_R110_T20JML_20240819T185411",
+            "cloud_cover_pct": 0.0019,
+            "processing_baseline": "05.10",
+            "mean": 0.6819,
+            "median": 0.6937,
+            "p10": 0.5824,
+            "p90": 0.7928,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          },
+          {
+            "date": "2023-02-18",
+            "scene_id": "S2A_MSIL2A_20230218T140701_R110_T20JML_20230220T193728",
+            "cloud_cover_pct": 0.0034,
+            "processing_baseline": "04.00",
+            "mean": 0.7464,
+            "median": 0.7722,
+            "p10": 0.6148,
+            "p90": 0.8723,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          },
+          {
+            "date": "2023-03-15",
+            "scene_id": "S2B_MSIL2A_20230315T140709_R110_T20JML_20240823T075006",
+            "cloud_cover_pct": 0.0039,
+            "processing_baseline": "05.10",
+            "mean": 0.5342,
+            "median": 0.6119,
+            "p10": 0.2733,
+            "p90": 0.7145,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          }
+        ],
+        "peak": {
+          "date": "2023-02-18",
+          "scene_id": "S2A_MSIL2A_20230218T140701_R110_T20JML_20230220T193728",
+          "cloud_cover_pct": 0.0034,
+          "processing_baseline": "04.00",
+          "ndvi_offset_applied": -1000,
+          "ndvi": 0.772,
+          "ndvi_stat": "median",
+          "ndvi_stats": {
+            "mean": 0.7464,
+            "median": 0.7722,
+            "p10": 0.6148,
+            "p90": 0.8723,
+            "n_pixels": 10110
+          },
+          "source": "measured"
+        },
+        "min": {
+          "date": "2023-03-15",
+          "scene_id": "S2B_MSIL2A_20230315T140709_R110_T20JML_20240823T075006",
+          "ndvi": 0.612,
+          "processing_baseline": "05.10",
+          "ndvi_stats": {
+            "mean": 0.5342,
+            "median": 0.6119,
+            "p10": 0.2733,
+            "p90": 0.7145,
+            "n_pixels": 10110
+          }
+        },
+        "rain_dec_feb_mm": 370.7,
+        "rain_source": "measured"
+      },
+      {
+        "campaign": "2023/24",
+        "harvest_year": 2024,
+        "window": {
+          "start": "2024-01-15",
+          "end": "2024-03-15",
+          "widened": false
+        },
+        "scenes_evaluated": [
+          {
+            "date": "2024-01-29",
+            "scene_id": "S2B_MSIL2A_20240129T140709_R110_T20JML_20240129T192633",
+            "cloud_cover_pct": 0.005,
+            "processing_baseline": "05.10",
+            "mean": 0.7269,
+            "median": 0.7494,
+            "p10": 0.5732,
+            "p90": 0.8688,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          },
+          {
+            "date": "2024-01-24",
+            "scene_id": "S2A_MSIL2A_20240124T140701_R110_T20JML_20240124T211301",
+            "cloud_cover_pct": 0.2459,
+            "processing_baseline": "05.10",
+            "mean": 0.7404,
+            "median": 0.7608,
+            "p10": 0.6005,
+            "p90": 0.8511,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          },
+          {
+            "date": "2024-02-03",
+            "scene_id": "S2A_MSIL2A_20240203T140701_R110_T20JML_20240203T211547",
+            "cloud_cover_pct": 0.711,
+            "processing_baseline": "05.10",
+            "mean": 0.6752,
+            "median": 0.706,
+            "p10": 0.5136,
+            "p90": 0.8341,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          }
+        ],
+        "peak": {
+          "date": "2024-01-24",
+          "scene_id": "S2A_MSIL2A_20240124T140701_R110_T20JML_20240124T211301",
+          "cloud_cover_pct": 0.2459,
+          "processing_baseline": "05.10",
+          "ndvi_offset_applied": -1000,
+          "ndvi": 0.761,
+          "ndvi_stat": "median",
+          "ndvi_stats": {
+            "mean": 0.7404,
+            "median": 0.7608,
+            "p10": 0.6005,
+            "p90": 0.8511,
+            "n_pixels": 10110
+          },
+          "source": "measured"
+        },
+        "min": {
+          "date": "2024-02-03",
+          "scene_id": "S2A_MSIL2A_20240203T140701_R110_T20JML_20240203T211547",
+          "ndvi": 0.706,
+          "processing_baseline": "05.10",
+          "ndvi_stats": {
+            "mean": 0.6752,
+            "median": 0.706,
+            "p10": 0.5136,
+            "p90": 0.8341,
+            "n_pixels": 10110
+          }
+        },
+        "rain_dec_feb_mm": 488.3,
+        "rain_source": "measured"
+      },
+      {
+        "campaign": "2024/25",
+        "harvest_year": 2025,
+        "window": {
+          "start": "2025-01-15",
+          "end": "2025-03-15",
+          "widened": false
+        },
+        "scenes_evaluated": [
+          {
+            "date": "2025-02-02",
+            "scene_id": "S2B_MSIL2A_20250202T140709_R110_T20JML_20250202T175010",
+            "cloud_cover_pct": 0.0028,
+            "processing_baseline": "05.11",
+            "mean": 0.7262,
+            "median": 0.7769,
+            "p10": 0.5151,
+            "p90": 0.8976,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          },
+          {
+            "date": "2025-02-07",
+            "scene_id": "S2C_MSIL2A_20250207T140811_R110_T20JML_20250207T174511",
+            "cloud_cover_pct": 0.3321,
+            "processing_baseline": "05.11",
+            "mean": 0.6973,
+            "median": 0.7553,
+            "p10": 0.4745,
+            "p90": 0.8767,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          },
+          {
+            "date": "2025-01-23",
+            "scene_id": "S2B_MSIL2A_20250123T140709_R110_T20JML_20250123T194021",
+            "cloud_cover_pct": 0.6578,
+            "processing_baseline": "05.11",
+            "mean": 0.7241,
+            "median": 0.7574,
+            "p10": 0.5244,
+            "p90": 0.9069,
+            "n_pixels": 10110,
+            "offset_applied": -1000
+          }
+        ],
+        "peak": {
+          "date": "2025-02-02",
+          "scene_id": "S2B_MSIL2A_20250202T140709_R110_T20JML_20250202T175010",
+          "cloud_cover_pct": 0.0028,
+          "processing_baseline": "05.11",
+          "ndvi_offset_applied": -1000,
+          "ndvi": 0.777,
+          "ndvi_stat": "median",
+          "ndvi_stats": {
+            "mean": 0.7262,
+            "median": 0.7769,
+            "p10": 0.5151,
+            "p90": 0.8976,
+            "n_pixels": 10110
+          },
+          "source": "measured"
+        },
+        "min": {
+          "date": "2025-02-07",
+          "scene_id": "S2C_MSIL2A_20250207T140811_R110_T20JML_20250207T174511",
+          "ndvi": 0.755,
+          "processing_baseline": "05.11",
+          "ndvi_stats": {
+            "mean": 0.6973,
+            "median": 0.7553,
+            "p10": 0.4745,
+            "p90": 0.8767,
+            "n_pixels": 10110
+          }
+        },
+        "rain_dec_feb_mm": 247,
+        "rain_source": "measured"
+      }
+    ],
+    "lote_id": "lote-demo-rio-primero-jd91"
+  },
+  "official": {
+    "schema_version": 1,
+    "departamento": "Río Primero",
+    "provincia": "Córdoba",
+    "campaigns": [
+      {
+        "campana": "2018/19",
+        "rinde_dpto_kg_ha": 3669,
+        "rinde_prov_kg_ha": 3528.4
+      },
+      {
+        "campana": "2019/20",
+        "rinde_dpto_kg_ha": 3248,
+        "rinde_prov_kg_ha": 2998.2
+      },
+      {
+        "campana": "2020/21",
+        "rinde_dpto_kg_ha": 3651,
+        "rinde_prov_kg_ha": 3224.1
+      },
+      {
+        "campana": "2021/22",
+        "rinde_dpto_kg_ha": 3011,
+        "rinde_prov_kg_ha": 2854.5
+      },
+      {
+        "campana": "2022/23",
+        "rinde_dpto_kg_ha": 1769,
+        "rinde_prov_kg_ha": 1572.5
+      },
+      {
+        "campana": "2023/24",
+        "rinde_dpto_kg_ha": 3408,
+        "rinde_prov_kg_ha": 3074.4
+      },
+      {
+        "campana": "2024/25",
+        "rinde_dpto_kg_ha": 3558,
+        "rinde_prov_kg_ha": 3180.6
+      }
+    ],
+    "source": "MAGyP, Estimaciones Agricolas, serie soja 1941-2024 (rendimiento_kgxha por departamento)",
+    "refs": [
+      "https://datos.magyp.gob.ar/dataset/soja-siembra-cosecha-produccion-rendimiento",
+      "https://datos.magyp.gob.ar/dataset/8ae4865f-d2f2-45a2-9343-7a4a12728a90/resource/ba694aa3-99d2-4d7d-9936-60f88e36ad9a/download/soja-serie-1941-2024.csv"
+    ],
+    "license": "CC-BY 4.0",
+    "departments": [
+      {
+        "departamento": "Río Primero",
+        "departamento_id": "14105",
+        "provincia": "Córdoba",
+        "share": 1,
+        "probes": 6
+      }
+    ],
+    "lote_id": "lote-demo-rio-primero-jd91"
+  },
+  "points": {
+    "schema_version": 2,
+    "pack_version": "1.0.0",
+    "lote_id": "lote-demo-rio-primero-jd91",
+    "protocol": {
+      "nadir": true,
+      "height_m": [
+        0.6,
+        1.5
+      ],
+      "gps_tolerance_m": 30,
+      "min_points_for_score": 3,
+      "aggregation": "median"
+    },
+    "points": [
+      {
+        "point_id": "P1",
+        "label": "N-O",
+        "lat": -31.4182,
+        "lon": -63.72216
+      },
+      {
+        "point_id": "P2",
+        "label": "N-E",
+        "lat": -31.4182,
+        "lon": -63.71784
+      },
+      {
+        "point_id": "P3",
+        "label": "Centro",
+        "lat": -31.42,
+        "lon": -63.72
+      },
+      {
+        "point_id": "P4",
+        "label": "S-O",
+        "lat": -31.4218,
+        "lon": -63.72216
+      },
+      {
+        "point_id": "P5",
+        "label": "S-E",
+        "lat": -31.4218,
+        "lon": -63.71784
+      }
+    ],
+    "weeds_ownership_note": "THIS FILE IS THE SINGLE SOURCE OF TRUTH for per-point weeds. demo-scenarios.json must never carry a weeds number.",
+    "scenarios": {
+      "bueno": {
+        "weeds_pct_by_point": {
+          "P1": 10,
+          "P2": 15,
+          "P3": 8,
+          "P4": 18,
+          "P5": 12
+        },
+        "weeds_pct_lote": 12,
+        "aggregation": "median",
+        "source": "simulated",
+        "notes": "lote limpio mid-campaña"
+      },
+      "mixto": {
+        "weeds_pct_by_point": {
+          "P1": 18,
+          "P2": 58,
+          "P3": 55,
+          "P4": 62,
+          "P5": 45
+        },
+        "weeds_pct_lote": 55,
+        "aggregation": "median",
+        "source": "simulated",
+        "notes": "manchones - el satélite no lo ve, las fotos sí"
+      },
+      "malo": {
+        "weeds_pct_by_point": {
+          "P1": 55,
+          "P2": 70,
+          "P3": 65,
+          "P4": 58,
+          "P5": 72
+        },
+        "weeds_pct_lote": 65,
+        "aggregation": "median",
+        "source": "simulated",
+        "notes": "enmalezado / manejo flojo"
+      }
+    },
+    "aggregation_warning": "weeds_pct_lote is the median of the 5 points. If Vision returns fewer than 5 points the median changes and expected_score will not match. min_points_for_score = 3.",
+    "vision_api": {
+      "route": "/api/vision/weeds",
+      "models": [
+        "gpt-4o-mini",
+        "gemini-flash"
+      ],
+      "fallback": "scenario_preset_or_slider"
+    },
+    "sources": [
+      "research/01-EVIDENCIA-PUNTOS-VISION.md"
+    ]
+  }
+}

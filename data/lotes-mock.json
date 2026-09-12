@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "pack_version": "1.0.0",
+  "rule_version": "lotes-mock-v1",
+  "notes": "Armado instantaneo de un lote dibujado en vivo. En vez de consultar Georef, la serie oficial del MAGyP y siete campañas de NDVI de Planetary Computer (~5 s con las llamadas ya paralelizadas), clona el historial y la serie oficial del lote demo y solo recalcula lo que sale del poligono: superficie, centro, bbox y puntos de muestreo. El cupo sigue saliendo de la tabla por superficie (capacity-mock.json). Apagar con LOTES_MOCK=0 para volver a construirlo con datos reales.",
+  "delay_ms": { "min": 500, "max": 900 },
+  "department_note": "departamento y serie oficial heredados del lote demo; en modo mock no se resuelve el poligono real"
+}

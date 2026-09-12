@@ -249,8 +249,11 @@ export async function officialSeries(provincia, departamento) {
 
 // ---------------------------------------------------------------- history + scenarios
 export async function buildHistory(feature, bbox, centre, onProgress = () => {}) {
-  const campaigns = [];
-  for (const y of HARVEST_YEARS) {
+  // Las campañas son independientes entre si, asi que van en paralelo: antes eran ~35
+  // requests en serie (7 campañas x busqueda + 3 escenas + lluvia) y el lote tardaba ~18 s.
+  // Las escenas DENTRO de cada campaña siguen en serie a proposito, para no dispararle
+  // 21 requests simultaneas a Planetary Computer y comerse un 429.
+  const campaign = async (y) => {
     let start = `${y}-01-15`, end = `${y}-03-15`, widened = false;
     let items = await searchScenes(bbox, start, end);
     if (!items.length) { widened = true; start = `${y}-01-01`; end = `${y}-03-31`; items = await searchScenes(bbox, start, end); }
@@ -273,9 +276,13 @@ export async function buildHistory(feature, bbox, centre, onProgress = () => {})
       row.rain_dec_feb_mm = await rainSum(centre.lat, centre.lon, `${y - 1}-12-01`, `${y}-02-28`);
       row.rain_source = "measured";
     }
-    campaigns.push(row);
     onProgress(row);
-  }
+    return row;
+  };
+
+  // Promise.all conserva el orden del array, no el de finalizacion: la serie sigue
+  // ordenada por campaña aunque terminen desordenadas.
+  const campaigns = await Promise.all(HARVEST_YEARS.map(campaign));
   return {
     schema_version: 1,
     generated_at_utc: new Date().toISOString().slice(0, 19) + "Z",

@@ -1,10 +1,7 @@
 import type { VisionPointState, EvidenceRequestPayload, ScoreResponse, PublishResponse, DisburseResponse, CapacityResponse, ApiErrorResponse } from '@/types';
 import { ApiError } from '@/types';
+import { evidenceApiUrl, evidenceApiHeaders } from '@/lib/evidenceApi';
 
-function getApiUrl(): string {
-  const url = process.env.NEXT_PUBLIC_EVIDENCE_API_URL || 'http://127.0.0.1:8787';
-  return url.replace(/\/$/, '');
-}
 
 /**
  * Función pura para construir el payload de las llamadas a la API.
@@ -37,15 +34,12 @@ export function buildEvidenceRequest(
 }
 
 async function fetchWithHandling<T>(endpoint: string, options: RequestInit): Promise<T> {
-  const url = `${getApiUrl()}${endpoint}`;
+  const url = `${evidenceApiUrl()}${endpoint}`;
   let res: Response;
   try {
     res = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      }
+      headers: evidenceApiHeaders(options.headers),
     });
   } catch (error) {
     throw new ApiError({
@@ -69,10 +63,10 @@ async function fetchWithHandling<T>(endpoint: string, options: RequestInit): Pro
 }
 
 async function fetchText(endpoint: string, signal?: AbortSignal): Promise<string> {
-  const url = `${getApiUrl()}${endpoint}`;
+  const url = `${evidenceApiUrl()}${endpoint}`;
   let res: Response;
   try {
-    res = await fetch(url, { signal });
+    res = await fetch(url, { signal, headers: evidenceApiHeaders() });
   } catch (error) {
     throw new ApiError({
       error: 'Error de red',

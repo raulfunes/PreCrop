@@ -1,84 +1,116 @@
-# PreCrop · Evidencia del Cultivo para Decidir Anticipos (MVP Hackathon)
+# PreCrop · Evidencia del lote para decidir anticipos
 
-**PreCrop** es una interfaz de frontend para presentar en hackathons. Permite visualizar la evidencia agronómica (satelital y climática) de un lote de cultivo y simular la toma de decisiones financieras (límite simulado, desembolsos y repagos) durante la campaña agrícola.
+Una cooperativa tiene que decidir cuánto anticipar a un productor **antes de la cosecha**, y hoy lo hace con poca evidencia. PreCrop reúne la que ya existe —satélite, clima, rindes oficiales del departamento y fotos a pie de lote— y la convierte en dos números defendibles ante un comité: **cuánto se puede anticipar** y **si el anticipo sigue habilitado**.
 
----
+No es un score crediticio. Es una regla transparente sobre datos publicados, con la fuente de cada número al lado.
 
-## 🎯 Alcance del Frontend
-
-> **IMPORTANTE:** Esta aplicación es un MVP **exclusivamente de frontend**.
->
-> - **Datos y Score:** Todos los datos agronómicos (NDVI, lluvias, malezas) y el score de condición del lote son simulados mediante fixtures locales en TypeScript que cargan datos de la carpeta `data/`. El cálculo de score usa las fórmulas oficiales.
-> - **Operaciones Financieras:** El cupo simulado, la habilitación de desembolsos, el bloqueo por estado desfavorable y la liquidación final de repago se calculan de manera pura y en memoria en el cliente (`src/lib/scoreUtils.ts` y `src/lib/demoReducer.ts`).
-> - **Sin Backend Obligatorio:** Puede funcionar de manera simulada local. Si se provee la variable `VISION_BACKEND_URL`, se conecta al motor de Python de visión real (que debe ejecutarse en `127.0.0.1:8000`).
-> - **Evaluación IA:** Cuando se usa el backend, la aplicación hace 1 sola petición por fotografía hacia el proxy local de Next.js, el cual contacta al motor en Python (que internamente realiza las 2 llamadas a los modelos IA).
-> - **Visualización de Mapa:** El mapa del lote es un componente `Leaflet` local sin API key que interactúa con polígonos locales. Todo el estado (aportes, desembolsos, repagos, score) es un estado en memoria.
+**Demo en vivo:** https://precrop-1n71ira4q-raulfunes-projects.vercel.app
 
 ---
 
-## 🚀 Instalación y Ejecución
+## Las dos preguntas
 
-### Requisitos Previos
-- **Node.js** 20.9 o superior.
-- **npm** (incluido con Node.js).
+**Capacidad — ¿cuánto?** El cupo se dimensiona contra el **peor año que el departamento realmente tuvo**, según la serie oficial del MAGyP, no contra una estimación satelital.
 
-### Pasos
-1. Clonar o descargar el repositorio e ingresar al directorio:
-   ```bash
-   cd PreCrop
-   ```
+```
+cupo = ha × rinde_peor_año_oficial × precio_usd_t × haircut
+     = 100 × 1,769 × 364,8 × 0,7 = 45.173 USD
+```
 
-2. Instalar las dependencias del proyecto:
-   ```bash
-   npm install
-   ```
+El NDVI histórico **habilita la regla, no multiplica el cupo**: si el lote sigue a su departamento (mediana de ratios dentro de 0,85–1,15), el rinde departamental es un proxy legítimo. Si no, el cupo se retiene con el motivo.
 
-3. (Opcional) Configurar el Backend de Visión:
-   Copiar `.env.example` a `.env.local` y asegurarse de tener corriendo el servidor Python en `http://127.0.0.1:8000`. Si no se configura, usará el modo simulado (presets).
+**Condición — ¿sigue?** Durante la campaña, un índice combina vigor satelital, lluvia y malezas detectadas en las fotos:
 
-3. Iniciar el servidor de desarrollo:
-   ```bash
-   npm run dev
-   ```
+```
+0,6 × ndvi_norm + 0,25 × clima − 0,15 × malezas
+```
 
-4. Abrir en el navegador:
-   [http://localhost:3000](http://localhost:3000)
+Umbrales 70 / 50 → verde, amarillo, rojo. **Capacidad pone el techo; condición libera una porción.** En rojo, los desembolsos nuevos se bloquean; lo ya desembolsado mantiene sus condiciones.
 
 ---
 
-## 🎬 Cómo Presentar la Demo en Vivo
+## Arquitectura
 
-La aplicación incluye un selector de 3 escenarios (Bueno, Mixto, Malo) y un recorrido interactivo de 6 pasos. Asegúrate de estar en el escenario "Bueno" para comenzar:
+| Pieza | Qué hace | Dónde |
+|---|---|---|
+| **Front** (Next.js 16) | Las dos pantallas: coop aprueba el cupo, productor sube fotos y pide retiros | `src/` |
+| **evidence-api** (Node, sin framework) | Sirve el pack, calcula el índice, arma lotes desde un polígono y ancla la evidencia en Solana devnet | `services/evidence-api/` |
+| **Fórmula compartida** | El cálculo, el hash `precrop-canon-v1` y las reglas de cupo | `packages/score/` |
+| **Visión** (Python) | Estimación de malezas sobre la foto con Gemini | `api/vision_weeds.py` |
+| **Pack de datos** | NDVI, lluvia, puntos, economía y evidencia con hash | `data/` — ver `data/README.md` |
 
-1. **Paso 1 · Condición Inicial:** Muestra el "Lote demo Río Segundo / Córdoba". Sube al menos 3 fotos en los puntos del mapa (simulado o estimado por IA) y el score se ajustará alrededor de **74.4** (Verde · Condición Favorable).
-2. **Paso 2 · Aporte:** Simula el aporte de **USD 50.000** de prueba.
-3. **Paso 3 · Desembolso:** Simula el primer desembolso de **USD 30.000** al productor (quedan USD 20.000 disponibles).
-4. **Paso 4 · Cambio de Condición:** Cambia el escenario a "Malo" desde el selector y sube las fotos. El score cae a **48.5** (Rojo · Condición Desfavorable), recalculando el cupo teórico y mostrando la evidencia climática (falta de lluvia) y de malezas (aumento).
-5. **Paso 5 · Bloqueo de Desembolso:** Al intentar solicitar un segundo desembolso, el frontend aplica la regla del sistema y lo **rechaza de forma explícita** por estar en estado rojo (score < 50), aclarando que los USD 30.000 desembolsados anteriormente mantienen sus condiciones.
-6. **Paso 6 · Repago y Liquidación:** Simula el cierre de campaña con un repago de capital e interés y devolución de los fondos no usados, para un total a distribuir de **USD 53.000**.
-7. **Reiniciar Demo:** Usar el botón secundario **"Reiniciar demo"** para volver de manera segura al estado inicial en cualquier momento.
+El navegador habla directo con el evidence-api; visión va proxeada por el front, para que su credencial nunca llegue al cliente.
 
 ---
 
-## 🛠️ Comandos de Verificación
+## Correrlo
+
+Requiere Node 20+ y Python 3.14 con Pillow (sólo para visión real).
 
 ```bash
-# Verificación de tipos TypeScript
-npx tsc --noEmit
+npm install
+cp .env.example .env        # los valores por defecto alcanzan para la demo
+npm run dev                 # http://localhost:3000
+```
 
-# Auditoría de linter (ESLint)
-npx eslint src --ext .ts,.tsx
+En otra terminal, el backend de datos:
 
-# Compilación de producción
-npm run build
+```bash
+cd services/evidence-api && npm install && npm start   # http://localhost:8787
+```
+
+### Exponerlo a internet
+
+`scripts/serve-ngrok.ps1` levanta los dos backends y abre los túneles:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\serve-ngrok.ps1
+```
+
+Imprime las URLs públicas y las variables listas para pegar. El túnel de visión va con basic-auth porque detrás está una credencial que factura. Las URLs de ngrok cambian en cada arranque: con un dominio reservado se pasa `-EvidenceDomain`.
+
+---
+
+## Configuración de datos
+
+Tres valores salen de tabla en vez de calcularse, para que la demo no dependa de red ni de cuota. **Los tres están activos por defecto** y se apagan con su flag.
+
+| Flag | Qué evita | Tabla |
+|---|---|---|
+| `LOTES_MOCK=0` | Georef + MAGyP + Planetary Computer al crear un lote (~5 s → 0,7 s) | `data/lotes-mock.json` |
+| `CAPACITY_MOCK=0` | El cruce serie oficial × NDVI para el cupo | `data/capacity-mock.json` |
+| `VISION_MOCK=0` | La llamada a Gemini por foto | `data/vision-mock.json` |
+
+Las tablas están sembradas con las fórmulas reales, así que los números publicados no se contradicen: **100 ha sigue dando 45.173 USD**. Un lote creado en modo mock queda marcado con `source: "mock"` y hereda el departamento del lote demo. Detalle completo en [`services/evidence-api/README.md`](services/evidence-api/README.md#mocks-de-demo).
+
+---
+
+## El guion
+
+1. **La coop aprueba el cupo.** 45.173 USD contra el peor año del departamento, con la serie a la vista.
+2. **El productor sube tres fotos.** El GPS de cada una la asigna a su punto del protocolo; malezas ~6 % → índice 75,2 **verde**.
+3. **Retiro habilitado:** 33.958 USD.
+4. **Cambia la condición.** Escena `malo` y fotos con malezas ~70 % → índice 45,5 **rojo**.
+5. **El segundo retiro se rechaza**, con el motivo y la evidencia que lo sostiene.
+
+Cada paso deja un payload con su `sha256`, anclable en devnet con `POST /publish`.
+
+---
+
+## Verificar
+
+```bash
+npm run build                              # front
+cd services/evidence-api && npm test       # la evidencia reproduce data/evidence/*.json, hash incluido
+cd packages/score && npm test              # la fórmula
+pytest tests -q                            # el pack, sin red
 ```
 
 ---
 
-## 🎨 Sistema de Diseño y Accesibilidad
+## Documentación
 
-Desarrollado respetando la identidad visual y guías de `docs/branding.md`:
-- **Tipografía:** Inter (Google Fonts via `next/font`).
-- **Paleta de Colores:** Tokens hexadecimales sobrios con fondo `#FAF9F6` y verde primario `#175E36`.
-- **Accesibilidad (WCAG 2.1 AA):** Triple codificación (color + icono + texto), foco visible de 3 px, botones de al menos 44×44 px y etiquetas `aria-live` moderadas para anuncios de voz.
-- **Responsive:** Mobile-first optimizado para pantallas de 360 px en adelante.
+- [`docs/plan-de-accion.md`](docs/plan-de-accion.md) — estado y reparto
+- [`data/README.md`](data/README.md) — contrato de datos y procedencia de cada número
+- [`services/evidence-api/README.md`](services/evidence-api/README.md) — endpoints, reglas de cupo y mocks
+- [`VISION-IA.md`](VISION-IA.md) — alcance y límites de la detección de malezas

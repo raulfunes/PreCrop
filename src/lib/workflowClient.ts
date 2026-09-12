@@ -3,6 +3,7 @@
 // disbursements. A rejected disbursement (409) is a normal outcome, not an
 // error, so it is returned instead of thrown.
 import { ApiError } from '@/types';
+import { evidenceApiUrl, evidenceApiHeaders } from '@/lib/evidenceApi';
 
 export type Scenario = 'bueno' | 'mixto' | 'malo';
 export type WorkflowLight = 'verde' | 'amarillo' | 'rojo';
@@ -73,16 +74,13 @@ export interface DisburseWorkflowResponse {
   state: LotStateResponse;
 }
 
-function apiUrl(): string {
-  return (process.env.NEXT_PUBLIC_EVIDENCE_API_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
-}
 
 async function call<T>(endpoint: string, init: RequestInit = {}, okStatuses: number[] = [200]): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${apiUrl()}${endpoint}`, {
+    res = await fetch(`${evidenceApiUrl()}${endpoint}`, {
       ...init,
-      headers: { 'Content-Type': 'application/json', ...(init.headers || {}) },
+      headers: evidenceApiHeaders(init.headers),
     });
   } catch (error) {
     throw new ApiError({ error: 'Error de red', detail: error instanceof Error ? error.message : 'desconocido' });

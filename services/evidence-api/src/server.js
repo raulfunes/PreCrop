@@ -30,7 +30,9 @@ const keypair = existsSync(KEYPAIR_PATH) ? loadKeypair(KEYPAIR_PATH) : null;
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  // ngrok-skip-browser-warning: el front lo manda para saltear la pagina interstitial
+  // del plan free de ngrok, que responde HTML sin CORS. Sin listarlo aca, el preflight falla.
+  "Access-Control-Allow-Headers": "Content-Type, ngrok-skip-browser-warning",
 };
 
 function send(res, status, body, type = "application/json", raw = false) {
