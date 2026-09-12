@@ -1,0 +1,24 @@
+{
+  "lote_id": "demo-rio-segundo-01",
+  "generated_at_utc": "2026-09-12T02:37:21.315552+00:00",
+  "inputs": {
+    "buena": {
+      "date": "2025-02-02",
+      "scene_id": "S2B_MSIL2A_20250202T140709_R110_T20JML_20250202T175010",
+      "ndvi_mean": 0.727,
+      "rain_7d": 46.7
+    },
+    "mala": {
+      "date": "2025-02-07",
+      "scene_id": "S2C_MSIL2A_20250207T140811_R110_T20JML_20250207T174511",
+      "ndvi_mean": 0.698,
+      "rain_7d": 0.1
+    }
+  },
+  "method": {
+    "stac": "planetarycomputer sentinel-2-l2a",
+    "ndvi": "(B08-1000)/10000 and (B04-1000)/10000 then (NIR-Red)/(NIR+Red)",
+    "rain": "Open-Meteo archive daily precipitation_sum"
+  },
+  "content_sha256": "418e19421e3b43dd5c1e958ce809327e3bd63922854695c6f1fdb9d9507a4102"
+}

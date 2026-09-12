@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "lote_id": "demo-rio-segundo-01",
+  "cultivo": "soja",
+  "how_to_use": "Front loads scenario key. Satellite block from lote-sentinel-presets. Photos from presets/fotos. Vision may call API or use weeds_pct_expected.",
+  "scenarios": {
+    "bueno": {
+      "label": "Campaña OK — vigor alto, malezas bajas",
+      "satellite_preset": "fecha_buena",
+      "ndvi": 0.727,
+      "rain_mm_7d": 46.7,
+      "photos": [
+        {
+          "point_id": "P1",
+          "file": "presets/fotos/limpio_1.jpg",
+          "tipo": "limpio",
+          "weeds_pct_expected": 12
+        },
+        {
+          "point_id": "P2",
+          "file": "presets/fotos/limpio_2.jpg",
+          "tipo": "limpio",
+          "weeds_pct_expected": 15
+        },
+        {
+          "point_id": "P3",
+          "file": "presets/fotos/limpio_1.jpg",
+          "tipo": "limpio",
+          "weeds_pct_expected": 10
+        },
+        {
+          "point_id": "P4",
+          "file": "presets/fotos/medio_1.jpg",
+          "tipo": "medio",
+          "weeds_pct_expected": 22
+        },
+        {
+          "point_id": "P5",
+          "file": "presets/fotos/limpio_2.jpg",
+          "tipo": "limpio",
+          "weeds_pct_expected": 14
+        }
+      ],
+      "weeds_pct_lote": 14,
+      "score_hint": "verde (~70+)",
+      "ndvi_source": "measured_recalc_offset",
+      "pitch": "Fecha buena 2025-02-02. NDVI puede subir tras offset L2A.",
+      "scene_id": "S2B_MSIL2A_20250202T140709_R110_T20JML_20250202T175010"
+    },
+    "malo": {
+      "label": "Misma campaña — seca + malezas (MOCK funcional)",
+      "satellite_preset": "fecha_mala",
+      "date": "2025-02-07",
+      "ndvi": 0.698,
+      "ndvi_source": "measured_recalc_offset",
+      "rain_mm_7d": 0.1,
+      "photos": [
+        {
+          "point_id": "P1",
+          "file": "presets/fotos/enmalezado_1.jpg",
+          "tipo": "enmalezado",
+          "weeds_pct_expected": 55
+        },
+        {
+          "point_id": "P2",
+          "file": "presets/fotos/enmalezado_2.jpg",
+          "tipo": "enmalezado",
+          "weeds_pct_expected": 70
+        },
+        {
+          "point_id": "P3",
+          "file": "presets/fotos/enmalezado_1.jpg",
+          "tipo": "enmalezado",
+          "weeds_pct_expected": 65
+        },
+        {
+          "point_id": "P4",
+          "file": "presets/fotos/medio_1.jpg",
+          "tipo": "medio",
+          "weeds_pct_expected": 48
+        },
+        {
+          "point_id": "P5",
+          "file": "presets/fotos/enmalezado_2.jpg",
+          "tipo": "enmalezado",
+          "weeds_pct_expected": 72
+        }
+      ],
+      "weeds_pct_lote": 55,
+      "score_hint": "baja por lluvia+malezas (NDVI casi igual) → rojo/amarillo con pesos",
+      "pitch": "2 feb→7 feb misma soja. NDVI ~0.73→0.70; lluvia 46.7→0.1; malezas suben. Gate por score compuesto.",
+      "scene_id": "S2C_MSIL2A_20250207T140811_R110_T20JML_20250207T174511"
+    },
+    "mixto": {
+      "label": "NDVI bueno pero malezas medias (para mostrar valor de fotos)",
+      "satellite_preset": "fecha_buena",
+      "ndvi": 0.727,
+      "rain_mm_7d": 46.7,
+      "photos": [
+        {
+          "point_id": "P1",
+          "file": "presets/fotos/limpio_1.jpg",
+          "tipo": "limpio",
+          "weeds_pct_expected": 18
+        },
+        {
+          "point_id": "P2",
+          "file": "presets/fotos/enmalezado_1.jpg",
+          "tipo": "enmalezado",
+          "weeds_pct_expected": 58
+        },
+        {
+          "point_id": "P3",
+          "file": "presets/fotos/medio_1.jpg",
+          "tipo": "medio",
+          "weeds_pct_expected": 35
+        },
+        {
+          "point_id": "P4",
+          "file": "presets/fotos/enmalezado_2.jpg",
+          "tipo": "enmalezado",
+          "weeds_pct_expected": 62
+        },
+        {
+          "point_id": "P5",
+          "file": "presets/fotos/medio_1.jpg",
+          "tipo": "medio",
+          "weeds_pct_expected": 40
+        }
+      ],
+      "weeds_pct_lote": 40,
+      "score_hint": "amarillo / borde",
+      "ndvi_source": "measured_recalc_offset"
+    }
+  },
+  "formula": "score ≈ 0.6*NDVI_norm + 0.25*rain_norm - 0.15*weeds_norm",
+  "owners": {
+    "data_franco": [
+      "lote-sentinel-presets.json",
+      "demo-scenarios.json",
+      "SOURCES.md",
+      "presets/fotos/*"
+    ],
+    "vision": [
+      "api/vision/weeds",
+      "usar weeds_pct_expected si API falla"
+    ],
+    "front": [
+      "toggle escenario bueno|malo|mixto",
+      "pintar mapa + thumbs + score"
+    ]
+  }
+}

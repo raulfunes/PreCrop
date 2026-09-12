@@ -1,0 +1,78 @@
+{
+  "lote_id": "demo-rio-segundo-01",
+  "protocol": {
+    "nadir": true,
+    "height_m": [
+      0.6,
+      1.5
+    ],
+    "gps_tolerance_m": 30,
+    "min_points_for_score": 3,
+    "aggregation": "median"
+  },
+  "points": [
+    {
+      "point_id": "P1",
+      "lat": -31.417,
+      "lon": -63.722,
+      "label": "N-O"
+    },
+    {
+      "point_id": "P2",
+      "lat": -31.417,
+      "lon": -63.718,
+      "label": "N-E"
+    },
+    {
+      "point_id": "P3",
+      "lat": -31.42,
+      "lon": -63.72,
+      "label": "Centro"
+    },
+    {
+      "point_id": "P4",
+      "lat": -31.423,
+      "lon": -63.722,
+      "label": "S-O"
+    },
+    {
+      "point_id": "P5",
+      "lat": -31.423,
+      "lon": -63.718,
+      "label": "S-E"
+    }
+  ],
+  "scenarios": {
+    "bueno": {
+      "weeds_pct_by_point": {
+        "P1": 12,
+        "P2": 18,
+        "P3": 15,
+        "P4": 10,
+        "P5": 20
+      },
+      "notes": "lote limpio mid-campaña"
+    },
+    "malo": {
+      "weeds_pct_by_point": {
+        "P1": 55,
+        "P2": 70,
+        "P3": 65,
+        "P4": 48,
+        "P5": 72
+      },
+      "notes": "enmalezado / manejo flojo"
+    }
+  },
+  "vision_api": {
+    "route": "/api/vision/weeds",
+    "models": [
+      "gpt-4o-mini",
+      "gemini-flash"
+    ],
+    "fallback": "scenario_preset_or_slider"
+  },
+  "sources": [
+    "research/01-EVIDENCIA-PUNTOS-VISION.md"
+  ]
+}

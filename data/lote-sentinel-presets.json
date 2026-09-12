@@ -1,0 +1,208 @@
+{
+  "lote_id": "demo-rio-segundo-01",
+  "nombre": "Lote demo Río Segundo / Córdoba",
+  "ha": 100,
+  "cultivo": "soja",
+  "base_valuation_usd": 100000,
+  "haircut": 0.7,
+  "center": {
+    "lat": -31.42,
+    "lon": -63.72
+  },
+  "bbox": [
+    -63.7254,
+    -31.424500000000002,
+    -63.7146,
+    -31.4155
+  ],
+  "geojson": {
+    "type": "Feature",
+    "properties": {
+      "lote_id": "demo-rio-segundo-01",
+      "nombre": "Lote demo Río Segundo"
+    },
+    "geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -63.7254,
+            -31.424500000000002
+          ],
+          [
+            -63.7146,
+            -31.424500000000002
+          ],
+          [
+            -63.7146,
+            -31.4155
+          ],
+          [
+            -63.7254,
+            -31.4155
+          ],
+          [
+            -63.7254,
+            -31.424500000000002
+          ]
+        ]
+      ]
+    }
+  },
+  "climate_table": {
+    "description": "climate_score from rain_mm_7d",
+    "rules": [
+      {
+        "max_mm": 5,
+        "climate": 25,
+        "label": "sequía"
+      },
+      {
+        "max_mm": 15,
+        "climate": 45,
+        "label": "seco"
+      },
+      {
+        "max_mm": 25,
+        "climate": 70,
+        "label": "aceptable"
+      },
+      {
+        "max_mm": 50,
+        "climate": 90,
+        "label": "óptimo"
+      },
+      {
+        "max_mm": 80,
+        "climate": 85,
+        "label": "húmedo"
+      },
+      {
+        "max_mm": null,
+        "climate": 60,
+        "label": "exceso"
+      }
+    ]
+  },
+  "formula": "vigor=ndvi*100; climate=tabla(rain_mm_7d); score=0.45*vigor+0.35*(100-weed_pct)+0.20*climate; valuation=base*(score/100)*haircut",
+  "presets": {
+    "fecha_buena": {
+      "label": "Fecha buena — pico soja / verano",
+      "date": "2025-02-02",
+      "why": "Pico vegetativo de soja en Córdoba (ene–mar). Escena Sentinel-2 casi sin nubes; lluvia 7d real ~47 mm (Open-Meteo) → clima óptimo; NDVI medido en ventana ~1 km.",
+      "ndvi": 0.727,
+      "ndvi_source": "measured_recalc_offset",
+      "ndvi_stats": {
+        "mean": 0.7270079255104065,
+        "median": 0.7823028564453125,
+        "p10": 0.5150543451309204,
+        "p90": 0.8981702923774719,
+        "n_pixels": 10300
+      },
+      "rain_mm_7d": 46.7,
+      "rain_window": {
+        "start": "2025-01-27",
+        "end": "2025-02-02"
+      },
+      "weed_pct": 9,
+      "weed_pct_note": "estimado — sin drone/CV; supuesto lote manejado en pico",
+      "sentinel2": {
+        "collection": "sentinel-2-l2a",
+        "scene_id": "S2B_MSIL2A_20250202T140709_R110_T20JML_20250202T175010",
+        "cloud_cover_pct": 0.002784,
+        "processing_baseline": "05.11",
+        "stac": "https://planetarycomputer.microsoft.com/api/stac/v1"
+      },
+      "vigor": 72.7,
+      "climate": 90,
+      "score": 71.85,
+      "valuation_usd": 50298.5,
+      "ndvi_stats_old_wrong_formula": {
+        "mean": 0.4893617331981659,
+        "median": 0.5454307794570923,
+        "p10": 0.30501702427864075,
+        "p90": 0.6487452387809753,
+        "n_pixels": 10300
+      }
+    },
+    "fecha_mala_agosto_barbecho": {
+      "label": "Fecha mala — barbecho invierno / bajo vigor",
+      "date": "2024-08-26",
+      "why": "Invierno (ago) fuera de campaña de soja: cobertura baja / suelo+rastrojo. NDVI medido ~0.15; lluvia 7d ~7 mm (Open-Meteo) → clima seco. Contraste claro vs fecha_buena.",
+      "ndvi": 0.151,
+      "ndvi_source": "measured",
+      "ndvi_stats": {
+        "mean": 0.1512,
+        "median": 0.135,
+        "n_pixels": 10300
+      },
+      "rain_mm_7d": 6.9,
+      "rain_window": {
+        "start": "2024-08-20",
+        "end": "2024-08-26"
+      },
+      "weed_pct": 26,
+      "weed_pct_note": "estimado — sin drone/CV; barbecho invernal con malezas/rastrojo (conservador)",
+      "sentinel2": {
+        "collection": "sentinel-2-l2a",
+        "scene_id": "S2B_MSIL2A_20240826T140709_R110_T20JML_20240826T181009",
+        "cloud_cover_pct": 0.0042,
+        "stac": "https://planetarycomputer.microsoft.com/api/stac/v1"
+      },
+      "vigor": 15.1,
+      "climate": 45,
+      "score": 41.7,
+      "valuation_usd": 29186.5,
+      "deprecated_for_pitch": true,
+      "pitch_note": "NO usar como fallo de soja mid-campaña; es barbecho invierno."
+    },
+    "fecha_mala": {
+      "label": "Fecha mala — misma campaña, sequía corta (7 feb 2025)",
+      "date": "2025-02-07",
+      "why": "Misma campaña que 2 feb. Lluvia 7d 0.1 mm vs 46.7. NDVI casi no cae en 5 días (vegetación inercial); el score baja por clima + malezas simuladas. Honestidad pitch: NDVI estable, estrés hídrico reciente + malezas.",
+      "ndvi": 0.698,
+      "ndvi_source": "measured_recalc_offset",
+      "ndvi_note": "Placeholder para demo/mock. Recalcular con (DN-1000)/10000 sobre AOI. No usar 0.15 de agosto.",
+      "rain_mm_7d": 0.1,
+      "rain_window": {
+        "start": "2025-02-01",
+        "end": "2025-02-07"
+      },
+      "rain_source": "Open-Meteo archive verified 2026-09-11",
+      "weed_pct": 55,
+      "weed_pct_note": "simulado presets enmalezado — visión/expected",
+      "sentinel2": {
+        "collection": "sentinel-2-l2a",
+        "scene_id": "S2C_MSIL2A_20250207T140811_R110_T20JML_20250207T174511",
+        "cloud_cover_pct": 0.332106,
+        "processing_baseline": "05.11",
+        "stac": "https://planetarycomputer.microsoft.com/api/stac/v1",
+        "status": "verified_on_lote_bbox"
+      },
+      "vigor": 69.8,
+      "climate": 25,
+      "score": null,
+      "valuation_usd": null,
+      "ndvi_stats": {
+        "mean": 0.6983945369720459,
+        "median": 0.763090968132019,
+        "p10": 0.47445154190063477,
+        "p90": 0.8774323463439941,
+        "n_pixels": 10300
+      },
+      "ndvi_stats_old_wrong_formula": {
+        "mean": 0.4598236382007599,
+        "median": 0.5192749500274658,
+        "p10": 0.27865925431251526,
+        "p90": 0.6149667501449585,
+        "n_pixels": 10300
+      }
+    }
+  },
+  "aliases": {
+    "baseline": "fecha_buena",
+    "drought": "fecha_mala",
+    "barbecho_archived": "fecha_mala_agosto_barbecho"
+  },
+  "ndvi_method_note": "CORRECT: BOA=(DN-1000)/10000 for baseline>=04.00. Recalc 2026-09-12. Old pack used DN/10000."
+}
