@@ -214,36 +214,55 @@ export interface EvidenceRequestPayload {
 }
 
 export interface ScoreResponse {
-  condition: {
-    status: EstadoLote;
+  scenario: string;
+  inputs: {
+    ndvi: number;
+    rain_mm_7d: number;
+    weeds_pct: number;
+  };
+  result: {
+    ndvi_norm: number;
+    climate: number;
+    score_exact: number;
     score: number;
-    reason: string;
+    score_bp: number;
+    light: EstadoLote;
   };
   factors: Array<{
+    name: string;
     label: string;
-    value: string;
-    weight: string;
+    value: number;
+    weight: number;
     contribution: number;
     source: string;
+    input: Record<string, number>;
   }>;
   advance: {
+    rule_version: string;
+    condition_index: number;
+    light: string;
+    production_estimate: number;
     advance_limit: {
       usd: number;
-      ars: number;
-      pct_of_reference_value: string;
+      ars: number | null;
+      pct_of_reference_value: number;
       new_disbursements: 'allowed' | 'review' | 'blocked';
+      formula: string;
     };
+    benchmark: Record<string, unknown>;
     reference: {
       reference_value_usd: number;
     };
-    rule_version: string;
   } | null;
+  evidence: {
+    canonicalization: string;
+    pack_version: string;
+    content_sha256: string;
+    payload: Record<string, unknown>;
+  };
 }
 
-export interface PublishResponse {
-  evidence: {
-    content_sha256: string;
-  };
+export interface PublishResponse extends ScoreResponse {
   anchor: {
     network: string;
     mock: boolean;
@@ -253,7 +272,9 @@ export interface PublishResponse {
 }
 
 export interface DisburseResponse {
-  receipt: {
+  mock: boolean;
+  rail: string;
+  transfer: {
     asset: string;
     amount_ars: number;
     from: string;
@@ -262,8 +283,9 @@ export interface DisburseResponse {
     status: string;
     settled_in_seconds: number;
     note: string;
-    evidence_sha256: string;
   };
+  advance: ScoreResponse['advance'];
+  evidence_sha256: string;
 }
 
 export interface ApiErrorResponse {

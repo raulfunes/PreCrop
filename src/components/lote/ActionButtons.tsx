@@ -10,9 +10,10 @@ interface ActionButtonsProps {
   publish: () => Promise<PublishResponse>;
   disburse: (amountArs?: number) => Promise<DisburseResponse>;
   advance: ScoreResponse['advance'];
+  disabled: boolean;
 }
 
-export function ActionButtons({ publish, disburse, advance }: ActionButtonsProps) {
+export function ActionButtons({ publish, disburse, advance, disabled }: ActionButtonsProps) {
   const [publishing, setPublishing] = useState(false);
   const [publishResult, setPublishResult] = useState<PublishResponse | null>(null);
   const [publishError, setPublishError] = useState<ApiError | null>(null);
@@ -62,6 +63,8 @@ export function ActionButtons({ publish, disburse, advance }: ActionButtonsProps
   };
 
   const disburseStatus = advance?.advance_limit.new_disbursements || 'blocked';
+  const disablePublish = disabled || publishing;
+  const disableDisburse = disabled || disbursing || disburseStatus === 'blocked';
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,7 +80,7 @@ export function ActionButtons({ publish, disburse, advance }: ActionButtonsProps
               variante="primario"
               tamanio="lg"
               onClick={handlePublish}
-              disabled={publishing}
+              disabled={disablePublish}
               iconoDerecha={<ArrowRight size={18} />}
               className="w-full"
             >
@@ -132,7 +135,7 @@ export function ActionButtons({ publish, disburse, advance }: ActionButtonsProps
                   <span className="font-mono text-[10px] truncate max-w-[150px]">{publishResult.anchor.signature}</span>
                 </div>
               </div>
-              <a href={publishResult.anchor.explorer_url} target="_blank" rel="noreferrer" className="mt-1 flex items-center justify-center gap-2 text-[var(--color-brand-primary)] font-medium bg-white py-1.5 rounded border border-[var(--color-brand-primary)]/20 hover:bg-[var(--color-brand-soft)] transition-colors">
+              <a href={publishResult.anchor.explorer_url} target="_blank" rel="noopener noreferrer" className="mt-1 flex items-center justify-center gap-2 text-[var(--color-brand-primary)] font-medium bg-white py-1.5 rounded border border-[var(--color-brand-primary)]/20 hover:bg-[var(--color-brand-soft)] transition-colors">
                 Ver en Explorer <ExternalLink size={14} />
               </a>
             </div>
@@ -159,7 +162,7 @@ export function ActionButtons({ publish, disburse, advance }: ActionButtonsProps
                       Revisión de comité requerida
                     </span>
                     <span className="text-[12px] text-[var(--color-warning)]/80 leading-4">
-                      El comité debe revisar esta operación debido al estado mixto del cultivo. ¿Continuar con la simulación?
+                      El comité debe revisar esta operación. ¿Continuar con la simulación?
                     </span>
                   </div>
                 </div>
@@ -177,7 +180,7 @@ export function ActionButtons({ publish, disburse, advance }: ActionButtonsProps
                 variante="secundario"
                 tamanio="lg"
                 onClick={handleDisburseClick}
-                disabled={disbursing || disburseStatus === 'blocked'}
+                disabled={disableDisburse}
                 iconoDerecha={<ArrowRight size={18} />}
                 className="w-full"
               >
@@ -185,7 +188,7 @@ export function ActionButtons({ publish, disburse, advance }: ActionButtonsProps
               </Button>
             )}
 
-            {disburseStatus === 'blocked' && (
+            {disburseStatus === 'blocked' && !disabled && (
               <p className="text-[12px] text-[var(--color-danger)] font-medium mt-1">
                 Motivo: El estado del cultivo bloquea los desembolsos.
               </p>
@@ -221,27 +224,27 @@ export function ActionButtons({ publish, disburse, advance }: ActionButtonsProps
             <div className="flex flex-col gap-2 text-[12px] text-[var(--color-ink)] bg-white p-3 rounded shadow-sm border border-[var(--color-border)]/50">
               <div className="flex justify-between items-center border-b pb-2">
                 <span className="text-[var(--color-text-muted)]">Monto:</span>
-                <span className="font-bold text-[14px]">{disburseResult.receipt.amount_ars.toLocaleString('es-AR')} {disburseResult.receipt.asset}</span>
+                <span className="font-bold text-[14px]">{disburseResult.transfer.amount_ars.toLocaleString('es-AR')} {disburseResult.transfer.asset}</span>
               </div>
               <div className="flex justify-between items-center pt-1">
                 <span className="text-[var(--color-text-muted)]">Estado:</span>
-                <span className="font-medium capitalize text-[var(--color-positive)]">{disburseResult.receipt.status}</span>
+                <span className="font-medium capitalize text-[var(--color-positive)]">{disburseResult.transfer.status}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[var(--color-text-muted)]">From:</span>
-                <span className="font-mono text-[10px]">{disburseResult.receipt.from}</span>
+                <span className="font-mono text-[10px]">{disburseResult.transfer.from}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[var(--color-text-muted)]">To:</span>
-                <span className="font-mono text-[10px]">{disburseResult.receipt.to}</span>
+                <span className="font-mono text-[10px]">{disburseResult.transfer.to}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[var(--color-text-muted)]">Ref:</span>
-                <span className="font-mono text-[10px]">{disburseResult.receipt.reference}</span>
+                <span className="font-mono text-[10px]">{disburseResult.transfer.reference}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[var(--color-text-muted)]">Hash doc:</span>
-                <span className="font-mono text-[10px] truncate max-w-[120px]">{disburseResult.receipt.evidence_sha256}</span>
+                <span className="font-mono text-[10px] truncate max-w-[120px]">{disburseResult.evidence_sha256}</span>
               </div>
             </div>
             <p className="text-[11px] text-[var(--color-text-muted)] text-center font-medium mt-1">

@@ -94,7 +94,7 @@ export function SimulatedLimitCard({ advance }: SimulatedLimitCardProps) {
 
       <FilaDato
         etiqueta="Límite de anticipo sugerido"
-        descripcion={`Referencia: ${formatUSD(reference.reference_value_usd)} · ${advance_limit.pct_of_reference_value}`}
+        descripcion={`Referencia: ${formatUSD(reference.reference_value_usd)} · ${advance_limit.pct_of_reference_value}%`}
         valor={formatUSD(advance_limit.usd)}
         esDestacado
         colorValor="text-[var(--color-brand-primary)]"
@@ -104,7 +104,7 @@ export function SimulatedLimitCard({ advance }: SimulatedLimitCardProps) {
       <FilaDato
         etiqueta="Límite en ARGt"
         descripcion="Conversión simulada a tasa actual"
-        valor={`ARGt ${advance_limit.ars.toLocaleString('es-AR')}`}
+        valor={advance_limit.ars !== null ? `ARGt ${advance_limit.ars.toLocaleString('es-AR')}` : 'Conversión a ARGt no disponible'}
       />
 
       {isBlocked && (
@@ -120,7 +120,7 @@ export function SimulatedLimitCard({ advance }: SimulatedLimitCardProps) {
       <div className="mt-4 flex items-start gap-2 p-3 bg-[var(--color-neutral-soft)] rounded-[var(--radius-badge)]">
         <Info size={13} className="text-[var(--color-text-muted)] shrink-0 mt-0.5" aria-hidden="true" />
         <p className="text-[11px] text-[var(--color-text-muted)] leading-[17px]">
-          <strong className="text-[var(--color-ink)]">Regla de capacidad: {rule_version}</strong><br/>
+          <strong className="text-[var(--color-ink)]">Regla del límite: {rule_version}</strong><br/>
           Simulación. El monto definitivo depende de la cotización al momento del contrato.
         </p>
       </div>
