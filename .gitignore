@@ -1,3 +1,8 @@
 .venv*/
 __pycache__/
 *.pyc
+
+# node
+node_modules/
+.env
+services/evidence-api/.keys/
