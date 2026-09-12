@@ -38,7 +38,13 @@ Todo lo de capacidad se construye con las mismas herramientas que ya funcionan: 
 4. **Informe para el comité** (2 h). `GET /report/<escenario>` devuelve un informe de una página en markdown: lote, capacidad (serie, año malo, cupo pre-siembra), condición actual (índice, factores, límite), fuentes, versión de las reglas, hash y firma. Front lo muestra y lo imprime. Es el "formato que un comité puede firmar".
 5. **Firma real en devnet** (15 min). Cargar SOL en `HBhUd4K6SkgaYQm54xF5rhmQJndc3NJq7JHt15MYhGg8` desde https://faucet.solana.com y correr `/publish`. Guardar el link del explorer para la demo.
 
-### Front (unas 10 h)
+### Front (unas 10 h) — el MVP ya está en `main` (`src/`, Next en la raíz del repo)
+
+Lo que ya encaja: `src/lib/scoreUtils.ts` usa la misma fórmula que el pack (anclas 0.20 a 0.85, tabla de lluvia, pesos 0.6 / 0.25 / 0.15, umbrales 70 y 50), lee `photo-point-presets.json` y los presets satelitales de `data/`, y el disclaimer ya dice "no es un score crediticio". Tres ajustes de integración antes de seguir:
+
+- **Base del cupo.** Front usa `COSECHA_BASE_USD = 100.000` fijo; el backend usa el valor de referencia de `data/lote-economics.json` (100 ha × 3.2 t/ha × 364.8 USD/t = 116.736 USD). Mismo porcentaje (52 % en verde), distinto monto: 52.100 vs 60.800 USD. Elegir uno: o Front lee `lote-economics.json`, o directamente muestra el bloque `advance` que devuelve `POST /score`. Recomendado lo segundo: una sola fuente para el número que firma la coop.
+- **Factores y versión de regla.** `POST /score` ya devuelve `factors[]` (peso y aporte de cada término) y `rule_version`. Mostrarlos al lado del límite: es el argumento de transparencia frente al comité.
+- **Botones que faltan.** "Publicar evidencia" → `POST /publish` → link al explorer. "Aprobar y pagar en ARGt" → `POST /disburse` → recibo simulado. Ambos con cartel MOCK.
 
 1. **Pantalla Condición** (ya tiene todo el backend): mapa con `lote.geojson`, toggle bueno / mixto / malo, fotos por punto, semáforo, límite sugerido y los tres factores con su aporte. Botón "Publicar evidencia" → `/publish` → link al explorer. Botón "Aprobar y pagar en ARGt" → `/disburse` → recibo simulado.
 2. **Pantalla Capacidad** (cuando esté `/capacity`): barras por campaña con el rinde estimado del lote y el oficial del departamento al lado, el año malo resaltado, el cupo pre-siembra en grande con la frase "contra el peor año que este lote ya tuvo".
