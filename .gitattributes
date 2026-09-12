@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.jpg binary
+# Preserve exact experiment bytes: manifests and runs verify SHA-256 hashes.
+data/vision-growingsoy/** -text

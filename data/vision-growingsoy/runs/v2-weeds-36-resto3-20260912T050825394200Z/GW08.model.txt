@@ -1,0 +1,63 @@
+{
+  "status": "assessed",
+  "reason": "Se observa claramente el cultivo de soja organizado en hileras con sus característicos foliolos trifoliados, distinguiéndose algunas plántulas pequeñas de maleza entre la cobertura vegetal y suelo.",
+  "limitations": [
+    "Presencia de rastrojo y marcadores de ensayo que pueden ocluir parcialmente algunas malezas pequeñas."
+  ],
+  "polygons": [
+    [
+      [153, 161],
+      [169, 174],
+      [159, 192],
+      [139, 185],
+      [141, 165]
+    ],
+    [
+      [365, 307],
+      [383, 304],
+      [397, 329],
+      [389, 362],
+      [369, 375],
+      [353, 345]
+    ],
+    [
+      [575, 163],
+      [611, 158],
+      [631, 188],
+      [607, 240],
+      [577, 247],
+      [577, 212]
+    ],
+    [
+      [736, 427],
+      [752, 427],
+      [754, 447],
+      [732, 449]
+    ],
+    [
+      [634, 526],
+      [657, 525],
+      [667, 545],
+      [640, 563]
+    ],
+    [
+      [277, 601],
+      [293, 601],
+      [299, 629],
+      [280, 642],
+      [268, 627]
+    ],
+    [
+      [646, 856],
+      [677, 851],
+      [712, 874],
+      [723, 919],
+      [756, 929],
+      [764, 966],
+      [723, 990],
+      [677, 988],
+      [644, 946],
+      [639, 896]
+    ]
+  ]
+}

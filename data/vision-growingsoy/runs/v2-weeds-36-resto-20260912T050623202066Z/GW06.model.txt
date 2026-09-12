@@ -1,0 +1,33 @@
+{
+  "status": "assessed",
+  "reason": "Se identifican plantas de soja en el cultivo (hojas trifoliadas características) y algunas malezas de hoja ancha pequeñas/medias situadas entre el cultivo y cerca del cartel/estaca.",
+  "limitations": [
+    "Presencia de elementos artificiales (cartel 106, varillas, banderas) y sombra que cubren parcialmente la superficie."
+  ],
+  "polygons": [
+    [
+      [630, 118],
+      [667, 120],
+      [758, 169],
+      [758, 252],
+      [738, 345],
+      [664, 345],
+      [637, 280],
+      [633, 201]
+    ],
+    [
+      [881, 287],
+      [937, 285],
+      [944, 362],
+      [888, 368]
+    ],
+    [
+      [860, 843],
+      [901, 849],
+      [949, 928],
+      [951, 988],
+      [879, 988],
+      [864, 917]
+    ]
+  ]
+}

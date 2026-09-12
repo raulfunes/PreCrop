@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"Se observa claramente el cultivo de soja organizado en hileras con sus característicos foliolos trifoliados, distinguiéndose algunas plántulas pequeñas de maleza entre la cobertura vegetal y suelo.\",\n  \"limitations\": [\n    \"Presencia de rastrojo y marcadores de ensayo que pueden ocluir parcialmente algunas malezas pequeñas.\"\n  ],\n  \"polygons\": [\n    [\n      [153, 161],\n      [169, 174],\n      [159, 192],\n      [139, 185],\n      [141, 165]\n    ],\n    [\n      [365, 307],\n      [383, 304],\n      [397, 329],\n      [389, 362],\n      [369, 375],\n      [353, 345]\n    ],\n    [\n      [575, 163],\n      [611, 158],\n      [631, 188],\n      [607, 240],\n      [577, 247],\n      [577, 212]\n    ],\n    [\n      [736, 427],\n      [752, 427],\n      [754, 447],\n      [732, 449]\n    ],\n    [\n      [634, 526],\n      [657, 525],\n      [667, 545],\n      [640, 563]\n    ],\n    [\n      [277, 601],\n      [293, 601],\n      [299, 629],\n      [280, 642],\n      [268, 627]\n    ],\n    [\n      [646, 856],\n      [677, 851],\n      [712, 874],\n      [723, 919],\n      [756, 929],\n      [764, 966],\n      [723, 990],\n      [677, 988],\n      [644, 946],\n      [639, 896]\n    ]\n  ]\n}",
+            "thoughtSignature": "EmcKZQERTTIPNmMuejDmCDSYGIMJ0nTDRQeeIpaQEggNUO2piJYMH12W15oRq4kqTYajVQQjWYoONDw+m+HBb2n0Fn3M1HhVV9bvV3DA82Y0Pbd+WrPajofpkEzSL/g/p0QVhnTWQ4c+"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 626,
+    "totalTokenCount": 2709,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "Ud6kaobpMZKEz7IPhuXZ6Q4"
+}

@@ -1,0 +1,398 @@
+{
+  "experiment": "v2-weeds-36-resto3",
+  "started_at": "2026-09-12T05:08:25.394200+00:00",
+  "model": "gemini-3.6-flash",
+  "provider": "Google Gemini API",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+  "configuration": {
+    "candidateCount": 1,
+    "maxOutputTokens": 8192,
+    "thinkingConfig": {
+      "thinkingLevel": "LOW"
+    },
+    "responseMimeType": "application/json",
+    "responseJsonSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason",
+        "limitations",
+        "polygons"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "assessed",
+            "not_assessable"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "timeout_seconds": 30,
+  "automatic_retries": 0,
+  "max_requests": 4,
+  "expected_crop": "soja",
+  "free_project_confirmed_by_operator": false,
+  "billing_acknowledged_by_operator": true,
+  "prompt_sha256": "4639e220b8a5f4c6d84ae3a8ea310f8b4c9351bf486e403b180eec677be1a983",
+  "script_sha256": "e8bb781f09caa24b8b77ca4412b00fccab98b12b3b88a58bb28057c088e7d92d",
+  "manifest_sha256": "c9663bb73ed2e61b45f863d26bbcdd19a1fbb470536b59e955c50d60cd01157c",
+  "pillow": "12.3.0",
+  "requests_sent": 3,
+  "blocked_reason": "transport_error_or_timeout",
+  "results": [
+    {
+      "id": "GW07",
+      "status": "assessed",
+      "image_path": "images/desarrollo/GW07.jpg",
+      "image_sha256": "5ccce302f6ae4ec7ba68f7d3f32bb89d47126d309afa93ca3615a6fbddaf65e9",
+      "reference_pct": 1.8056640625,
+      "reference_sha256": "e136a6d950fcbb652b6b060ad319b432f9e6f686e0d5988b928a50955863207b",
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 5.503458600000158,
+      "credential_redacted": false,
+      "raw_api_response": "GW07.response.bin",
+      "response": {
+        "status": "assessed",
+        "reason": "Se identificó correctamente el cultivo de soja en hileras y algunas plantas de malezas de hoja fina/angosta entre el rastrojo.",
+        "limitations": [
+          "Presencia de rastrojo denso y marcadores artificiales (cinta/banderines)."
+        ],
+        "polygons": [
+          [
+            [
+              162,
+              172
+            ],
+            [
+              166,
+              240
+            ],
+            [
+              189,
+              269
+            ],
+            [
+              226,
+              269
+            ],
+            [
+              218,
+              230
+            ],
+            [
+              189,
+              189
+            ],
+            [
+              184,
+              157
+            ]
+          ],
+          [
+            [
+              216,
+              321
+            ],
+            [
+              234,
+              335
+            ],
+            [
+              247,
+              344
+            ],
+            [
+              234,
+              370
+            ],
+            [
+              218,
+              381
+            ]
+          ]
+        ]
+      },
+      "weed_pct": 0.53662109375,
+      "absolute_error_pp": 1.26904296875,
+      "iou": 0.22795341098169716,
+      "both_empty": false,
+      "mask": "GW07.mask.png",
+      "comparison": "GW07.comparison.png"
+    },
+    {
+      "id": "GW08",
+      "status": "assessed",
+      "image_path": "images/desarrollo/GW08.jpg",
+      "image_sha256": "4ebe3d7c30ee99d554523ec37760d733d8f46c9233bd739366784d0ff0862dd1",
+      "reference_pct": 1.7001953125,
+      "reference_sha256": "b835a8732aafde3f73bfb984ee1b3e02ef43eebbc211ab432bb1016efc3aacfa",
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 8.639679400000205,
+      "credential_redacted": false,
+      "raw_api_response": "GW08.response.bin",
+      "response": {
+        "status": "assessed",
+        "reason": "Se observa claramente el cultivo de soja organizado en hileras con sus característicos foliolos trifoliados, distinguiéndose algunas plántulas pequeñas de maleza entre la cobertura vegetal y suelo.",
+        "limitations": [
+          "Presencia de rastrojo y marcadores de ensayo que pueden ocluir parcialmente algunas malezas pequeñas."
+        ],
+        "polygons": [
+          [
+            [
+              153,
+              161
+            ],
+            [
+              169,
+              174
+            ],
+            [
+              159,
+              192
+            ],
+            [
+              139,
+              185
+            ],
+            [
+              141,
+              165
+            ]
+          ],
+          [
+            [
+              365,
+              307
+            ],
+            [
+              383,
+              304
+            ],
+            [
+              397,
+              329
+            ],
+            [
+              389,
+              362
+            ],
+            [
+              369,
+              375
+            ],
+            [
+              353,
+              345
+            ]
+          ],
+          [
+            [
+              575,
+              163
+            ],
+            [
+              611,
+              158
+            ],
+            [
+              631,
+              188
+            ],
+            [
+              607,
+              240
+            ],
+            [
+              577,
+              247
+            ],
+            [
+              577,
+              212
+            ]
+          ],
+          [
+            [
+              736,
+              427
+            ],
+            [
+              752,
+              427
+            ],
+            [
+              754,
+              447
+            ],
+            [
+              732,
+              449
+            ]
+          ],
+          [
+            [
+              634,
+              526
+            ],
+            [
+              657,
+              525
+            ],
+            [
+              667,
+              545
+            ],
+            [
+              640,
+              563
+            ]
+          ],
+          [
+            [
+              277,
+              601
+            ],
+            [
+              293,
+              601
+            ],
+            [
+              299,
+              629
+            ],
+            [
+              280,
+              642
+            ],
+            [
+              268,
+              627
+            ]
+          ],
+          [
+            [
+              646,
+              856
+            ],
+            [
+              677,
+              851
+            ],
+            [
+              712,
+              874
+            ],
+            [
+              723,
+              919
+            ],
+            [
+              756,
+              929
+            ],
+            [
+              764,
+              966
+            ],
+            [
+              723,
+              990
+            ],
+            [
+              677,
+              988
+            ],
+            [
+              644,
+              946
+            ],
+            [
+              639,
+              896
+            ]
+          ]
+        ]
+      },
+      "weed_pct": 2.028076171875,
+      "absolute_error_pp": 0.327880859375,
+      "iou": 0.3766339132786442,
+      "both_empty": false,
+      "mask": "GW08.mask.png",
+      "comparison": "GW08.comparison.png"
+    },
+    {
+      "id": "GW09",
+      "status": "api_error",
+      "image_path": "images/desarrollo/GW09.jpg",
+      "image_sha256": "7780521a0ea54a9adaca2f2c605f1191d1cb350ed41b0515634f8b61efb0ef89",
+      "reference_pct": 1.2509765625,
+      "reference_sha256": "b80677e1bbc4d4b5a806c98d8dca58df0c2db35f0f3ea5eb949066e03b7f5a90",
+      "http_status": null,
+      "api_error": "transport_error_or_timeout",
+      "elapsed_seconds": 30.29989139999998,
+      "raw_api_response": "GW09.response.bin",
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "comparison": "GW09.comparison.png"
+    },
+    {
+      "id": "control",
+      "status": "blocked",
+      "image_path": "controls/no-interpretable.png",
+      "image_sha256": "56e4cd36830ae94733b8e1c3b2fd5141df5ea90bb7a58b4770987fae5b9fcf31",
+      "reference_pct": null,
+      "reference_sha256": null,
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "control_pass": null,
+      "comparison": "control.comparison.png"
+    }
+  ],
+  "summary": {
+    "counts": {
+      "assessed": 2,
+      "api_error": 1,
+      "blocked": 1
+    },
+    "mae_pp": 0.7984619140625,
+    "mae_n": 2,
+    "mean_iou": 0.30229366213017067,
+    "iou_n": 2,
+    "both_empty_n": 0
+  }
+}

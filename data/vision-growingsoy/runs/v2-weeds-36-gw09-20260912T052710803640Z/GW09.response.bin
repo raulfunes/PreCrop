@@ -1,0 +1,36 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"Se identifican plantas de soja emergentes con trifolios bien definidos dispuestas en hileras, diferenciadas de plántulas de maleza de hoja angosta y angosta/fina presentes en el entresurco.\",\n  \"limitations\": [\n    \"La presencia de abundante rastrojo seco dificulta la detección de plántulas de malezas extremadamente pequeñas o sumergidas en la broza.\"\n  ],\n  \"polygons\": [\n    [\n      [304, 608],\n      [330, 610],\n      [380, 642],\n      [360, 652],\n      [320, 628],\n      [304, 616]\n    ],\n    [\n      [548, 484],\n      [570, 492],\n      [612, 532],\n      [600, 542],\n      [560, 520],\n      [540, 500]\n    ],\n    [\n      [272, 886],\n      [290, 886],\n      [328, 934],\n      [310, 938],\n      [280, 908]\n    ],\n    [\n      [738, 492],\n      [760, 494],\n      [770, 532],\n      [750, 532],\n      [738, 510]\n    ],\n    [\n      [958, 432],\n      [975, 432],\n      [998, 478],\n      [980, 482],\n      [960, 450]\n    ]\n  ]\n}",
+            "thoughtSignature": "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"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 474,
+    "totalTokenCount": 3446,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      }
+    ],
+    "thoughtsTokenCount": 889,
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "seKkaqGMIPmjqtsP07m10Ak"
+}

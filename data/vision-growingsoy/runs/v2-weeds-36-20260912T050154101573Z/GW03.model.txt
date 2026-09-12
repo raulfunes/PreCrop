@@ -1,0 +1,31 @@
+{
+  "status": "assessed",
+  "reason": "Se identifican plantas de cultivo de soja dispuestas en surcos junto a parches de malezas de hoja angosta (gramíneas) y algunas de hoja ancha no correspondientes al cultivo.",
+  "limitations": [],
+  "polygons": [
+    [
+      [536, 0],
+      [710, 0],
+      [715, 78],
+      [715, 160],
+      [705, 273],
+      [680, 375],
+      [675, 470],
+      [670, 570],
+      [640, 580],
+      [580, 545],
+      [590, 430],
+      [565, 305],
+      [540, 195],
+      [530, 95]
+    ],
+    [
+      [470, 860],
+      [575, 875],
+      [590, 960],
+      [560, 1000],
+      [460, 1000],
+      [460, 925]
+    ]
+  ]
+}

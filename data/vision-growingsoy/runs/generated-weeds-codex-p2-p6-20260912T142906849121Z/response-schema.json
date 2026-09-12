@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "status",
+    "reason",
+    "limitations",
+    "polygons"
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": [
+        "assessed",
+        "not_assessable"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "polygons": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          }
+        }
+      }
+    }
+  }
+}

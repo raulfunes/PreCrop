@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"Se observa un cultivo de soja en emergencia/estado vegetativo temprano dispuesto en hileras con cobertura de rastrojo y algunas plántulas de malezas de hoja angosta/ramificada intercaladas en el entresurco.\",\n  \"limitations\": [\n    \"Presencia de rastrojo seco abundante y objetos de señalización (cintas y estacas) en la parcela.\"\n  ],\n  \"polygons\": [\n    [\n      [507, 281],\n      [523, 277],\n      [539, 290],\n      [547, 329],\n      [572, 363],\n      [575, 412],\n      [554, 403],\n      [552, 355],\n      [515, 332]\n    ],\n    [\n      [430, 147],\n      [447, 146],\n      [457, 168],\n      [474, 192],\n      [498, 203],\n      [500, 222],\n      [474, 237],\n      [455, 222],\n      [457, 196],\n      [427, 179]\n    ]\n  ]\n}",
+            "thoughtSignature": "EmcKZQERTTIPR5T8X4nU+b8yIRhMtn4v/Q+wku6RItGifPvDrrYfqgPLqKT5PHS/B1mEsD0g/pwCnBbT5AJ8xKetupZzROedvBXfVEOjNzpqRZVrXfsfqWLaVExcHmPv/h1zCyL3s5/c"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 1627,
+    "candidatesTokenCount": 353,
+    "totalTokenCount": 1980,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 538
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.8-flash",
+  "responseId": "pb6kapKOMcac6dkPyIH0iAw"
+}

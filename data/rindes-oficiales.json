@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "pack_version": "1.0.0",
+  "lote_id": "demo-rio-segundo-01",
+  "purpose": "Official soy yields per campaign for the capacity contrast: the departmental figure for the lote's district next to the provincial one. The NDVI-based estimate is a transparent linear rule, not a calibrated model, so it is published against this series -- and the check that matters is that the lote's worst year matches the official worst year.",
+  "generated_at_utc": "2026-09-12T11:47:17Z",
+  "method": {
+    "dpto_rule": "rendimiento_kgxha as published by MAGyP for the department",
+    "prov_rule": "sum(produccion_tm) / sum(superficie_cosechada_ha) * 1000 over all Cordoba departments in the campaign",
+    "prov_note": "Aggregated by production over area, not averaged across departments: a plain average would weight a small department like a large one and understate a bad year.",
+    "encoding": "utf-8-sig",
+    "bccba_note": "The Bolsa de Cereales de Cordoba does not publish a per-campaign historical series at a stable URL; its public archive carries monthly agrometeorology reports. The BCCBA figure is therefore recorded as a cross-check on the campaign where it is verifiable, not transcribed as an official column.",
+    "refs": [
+      "https://datos.magyp.gob.ar/dataset/soja-siembra-cosecha-produccion-rendimiento",
+      "https://datos.magyp.gob.ar/dataset/8ae4865f-d2f2-45a2-9343-7a4a12728a90/resource/ba694aa3-99d2-4d7d-9936-60f88e36ad9a/download/soja-serie-1941-2024.csv"
+    ]
+  },
+  "license": "Creative Commons Attribution 4.0 (MAGyP open data)",
+  "coverage": {
+    "campaigns_total": 7,
+    "campaigns_with_dpto": 7,
+    "worst_campaign": "2022/23",
+    "worst_rinde_dpto_kg_ha": 1769.0
+  },
+  "campaigns": [
+    {
+      "campana": "2018/19",
+      "campania_magyp": "2018/2019",
+      "departamento": "Rio Primero",
+      "provincia": "Cordoba",
+      "rinde_dpto_kg_ha": 3669.0,
+      "superficie_sembrada_ha": 247809.0,
+      "superficie_cosechada_ha": 238931.0,
+      "produccion_tm": 876753.0,
+      "dpto_source": "measured",
+      "rinde_prov_kg_ha": 3528.4,
+      "prov_departamentos_agregados": 22,
+      "prov_source": "computed"
+    },
+    {
+      "campana": "2019/20",
+      "campania_magyp": "2019/2020",
+      "departamento": "Rio Primero",
+      "provincia": "Cordoba",
+      "rinde_dpto_kg_ha": 3248.0,
+      "superficie_sembrada_ha": 220163.0,
+      "superficie_cosechada_ha": 215413.0,
+      "produccion_tm": 699593.0,
+      "dpto_source": "measured",
+      "rinde_prov_kg_ha": 2998.2,
+      "prov_departamentos_agregados": 22,
+      "prov_source": "computed"
+    },
+    {
+      "campana": "2020/21",
+      "campania_magyp": "2020/2021",
+      "departamento": "Rio Primero",
+      "provincia": "Cordoba",
+      "rinde_dpto_kg_ha": 3651.0,
+      "superficie_sembrada_ha": 242835.0,
+      "superficie_cosechada_ha": 241445.0,
+      "produccion_tm": 881581.0,
+      "dpto_source": "measured",
+      "rinde_prov_kg_ha": 3224.1,
+      "prov_departamentos_agregados": 23,
+      "prov_source": "computed"
+    },
+    {
+      "campana": "2021/22",
+      "campania_magyp": "2021/2022",
+      "departamento": "Rio Primero",
+      "provincia": "Cordoba",
+      "rinde_dpto_kg_ha": 3011.0,
+      "superficie_sembrada_ha": 235575.0,
+      "superficie_cosechada_ha": 235105.0,
+      "produccion_tm": 707983.0,
+      "dpto_source": "measured",
+      "rinde_prov_kg_ha": 2854.5,
+      "prov_departamentos_agregados": 23,
+      "prov_source": "computed"
+    },
+    {
+      "campana": "2022/23",
+      "campania_magyp": "2022/2023",
+      "departamento": "Rio Primero",
+      "provincia": "Cordoba",
+      "rinde_dpto_kg_ha": 1769.0,
+      "superficie_sembrada_ha": 235575.0,
+      "superficie_cosechada_ha": 229175.0,
+      "produccion_tm": 405515.0,
+      "dpto_source": "measured",
+      "rinde_prov_kg_ha": 1572.5,
+      "prov_departamentos_agregados": 23,
+      "prov_source": "computed",
+      "bccba_cross_check": {
+        "rinde_prov_qq_ha_reported": 15.2,
+        "ref": "https://www.agrositio.com.ar/noticia/231556-cordoba-calculos-finales-de-produccion-de-soja-campana-202223.html",
+        "note": "BCCBA final calculation for the 2022/23 drought campaign, via press coverage. Used only to sanity-check the aggregation of the MAGyP series, which lands within about 3 pct of it."
+      }
+    },
+    {
+      "campana": "2023/24",
+      "campania_magyp": "2023/2024",
+      "departamento": "Rio Primero",
+      "provincia": "Cordoba",
+      "rinde_dpto_kg_ha": 3408.0,
+      "superficie_sembrada_ha": 235575.0,
+      "superficie_cosechada_ha": 235285.0,
+      "produccion_tm": 801787.0,
+      "dpto_source": "measured",
+      "rinde_prov_kg_ha": 3074.4,
+      "prov_departamentos_agregados": 23,
+      "prov_source": "computed"
+    },
+    {
+      "campana": "2024/25",
+      "campania_magyp": "2024/2025",
+      "departamento": "Rio Primero",
+      "provincia": "Cordoba",
+      "rinde_dpto_kg_ha": 3558.0,
+      "superficie_sembrada_ha": 330500.0,
+      "superficie_cosechada_ha": 330300.0,
+      "produccion_tm": 1175190.0,
+      "dpto_source": "measured",
+      "rinde_prov_kg_ha": 3180.6,
+      "prov_departamentos_agregados": 23,
+      "prov_source": "computed"
+    }
+  ]
+}

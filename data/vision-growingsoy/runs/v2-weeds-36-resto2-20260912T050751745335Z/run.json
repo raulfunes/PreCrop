@@ -1,0 +1,142 @@
+{
+  "experiment": "v2-weeds-36-resto2",
+  "started_at": "2026-09-12T05:07:51.745335+00:00",
+  "model": "gemini-3.6-flash",
+  "provider": "Google Gemini API",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+  "configuration": {
+    "candidateCount": 1,
+    "maxOutputTokens": 8192,
+    "thinkingConfig": {
+      "thinkingLevel": "LOW"
+    },
+    "responseMimeType": "application/json",
+    "responseJsonSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason",
+        "limitations",
+        "polygons"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "assessed",
+            "not_assessable"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "timeout_seconds": 30,
+  "automatic_retries": 0,
+  "max_requests": 4,
+  "expected_crop": "soja",
+  "free_project_confirmed_by_operator": false,
+  "billing_acknowledged_by_operator": true,
+  "prompt_sha256": "4639e220b8a5f4c6d84ae3a8ea310f8b4c9351bf486e403b180eec677be1a983",
+  "script_sha256": "e8bb781f09caa24b8b77ca4412b00fccab98b12b3b88a58bb28057c088e7d92d",
+  "manifest_sha256": "c9663bb73ed2e61b45f863d26bbcdd19a1fbb470536b59e955c50d60cd01157c",
+  "pillow": "12.3.0",
+  "requests_sent": 1,
+  "blocked_reason": "HTTP_503",
+  "results": [
+    {
+      "id": "GW07",
+      "status": "api_error",
+      "image_path": "images/desarrollo/GW07.jpg",
+      "image_sha256": "5ccce302f6ae4ec7ba68f7d3f32bb89d47126d309afa93ca3615a6fbddaf65e9",
+      "reference_pct": 1.8056640625,
+      "reference_sha256": "e136a6d950fcbb652b6b060ad319b432f9e6f686e0d5988b928a50955863207b",
+      "http_status": 503,
+      "api_error": "HTTP_503",
+      "elapsed_seconds": 23.654782200000227,
+      "credential_redacted": false,
+      "raw_api_response": "GW07.response.bin",
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "comparison": "GW07.comparison.png"
+    },
+    {
+      "id": "GW08",
+      "status": "blocked",
+      "image_path": "images/desarrollo/GW08.jpg",
+      "image_sha256": "4ebe3d7c30ee99d554523ec37760d733d8f46c9233bd739366784d0ff0862dd1",
+      "reference_pct": 1.7001953125,
+      "reference_sha256": "b835a8732aafde3f73bfb984ee1b3e02ef43eebbc211ab432bb1016efc3aacfa",
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "comparison": "GW08.comparison.png"
+    },
+    {
+      "id": "GW09",
+      "status": "blocked",
+      "image_path": "images/desarrollo/GW09.jpg",
+      "image_sha256": "7780521a0ea54a9adaca2f2c605f1191d1cb350ed41b0515634f8b61efb0ef89",
+      "reference_pct": 1.2509765625,
+      "reference_sha256": "b80677e1bbc4d4b5a806c98d8dca58df0c2db35f0f3ea5eb949066e03b7f5a90",
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "comparison": "GW09.comparison.png"
+    },
+    {
+      "id": "control",
+      "status": "blocked",
+      "image_path": "controls/no-interpretable.png",
+      "image_sha256": "56e4cd36830ae94733b8e1c3b2fd5141df5ea90bb7a58b4770987fae5b9fcf31",
+      "reference_pct": null,
+      "reference_sha256": null,
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "control_pass": null,
+      "comparison": "control.comparison.png"
+    }
+  ],
+  "summary": {
+    "counts": {
+      "api_error": 1,
+      "blocked": 3
+    },
+    "mae_pp": null,
+    "mae_n": 0,
+    "mean_iou": null,
+    "iou_n": 0,
+    "both_empty_n": 0
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"Se identificó correctamente el cultivo de soja en hileras bien definidas, junto con malezas gramíneas presentes principalmente en la esquina superior izquierda del área de cultivo.\",\n  \"limitations\": [\n    \"La presencia de rastrojo denso en la entrehilera dificulta ligeramente la detección de plántulas de malezas de tamaño pequeño.\"\n  ],\n  \"polygons\": [\n    [\n      [14, 0],\n      [110, 2],\n      [175, 59],\n      [165, 126],\n      [127, 203],\n      [90, 212],\n      [42, 192],\n      [14, 150]\n    ]\n  ]\n}",
+            "thoughtSignature": "EmcKZQERTTIPQEryZUBjs86y5InBbfPAKtDogI0RDGmA1jWP2n/8WaXPpJhCMJhYl2eP++To3urt4/9jtEyDhVb+NGAspDjUITmckTwycO4Jr01fyXa4rJgBuaYI/lcTrjGY9cbJXjXR"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 197,
+    "totalTokenCount": 2280,
+    "promptTokensDetails": [
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      },
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "3d2kavPSL57bz7IP_--l8AY"
+}

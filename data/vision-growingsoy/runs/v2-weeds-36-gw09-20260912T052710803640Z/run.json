@@ -1,0 +1,258 @@
+{
+  "experiment": "v2-weeds-36-gw09",
+  "started_at": "2026-09-12T05:27:10.803640+00:00",
+  "model": "gemini-3.6-flash",
+  "provider": "Google Gemini API",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+  "configuration": {
+    "candidateCount": 1,
+    "maxOutputTokens": 8192,
+    "thinkingConfig": {
+      "thinkingLevel": "LOW"
+    },
+    "responseMimeType": "application/json",
+    "responseJsonSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason",
+        "limitations",
+        "polygons"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "assessed",
+            "not_assessable"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "timeout_seconds": 30,
+  "automatic_retries": 0,
+  "max_requests": 2,
+  "expected_crop": "soja",
+  "free_project_confirmed_by_operator": false,
+  "billing_acknowledged_by_operator": true,
+  "prompt_sha256": "4639e220b8a5f4c6d84ae3a8ea310f8b4c9351bf486e403b180eec677be1a983",
+  "script_sha256": "6173a47b8c1070cfbd9e0a01bfc2f4650056e6e01c82e7a985e85eef7f115d9d",
+  "manifest_sha256": "c9663bb73ed2e61b45f863d26bbcdd19a1fbb470536b59e955c50d60cd01157c",
+  "pillow": "12.3.0",
+  "requests_sent": 2,
+  "blocked_reason": null,
+  "results": [
+    {
+      "id": "GW09",
+      "status": "assessed",
+      "image_path": "images/desarrollo/GW09.jpg",
+      "image_sha256": "7780521a0ea54a9adaca2f2c605f1191d1cb350ed41b0515634f8b61efb0ef89",
+      "reference_pct": 1.2509765625,
+      "reference_sha256": "b80677e1bbc4d4b5a806c98d8dca58df0c2db35f0f3ea5eb949066e03b7f5a90",
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 14.028463900000133,
+      "credential_redacted": false,
+      "raw_api_response": "GW09.response.bin",
+      "response": {
+        "status": "assessed",
+        "reason": "Se identifican plantas de soja emergentes con trifolios bien definidos dispuestas en hileras, diferenciadas de plántulas de maleza de hoja angosta y angosta/fina presentes en el entresurco.",
+        "limitations": [
+          "La presencia de abundante rastrojo seco dificulta la detección de plántulas de malezas extremadamente pequeñas o sumergidas en la broza."
+        ],
+        "polygons": [
+          [
+            [
+              304,
+              608
+            ],
+            [
+              330,
+              610
+            ],
+            [
+              380,
+              642
+            ],
+            [
+              360,
+              652
+            ],
+            [
+              320,
+              628
+            ],
+            [
+              304,
+              616
+            ]
+          ],
+          [
+            [
+              548,
+              484
+            ],
+            [
+              570,
+              492
+            ],
+            [
+              612,
+              532
+            ],
+            [
+              600,
+              542
+            ],
+            [
+              560,
+              520
+            ],
+            [
+              540,
+              500
+            ]
+          ],
+          [
+            [
+              272,
+              886
+            ],
+            [
+              290,
+              886
+            ],
+            [
+              328,
+              934
+            ],
+            [
+              310,
+              938
+            ],
+            [
+              280,
+              908
+            ]
+          ],
+          [
+            [
+              738,
+              492
+            ],
+            [
+              760,
+              494
+            ],
+            [
+              770,
+              532
+            ],
+            [
+              750,
+              532
+            ],
+            [
+              738,
+              510
+            ]
+          ],
+          [
+            [
+              958,
+              432
+            ],
+            [
+              975,
+              432
+            ],
+            [
+              998,
+              478
+            ],
+            [
+              980,
+              482
+            ],
+            [
+              960,
+              450
+            ]
+          ]
+        ]
+      },
+      "weed_pct": 0.655029296875,
+      "absolute_error_pp": 0.595947265625,
+      "iou": 0.0,
+      "both_empty": false,
+      "mask": "GW09.mask.png",
+      "review": "GW09.review.png",
+      "comparison": "GW09.comparison.png"
+    },
+    {
+      "id": "control",
+      "status": "not_assessable",
+      "image_path": "controls/no-interpretable.png",
+      "image_sha256": "56e4cd36830ae94733b8e1c3b2fd5141df5ea90bb7a58b4770987fae5b9fcf31",
+      "reference_pct": null,
+      "reference_sha256": null,
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 22.967535400000088,
+      "credential_redacted": false,
+      "raw_api_response": "control.response.bin",
+      "response": {
+        "status": "not_assessable",
+        "reason": "La fotografía es completamente uniforme y sin contenido visible, por lo que no muestra el terreno ni la vegetación para evaluar la presencia de cultivo o malezas.",
+        "limitations": [
+          "La imagen proporcionada no contiene información visual o estructura del terreno."
+        ],
+        "polygons": []
+      },
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "control_pass": true,
+      "comparison": "control.comparison.png"
+    }
+  ],
+  "summary": {
+    "counts": {
+      "assessed": 1,
+      "not_assessable": 1
+    },
+    "mae_pp": 0.595947265625,
+    "mae_n": 1,
+    "mean_iou": 0.0,
+    "iou_n": 1,
+    "both_empty_n": 0
+  }
+}

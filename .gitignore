@@ -1,0 +1,31 @@
+.venv*/
+__pycache__/
+*.pyc
+
+# node
+node_modules/
+.env
+services/evidence-api/.keys/
+
+# Next.js frontend
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.env*
+!.env.example
+api/reviews/
+
+# runtime data of the evidence API (lots created live, MAGyP cache)
+data/lotes/
+data/cache/
+data/fotos-prueba/
+services/evidence-api/api.*.log
+next.*.log
+api/vision.*.log

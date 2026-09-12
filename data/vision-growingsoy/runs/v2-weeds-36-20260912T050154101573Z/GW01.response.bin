@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"Se identificó exitosamente vegetación de malezas (principalmente latifoliadas no correspondientes a la morfología trifoliada de la soja) coexistiendo con el cultivo emergente de soja.\",\n  \"limitations\": [\n    \"Presencia de objetos de muestreo (cartel con número '205', cinta métrica, marcadores de color) parcialmente cubriendo la vegetación.\"\n  ],\n  \"polygons\": [\n    [\n      [154, 0],\n      [365, 0],\n      [599, 58],\n      [572, 222],\n      [527, 461],\n      [429, 574],\n      [362, 451],\n      [234, 437],\n      [250, 240],\n      [194, 187]\n    ],\n    [\n      [748, 690],\n      [825, 680],\n      [825, 786],\n      [770, 843],\n      [754, 755]\n    ]\n  ]\n}",
+            "thoughtSignature": "EmcKZQERTTIPyYiJVvyqowFHODRd43QhNxMZ0LGFOyUSXKm+YF/joFq10a5N2wBLdjPLDxZEA0HJ0y6WHmu+CJI8WokdlV9oKE3kdlQ8pc8a1xh7L2f4KlUpPgePRtwk0mB/tvDEPsM8"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 302,
+    "totalTokenCount": 2385,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "zNykavGnO8XXz7IPrLPe6Qk"
+}

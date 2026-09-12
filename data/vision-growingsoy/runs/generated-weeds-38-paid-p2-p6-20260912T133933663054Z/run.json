@@ -1,0 +1,98 @@
+{
+  "experiment": "generated-weeds-38-paid-p2-p6",
+  "started_at": "2026-09-12T13:39:33.663054+00:00",
+  "model": "gemini-3.8-flash",
+  "provider": "Google Gemini API",
+  "configuration": {
+    "candidateCount": 1,
+    "maxOutputTokens": 8192,
+    "thinkingConfig": {
+      "thinkingLevel": "LOW"
+    },
+    "responseMimeType": "application/json",
+    "responseJsonSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason",
+        "limitations",
+        "polygons"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "assessed",
+            "not_assessable"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "prompt_sha256": "4639e220b8a5f4c6d84ae3a8ea310f8b4c9351bf486e403b180eec677be1a983",
+  "script_sha256": "ca29ea3b6fad1afe40cac0eebe42ecfbda7541365e2005dbbd31d9de68dd76e2",
+  "script_snapshot": "segment_generated.executed.py",
+  "billing_acknowledged_by_operator": true,
+  "automatic_retries": 0,
+  "max_requests": 2,
+  "requests_sent": 2,
+  "results": [
+    {
+      "id": "P2",
+      "image": "soja-brotes-jovenes-01.jpg",
+      "image_sha256": "83a187dfab92b69063dd8052562dc3ca8cd1bd4f6a706539fc1b68474a03e6f3",
+      "status": "api_error",
+      "http_status": 503,
+      "api_error": "HTTP_503",
+      "elapsed_seconds": 19.123363899998367,
+      "credential_redacted": false,
+      "raw_api_response": "P2.response.bin",
+      "usage": {}
+    },
+    {
+      "id": "P6",
+      "image": "soja-brotes-maleza-media-alta-02.jpg",
+      "image_sha256": "222190e639b5924c58ca575f96a765e2e36134624e2d22f47e7a5d5b53fe50cd",
+      "status": "api_error",
+      "http_status": 503,
+      "api_error": "HTTP_503",
+      "elapsed_seconds": 14.6368094999998,
+      "credential_redacted": false,
+      "raw_api_response": "P6.response.bin",
+      "usage": {}
+    }
+  ],
+  "summary": {
+    "counts": {
+      "api_error": 2
+    },
+    "token_totals": {},
+    "estimated_cost_usd": 0.0
+  }
+}

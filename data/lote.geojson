@@ -1,0 +1,27 @@
+{
+  "type": "Feature",
+  "bbox": [-63.7254, -31.4245, -63.7146, -31.4155],
+  "properties": {
+    "schema_version": 1,
+    "pack_version": "1.0.0",
+    "lote_id": "demo-rio-segundo-01",
+    "nombre": "Lote demo Río Primero",
+    "ha": 100,
+    "cultivo": "soja",
+    "geometry_kind": "analysis_box",
+    "source": "estimated",
+    "honesty_note": "~1 km analysis box around the AOI center, NOT a cadastral field boundary. NDVI stats over this box mix crop with roads and edges."
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-63.7254, -31.4245],
+        [-63.7146, -31.4245],
+        [-63.7146, -31.4155],
+        [-63.7254, -31.4155],
+        [-63.7254, -31.4245]
+      ]
+    ]
+  }
+}

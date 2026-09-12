@@ -1,0 +1,237 @@
+{
+  "experiment": "segmentation-v1-request-v2",
+  "started_at": "2026-09-12T02:53:23.507337+00:00",
+  "model": "gemini-3.8-flash",
+  "provider": "Google Gemini API",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
+  "configuration": {
+    "candidateCount": 1,
+    "maxOutputTokens": 8192,
+    "thinkingConfig": {
+      "thinkingLevel": "LOW"
+    },
+    "responseMimeType": "application/json",
+    "responseJsonSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason",
+        "limitations",
+        "polygons"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "assessed",
+            "not_assessable"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "timeout_seconds": 30,
+  "automatic_retries": 0,
+  "max_requests": 4,
+  "expected_crop": "soja",
+  "free_project_confirmed_by_operator": true,
+  "prompt_sha256": "c622b04cd39822eebca4161d205b1714edf616eaa6c774e75137728cdcad85a7",
+  "script_sha256": "84f900072c9251e37b89650a7d2dd4774a2dec72e25415972132f320ee899140",
+  "manifest_sha256": "f63c865e98d0f87521b04a35003ad6c8c3c07801122f41431ce792a47f378862",
+  "pillow": "12.3.0",
+  "requests_sent": 2,
+  "blocked_reason": "HTTP_503",
+  "results": [
+    {
+      "id": "GS08",
+      "status": "assessed",
+      "image_path": "images/desarrollo/GS08.jpg",
+      "image_sha256": "384687f2cb0c2545b49d6e642fddd04843d6dba2179ccf97c0871e57fae318c8",
+      "reference_pct": 0.0,
+      "reference_sha256": "0a4eab4cfce4bb2a18314eb2773db9d8ba63fa2936f93988e3a303de5d37d8f6",
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 5.213176899997052,
+      "credential_redacted": false,
+      "raw_api_response": "GS08.response.bin",
+      "response": {
+        "status": "assessed",
+        "reason": "Se observa un cultivo de soja en emergencia/estado vegetativo temprano dispuesto en hileras con cobertura de rastrojo y algunas plántulas de malezas de hoja angosta/ramificada intercaladas en el entresurco.",
+        "limitations": [
+          "Presencia de rastrojo seco abundante y objetos de señalización (cintas y estacas) en la parcela."
+        ],
+        "polygons": [
+          [
+            [
+              507,
+              281
+            ],
+            [
+              523,
+              277
+            ],
+            [
+              539,
+              290
+            ],
+            [
+              547,
+              329
+            ],
+            [
+              572,
+              363
+            ],
+            [
+              575,
+              412
+            ],
+            [
+              554,
+              403
+            ],
+            [
+              552,
+              355
+            ],
+            [
+              515,
+              332
+            ]
+          ],
+          [
+            [
+              430,
+              147
+            ],
+            [
+              447,
+              146
+            ],
+            [
+              457,
+              168
+            ],
+            [
+              474,
+              192
+            ],
+            [
+              498,
+              203
+            ],
+            [
+              500,
+              222
+            ],
+            [
+              474,
+              237
+            ],
+            [
+              455,
+              222
+            ],
+            [
+              457,
+              196
+            ],
+            [
+              427,
+              179
+            ]
+          ]
+        ]
+      },
+      "weed_pct": 0.635009765625,
+      "absolute_error_pp": 0.635009765625,
+      "iou": 0.0,
+      "both_empty": false,
+      "mask": "GS08.mask.png",
+      "comparison": "GS08.comparison.png"
+    },
+    {
+      "id": "GS11",
+      "status": "api_error",
+      "image_path": "images/desarrollo/GS11.jpg",
+      "image_sha256": "fab22f2597ca7ba4fb888484e54f89bd0913f6f29927b3802ec8614ddfe74d1b",
+      "reference_pct": 0.281494140625,
+      "reference_sha256": "676363d85dcf70b10a7a7cf41946d8f69146db7d0b22792e38aaabd69dff3fc8",
+      "http_status": 503,
+      "api_error": "HTTP_503",
+      "elapsed_seconds": 9.587031300005037,
+      "credential_redacted": false,
+      "raw_api_response": "GS11.response.bin",
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "comparison": "GS11.comparison.png"
+    },
+    {
+      "id": "GS15",
+      "status": "blocked",
+      "image_path": "images/desarrollo/GS15.jpg",
+      "image_sha256": "a073eae9487c452a4efa04903b9b5fc617fec51569e67847ee3fef06c1fc6910",
+      "reference_pct": 8.1806640625,
+      "reference_sha256": "1a0dc1dce730bcae7642b0c3c3274fd1977937c912a829a1e535c1578f279cb8",
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "comparison": "GS15.comparison.png"
+    },
+    {
+      "id": "control",
+      "status": "blocked",
+      "image_path": "controls/no-interpretable.png",
+      "image_sha256": "56e4cd36830ae94733b8e1c3b2fd5141df5ea90bb7a58b4770987fae5b9fcf31",
+      "reference_pct": null,
+      "reference_sha256": null,
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "control_pass": null,
+      "comparison": "control.comparison.png"
+    }
+  ],
+  "summary": {
+    "counts": {
+      "assessed": 1,
+      "api_error": 1,
+      "blocked": 2
+    },
+    "mae_pp": 0.635009765625,
+    "mae_n": 1,
+    "mean_iou": 0.0,
+    "iou_n": 1,
+    "both_empty_n": 0
+  }
+}
