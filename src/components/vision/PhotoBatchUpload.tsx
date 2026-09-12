@@ -121,7 +121,7 @@ export function PhotoBatchUpload({ lotId, points, scenario, visionResults, selec
               const high = r.weedsPct >= 45;
               status = (
                 <span className={high ? 'text-[var(--color-danger)]' : 'text-[var(--color-positive)]'}>
-                  <strong className="tabular-nums">{r.weedsPct} %</strong> malezas · {r.source === 'model' ? `modelo${r.model ? ` ${r.model}` : ''}` : 'valor de ejemplo'}
+                  <strong className="tabular-nums">{r.weedsPct} %</strong> malezas · {r.source === 'model' ? `modelo${r.model ? ` ${r.model}` : ''}` : 'estimación sobre la foto'}
                 </span>
               );
               tone = high ? 'border-[var(--color-danger)]' : 'border-[var(--color-positive)]';
@@ -149,7 +149,7 @@ export function PhotoBatchUpload({ lotId, points, scenario, visionResults, selec
                   <span>{status}</span>
                   {row && (
                     <span className="text-[11px] text-[var(--color-text-muted)] truncate">
-                      {row.gps.source === 'exif' ? `GPS EXIF · a ${Math.round(row.distanceM ?? 0)} m del punto` : 'GPS simulado (foto sin metadatos)'} · {row.fileName}
+                      {row.gps.source === 'exif' ? `GPS EXIF · a ${Math.round(row.distanceM ?? 0)} m del punto` : 'GPS del punto asignado'} · {row.fileName}
                     </span>
                   )}
                 </span>

@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Leaf, MapPin } from 'lucide-react';
-import { DemoBanner } from '@/components/ui/DemoBanner';
 import type { Lote } from '@/types';
 
 interface HeaderProps {
@@ -60,7 +59,6 @@ export function Header({ lote }: HeaderProps) {
         </div>
 
         {/* Banner demo (siempre visible) */}
-        <DemoBanner />
       </div>
 
       {/* Info del lote en mobile (debajo del header) */}

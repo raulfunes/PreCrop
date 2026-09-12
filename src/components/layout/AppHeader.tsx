@@ -59,18 +59,6 @@ export function AppHeader() {
           </div>
 
 
-          {/* ── Badge DEMO — siempre visible ─────────────── */}
-          <span
-            className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-[var(--radius-pill)]
-                       bg-[var(--color-warning-soft)] border border-[var(--color-warning)]/30
-                       text-[11px] font-semibold text-[var(--color-warning)] uppercase tracking-wide
-                       select-none"
-            aria-label="Modo demo. Fondos de prueba simulados."
-          >
-            <span aria-hidden="true">●</span>
-            <span className="hidden xs:inline">DEMO · </span>
-            Fondos de prueba
-          </span>
         </div>
       </div>
 

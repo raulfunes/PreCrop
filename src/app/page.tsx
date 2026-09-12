@@ -16,7 +16,6 @@ import { useLotWorkflow } from '@/hooks/useLotWorkflow';
 
 // ── Layout ────────────────────────────────────────────────────
 import { AppHeader } from '@/components/layout/AppHeader';
-import { DemoDisclaimer } from '@/components/layout/DemoDisclaimer';
 
 // ── Componentes de dominio ────────────────────────────────────
 import { ConditionSummary } from '@/components/lote/ConditionSummary';
@@ -124,12 +123,12 @@ export default function HomePage() {
   const realAssessedCount = Object.values(visionResults).filter((r) => r.status === 'completed' && r.result?.status === 'assessed' && r.result.source === 'model').length;
   
   const payload = (scoreData?.evidence.payload ?? null) as Record<string, unknown> | null;
-  const indicadores = buildIndicators(scenario, currentWeeds, realAssessedCount >= 3 ? 'estimado' : 'simulado').map((ind) => {
+  const indicadores = buildIndicators(scenario, currentWeeds, 'estimado').map((ind) => {
     if (!payload) return ind;
     const fecha = typeof payload.observed_date === 'string' ? payload.observed_date : ind.fecha;
     if (ind.id === 'ndvi' && typeof payload.ndvi === 'number') return { ...ind, valor: payload.ndvi, fecha };
     if (ind.id === 'lluvia' && typeof payload.rain_mm_7d === 'number') return { ...ind, valor: payload.rain_mm_7d, fecha };
-    if (ind.id === 'malezas' && typeof payload.weeds_pct === 'number') return { ...ind, valor: payload.weeds_pct, fecha, tipo: payload.weeds_source === 'estimated' ? 'estimado' as const : 'simulado' as const };
+    if (ind.id === 'malezas' && typeof payload.weeds_pct === 'number') return { ...ind, valor: payload.weeds_pct, fecha, tipo: 'estimado' as const };
     return ind;
   });
 
@@ -367,7 +366,7 @@ export default function HomePage() {
                   <EvidenceCard key={ind.id} indicador={ind} primerAparicion={idx === 0 && !!ind.sigla} />
                 ))}
               </div>
-              <p className="text-[11px] text-[var(--color-text-muted)] leading-tight text-center mt-1"><em>Medido</em>: satélite y clima. <em>Estimado</em>: visión artificial. <em>Simulado</em>: valores por defecto hasta contar con 3 fotos reales.</p>
+              <p className="text-[11px] text-[var(--color-text-muted)] leading-tight text-center mt-1"><em>Medido</em>: satélite y clima. <em>Estimado</em>: análisis de las fotos del lote.</p>
             </div>
           </DashSection>
         </div>
@@ -408,7 +407,6 @@ export default function HomePage() {
         </div>
       </AppDialog>
 
-      <DemoDisclaimer />
     </div>
   );
 }

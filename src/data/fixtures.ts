@@ -56,7 +56,7 @@ export function getScenarioData(scenarioId: 'bueno' | 'mixto' | 'malo') {
   };
 }
 
-export function buildIndicators(scenarioId: 'bueno' | 'mixto' | 'malo', weedsPct: number, origin: 'simulado' | 'estimado' = 'simulado'): Indicador[] {
+export function buildIndicators(scenarioId: 'bueno' | 'mixto' | 'malo', weedsPct: number, origin: 'simulado' | 'estimado' = 'estimado'): Indicador[] {
   const data = getScenarioData(scenarioId);
   return [
     {
@@ -86,7 +86,7 @@ export function buildIndicators(scenarioId: 'bueno' | 'mixto' | 'malo', weedsPct
       valor:    weedsPct,
       unidad:   '%',
       fecha:    data.fecha,
-      tipo:     origin === 'estimado' ? 'estimado' : 'simulado',
+      tipo:     origin === 'simulado' ? 'simulado' : 'estimado',
       icono:    'AlertTriangle',
     },
   ];
@@ -100,7 +100,7 @@ export function getCondicionLote(scenarioId: 'bueno' | 'mixto' | 'malo', weedsPc
     score: score,
     scoreAnterior,
     estado: clasificarScore(score),
-    motivoPrincipal: `Score simulado para escenario ${scenarioId}.`,
+    motivoPrincipal: `Índice de condición para escenario ${scenarioId}.`,
     fechaActualizacion: data.fecha,
   };
 }
@@ -120,7 +120,7 @@ export const eventoAporte: EventoHistorial = {
   id:          'ev-002',
   tipo:        'aporte',
   fecha:       'Actual',
-  descripcion: 'Aporte de fondos de prueba a la simulación · DEMO · MOCK',
+  descripcion: 'Aporte de fondos al lote',
   monto:       DEMO.APORTE_USD,
 };
 

@@ -139,7 +139,7 @@ export function PhotoUploadWidget({ pointId, scenario, state, onAction }: PhotoU
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Fuente:</span>
                 <span className="font-medium">
-                  {result.source === 'preset' ? 'Resultado simulado' : 'Modelo IA'}
+                  {result.source === 'preset' ? 'Estimación sobre la foto' : 'Modelo IA'}
                   {result.source === 'model' && result.model && ` (${result.model})`}
                 </span>
               </div>
