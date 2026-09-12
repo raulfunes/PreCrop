@@ -65,3 +65,17 @@ Alcance autorizado: P2 y P6, sólo malezas, dos solicitudes sin reintentos
 P2 devolvió `HTTP 503 UNAVAILABLE` por alta demanda. P6 sí fue evaluada: **9,13 % de malezas**, confianza calibrada 0,33 (baja), 2083 tokens de entrada y 1161 de salida. A la tarifa paga publicada, ese consumo equivale a USD 0,005916; la respuesta no acredita que se haya cobrado y la clave venía operando en free tier.
 
 En la misma P6, `gemini-3.6-flash` había estimado 11,41 %. La nueva estimación baja 2,28 puntos porcentuales y el overlay de 3.8 todavía omite numerosas malezas pequeñas y gramíneas visibles. No hay una mejora clara; sin máscara humana tampoco se puede decidir cuál de los dos contornos es más preciso. [Corrida, overlay y comparación 3.6/3.8](../data/vision-growingsoy/runs/generated-weeds-paid-gemini-3-8-flash-p2-p6-20260912T135902467963Z/report.md).
+
+## Piloto con Codex
+
+Fecha: 12-sep-2026, 11:29 ART
+Modelo: `gpt-6-astra` mediante Codex CLI y sesión de ChatGPT
+Alcance: P2 y P6, sólo malezas, dos ejecuciones sin reintentos
+
+Las dos ejecuciones terminaron correctamente. P2, generada como limpia, quedó en **0,00 %**; Codex consideró ambigua una plántula aislada y no la marcó sólo por estar en el entresurco. P6 quedó en **5,85 %**, frente a 11,41 % con Gemini 3.6 Flash y 9,13 % con Gemini 3.8 Flash.
+
+En la revisión visual de P6, Codex produjo contornos mucho más ajustados a hojas y gramíneas individuales que los parches amplios de Gemini. También dejó sin marcar malezas pequeñas y vegetación del fondo, de modo que el menor porcentaje no demuestra mayor precisión y probablemente subestima la cobertura visible. Se necesitan máscaras humanas para decidir cuál resultado es mejor.
+
+La CLI reportó 45.872 tokens de entrada, 3.941 de salida y 898 de razonamiento entre ambas ejecuciones. P2 tardó 17,0 s y P6 151,6 s. La sesión de ChatGPT no expuso un costo monetario por ejecución. A este ritmo, procesar 20 imágenes sería posible como evaluación por lotes, pero consumiría bastante cuota y podría tardar decenas de minutos.
+
+[Corrida, JSON, máscaras y lámina de revisión](../data/vision-growingsoy/runs/generated-weeds-codex-p2-p6-20260912T142906849121Z/report.md).

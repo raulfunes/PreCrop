@@ -1,7 +1,7 @@
 # Malezas en 2 imagenes generadas — Codex gpt-6-astra
 
-Fecha UTC: 2026-09-12T14:29:06.849121+00:00  
-Ejecuciones completadas: 2/2  
+Fecha UTC: 2026-09-12T14:29:06.849121+00:00
+Ejecuciones completadas: 2/2
 
 | Punto | Imagen | Estado | Malezas | Confianza | Tiempo |
 | --- | --- | --- | ---: | ---: | ---: |

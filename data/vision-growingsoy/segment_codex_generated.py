@@ -28,8 +28,8 @@ def save_report(directory, run):
     write_json(directory / "run.json", run)
     lines = [
         f"# Malezas en 2 imagenes generadas — Codex {run['model']}", "",
-        f"Fecha UTC: {run['started_at']}  ",
-        f"Ejecuciones completadas: {len(run['results'])}/2  ", "",
+        f"Fecha UTC: {run['started_at']}",
+        f"Ejecuciones completadas: {len(run['results'])}/2", "",
         "| Punto | Imagen | Estado | Malezas | Confianza | Tiempo |",
         "| --- | --- | --- | ---: | ---: | ---: |",
     ]
