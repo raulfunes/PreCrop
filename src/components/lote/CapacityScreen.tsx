@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { RefreshCw, AlertCircle, TrendingUp, BarChart3, Info, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { YieldSeriesChart } from './YieldSeriesChart';
 import { formatUSD } from '@/lib/scoreUtils';
 import type { CapacityResponse, ApiError } from '@/types';
 
@@ -59,7 +60,6 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
     );
   }
 
-  const maxYield = Math.max(...series.map(c => c.official_dpto_kg_ha || 0));
 
   return (
     <div className="flex flex-col gap-6">
@@ -158,65 +158,36 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
           Serie oficial y respuesta satelital ({series.length} campañas)
         </h2>
 
-        <div className="flex flex-col gap-3" role="list" aria-label="Historial de campañas">
-          {series.map((c) => {
-            const isWorst = c.campana === worst_year?.campana;
-            const barWidth = c.official_dpto_kg_ha !== null && maxYield > 0
-              ? (c.official_dpto_kg_ha / maxYield) * 100 : 0;
+        <YieldSeriesChart series={series} worstCampana={worst_year?.campana ?? null} height={110} />
 
-            return (
-              <div
-                key={c.campana}
-                role="listitem"
-                className={`p-3 rounded border ${isWorst ? 'border-[var(--color-danger)]/40 bg-[var(--color-danger-soft)]' : 'border-[var(--color-border)] bg-[var(--color-neutral-soft)]'}`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[14px] font-bold ${isWorst ? 'text-[var(--color-danger)]' : 'text-[var(--color-ink)]'}`}>
-                      {c.campana}
-                    </span>
-                    {isWorst && (
-                      <span className="text-[10px] font-semibold text-white bg-[var(--color-danger)] px-1.5 py-0.5 rounded">PEOR OFICIAL</span>
-                    )}
-                    {c.status === 'unpaired' && (
-                      <span className="text-[10px] font-semibold text-[var(--color-text-muted)] bg-[var(--color-neutral)] border border-[var(--color-border)] px-1.5 py-0.5 rounded">NO PAREADA</span>
-                    )}
-                  </div>
-                  <span className="text-[13px] font-bold tabular-nums text-[var(--color-ink)]">
-                    {c.official_dpto_kg_ha !== null ? `${c.official_dpto_kg_ha.toLocaleString('es-AR')} kg/ha` : 's/d'}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-[10px] text-[var(--color-text-muted)] w-[50px] shrink-0">Dpto</span>
-                  <div className="flex-1 bg-white rounded-full h-4 overflow-hidden border border-[var(--color-border)]/50">
-                    {c.official_dpto_kg_ha !== null && (
-                      <div
-                        className={`h-full rounded-full transition-all ${isWorst ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-brand-primary)]'}`}
-                        style={{ width: `${barWidth}%` }}
-                        role="meter"
-                        aria-valuenow={c.official_dpto_kg_ha}
-                        aria-valuemin={0}
-                        aria-valuemax={maxYield}
-                        aria-label={`Rinde dpto: ${c.official_dpto_kg_ha} kg/ha`}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--color-text-muted)]">
-                  <span>Pico NDVI lote: {c.ndvi_peak !== null ? c.ndvi_peak.toFixed(3) : 's/d'}</span>
-                  <span>Índice NDVI lote: {c.ndvi_index !== null ? c.ndvi_index.toFixed(3) : 's/d'}</span>
-                  <span>Índice rinde dpto: {c.official_index !== null ? c.official_index.toFixed(3) : 's/d'}</span>
-                  {c.lote_vs_district !== null ? (
-                    <span>Relación lote/dpto: {c.lote_vs_district.toFixed(4)}× · {(c.lote_vs_district - 1) > 0 ? '+' : ''}{((c.lote_vs_district - 1) * 100).toFixed(2)} %</span>
-                  ) : (
-                    <span>Relación lote/dpto: s/d</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-[12px] leading-5 tabular-nums">
+            <thead>
+              <tr className="text-left text-[11px] uppercase tracking-wide text-[var(--color-text-muted)] border-b border-[var(--color-border)]">
+                <th className="py-1 pr-3 font-semibold">Campaña</th>
+                <th className="py-1 pr-3 font-semibold text-right">Rinde dpto.</th>
+                <th className="py-1 pr-3 font-semibold text-right">Pico NDVI lote</th>
+                <th className="py-1 pr-3 font-semibold text-right">Índice lote</th>
+                <th className="py-1 pr-3 font-semibold text-right">Índice dpto.</th>
+                <th className="py-1 font-semibold text-right">Lote / dpto.</th>
+              </tr>
+            </thead>
+            <tbody>
+              {series.map((c) => {
+                const isWorst = c.campana === worst_year?.campana;
+                return (
+                  <tr key={c.campana} className={`border-b border-[var(--color-border)] last:border-0 ${isWorst ? 'bg-[var(--color-danger-soft)] text-[var(--color-danger)] font-semibold' : 'text-[var(--color-ink)]'}`}>
+                    <td className="py-1 pr-3">{c.campana}{isWorst && <span className="ml-2 text-[10px] uppercase">peor oficial</span>}{c.status === 'unpaired' && <span className="ml-2 text-[10px] uppercase text-[var(--color-text-muted)]">no pareada</span>}</td>
+                    <td className="py-1 pr-3 text-right">{c.official_dpto_kg_ha !== null ? `${c.official_dpto_kg_ha.toLocaleString('es-AR')} kg/ha` : 's/d'}</td>
+                    <td className="py-1 pr-3 text-right">{c.ndvi_peak !== null ? c.ndvi_peak.toFixed(3) : 's/d'}</td>
+                    <td className="py-1 pr-3 text-right">{c.ndvi_index !== null ? c.ndvi_index.toFixed(3) : 's/d'}</td>
+                    <td className="py-1 pr-3 text-right">{c.official_index !== null ? c.official_index.toFixed(3) : 's/d'}</td>
+                    <td className="py-1 text-right">{c.lote_vs_district !== null ? `${c.lote_vs_district.toFixed(3)}x` : 's/d'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
         <div className="mt-4 p-3 bg-[var(--color-neutral-soft)] rounded border border-[var(--color-border)]">

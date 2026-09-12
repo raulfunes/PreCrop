@@ -111,7 +111,12 @@ export interface CreatedLot {
   condition: Record<'bueno' | 'malo', { date: string; ndvi: number; rain_mm_7d: number; index: number; light: WorkflowLight }>;
 }
 
+export interface LocateResponse { point_id: string; label: string; distance_m: number; tolerance_m: number; within_tolerance: boolean }
+
 export const workflowClient = {
+  locate(loteId: string, lat: number, lon: number): Promise<LocateResponse> {
+    return call<LocateResponse>(`/lotes/${encodeURIComponent(loteId)}/locate?lat=${lat}&lon=${lon}`);
+  },
   /** Build a lot live from a GeoJSON polygon (about 20 s: department, official series, 7 campaigns, scenarios). */
   createLot(body: { name?: string; geometry: { type: 'Polygon'; coordinates: number[][][] } }): Promise<CreatedLot> {
     return call(`/lotes`, { method: 'POST', body: JSON.stringify(body) }, [201]);

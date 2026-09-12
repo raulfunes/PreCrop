@@ -13,8 +13,11 @@ export function buildEvidenceRequest(
   scenario: 'bueno' | 'mixto' | 'malo',
   visionResults: Record<string, VisionPointState>
 ): EvidenceRequestPayload {
-  const validPct = Object.values(visionResults)
-    .filter(r => r.status === 'completed' && r.result?.status === 'assessed' && r.result.source === 'model')
+  // Same rule as the lot state on the API: every assessed photo counts, whether the
+  // value came from the vision model or from the preset fallback when no API answered.
+  const assessed = Object.values(visionResults)
+    .filter(r => r.status === 'completed' && r.result?.status === 'assessed');
+  const validPct = assessed
     .map(r => (r.result && r.result.status === 'assessed') ? r.result.weedsPct : -1)
     .filter(w => Number.isFinite(w) && w >= 0 && w <= 100);
 
@@ -29,7 +32,7 @@ export function buildEvidenceRequest(
   return {
     scenario,
     weeds_pct: median,
-    weeds_source: 'estimated',
+    weeds_source: assessed.every(r => r.result?.status === 'assessed' && r.result.source === 'model') ? 'estimated' : 'simulated',
   };
 }
 

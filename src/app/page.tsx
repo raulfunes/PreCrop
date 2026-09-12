@@ -26,7 +26,9 @@ import { EvidenceCard } from '@/components/lote/EvidenceCard';
 import { SimulatedLimitCard } from '@/components/lote/SimulatedLimitCard';
 import { MapaLote } from '@/components/lote/MapaLote';
 import type { LatLng } from '@/components/lote/LeafletMap';
-import { PhotoUploadWidget } from '@/components/vision/PhotoUploadWidget';
+import { PhotoBatchUpload } from '@/components/vision/PhotoBatchUpload';
+import type { PhotoGps } from '@/lib/photoGps';
+import { YieldSeriesChart } from '@/components/lote/YieldSeriesChart';
 import { CapacityScreen } from '@/components/lote/CapacityScreen';
 import { ReportScreen } from '@/components/lote/ReportScreen';
 import { KpiStrip } from '@/components/lote/KpiStrip';
@@ -125,9 +127,10 @@ export default function HomePage() {
   }), [lot]);
 
   // Cada foto analizada (modelo, o valor de ejemplo si ninguna API respondió) se
-  // registra en el estado del lote con su "metadata" GPS: en producción viene del
-  // EXIF; en la demo se mockea con las coordenadas del punto elegido en el mapa.
+  // registra en el estado del lote con su metadata GPS: la del EXIF cuando la foto
+  // la trae, o la del punto asignado (mock) cuando no la trae.
   const synced = useRef<Set<string>>(new Set());
+  const photoGps = useRef<Record<string, PhotoGps>>({});
   useEffect(() => {
     for (const [pointId, st] of Object.entries(visionResults)) {
       const r = st.result;
@@ -137,7 +140,7 @@ export default function HomePage() {
       if (synced.current.has(key)) continue;
       synced.current.add(key);
       const point = lot.points.find((p) => p.point_id === pointId);
-      const gps = (isModel && r.gps) ? r.gps : (point ? { lat: point.lat, lon: point.lon, source: 'exif-mock' } : undefined);
+      const gps = photoGps.current[pointId] ?? ((isModel && r.gps) ? { ...r.gps, source: 'exif' } : (point ? { lat: point.lat, lon: point.lon, source: 'exif-mock' } : undefined));
       void workflow.recordPhoto({
         point_id: pointId,
         gps,
@@ -153,6 +156,7 @@ export default function HomePage() {
 
   const resetDemoState = () => {
     synced.current.clear();
+    photoGps.current = {};
     dispatch({ tipo: 'LIMPIAR_RESULTADOS' });
     setSelectedPointId(null);
   };
@@ -231,7 +235,7 @@ export default function HomePage() {
               aria-pressed={drawing}
               className={`h-9 px-4 rounded-[var(--radius-control)] text-[13px] font-semibold border transition-colors disabled:opacity-50 ${drawing ? 'bg-[var(--color-warning-soft)] border-[var(--color-warning)] text-[var(--color-warning)]' : 'bg-[var(--color-surface)] border-[var(--color-brand-primary)] text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-soft)]'}`}
             >
-              {drawing ? 'Dibujando… (2 clics en el mapa)' : 'Dibujar lote nuevo'}
+              {drawing ? 'Dibujando… (clic por vértice)' : 'Dibujar lote nuevo'}
             </button>
           )}
           {lot.id !== DEMO_LOT.id && (
@@ -270,7 +274,7 @@ export default function HomePage() {
               id="mapa-lote"
               noPadding
               titulo={`${lot.nombre} · ${lot.ha} ha · ${lot.departamento}`}
-              aside={<span className="text-[11px] text-[var(--color-text-muted)]">{role === 'productor' ? 'Tocá un punto para subir la foto' : drawing ? 'Dos clics: una esquina y la opuesta' : 'Cinco puntos de muestreo'}</span>}
+              aside={<span className="text-[11px] text-[var(--color-text-muted)]">{drawing ? 'Un clic por vértice; doble clic para cerrar' : `${lot.points.length} puntos de muestreo`}</span>}
             >
               <div className="h-[520px]">
                 <MapaLote
@@ -285,18 +289,26 @@ export default function HomePage() {
               </div>
             </DashSection>
 
-            {selectedPointId && role === 'productor' && (
-              <PhotoUploadWidget
-                pointId={selectedPointId}
-                scenario={scenario}
-                state={visionResults[selectedPointId] || { status: 'pending', result: null }}
-                onAction={(action) => dispatch(action)}
-              />
-            )}
-            {selectedPointId && role === 'coop' && (
-              <p className="text-[13px] text-[var(--color-text-muted)] px-1">
-                Punto {selectedPointId}: las fotos las sube el productor. Cambiá a “Productor” para cargarlas.
-              </p>
+            {role === 'productor' ? (
+              <DashSection id="fotos-lote" titulo="Fotos de la recorrida" aside={<span className="text-[11px] text-[var(--color-text-muted)]">Asignación por GPS de la foto</span>}>
+                <PhotoBatchUpload
+                  lotId={lot.id}
+                  points={lot.points}
+                  scenario={scenario}
+                  visionResults={visionResults}
+                  selectedPointId={selectedPointId}
+                  minPhotos={workflow.state?.min_points_for_score ?? 3}
+                  onAction={(action) => dispatch(action)}
+                  onAssign={(pointId, gps) => { photoGps.current[pointId] = gps; }}
+                  onSelectPoint={(id) => setSelectedPointId((cur) => (cur === id ? null : id))}
+                />
+              </DashSection>
+            ) : (
+              selectedPointId && (
+                <p className="text-[13px] text-[var(--color-text-muted)] px-1">
+                  Punto {selectedPointId}: las fotos las sube el productor. Cambiá a “Productor” para cargarlas.
+                </p>
+              )
             )}
 
             <DashSection
@@ -323,6 +335,14 @@ export default function HomePage() {
               <div className="mt-5">
                 <ConditionSummary scoreData={scoreData} isLoading={isLoading} error={error} onRetry={retry} />
               </div>
+            </DashSection>
+
+            <DashSection id="serie-oficial" titulo={`Serie oficial · ${lot.departamento}`} aside={capacityData ? <span className="text-[11px] text-[var(--color-text-muted)]">{capacityData.capacity.series.length} campañas</span> : undefined}>
+              {capacityData ? (
+                <YieldSeriesChart series={capacityData.capacity.series} worstCampana={capacityData.capacity.worst_year?.campana ?? null} height={96} />
+              ) : (
+                <p className="text-[12px] text-[var(--color-text-muted)]">{capacityLoading ? 'Cargando la serie oficial…' : 'Sin serie oficial.'}</p>
+              )}
             </DashSection>
 
             <DashSection id="acciones" titulo={role === 'coop' ? 'Decisión de la cooperativa' : 'Solicitud del productor'}>

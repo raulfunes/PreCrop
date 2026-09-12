@@ -209,7 +209,7 @@ export type VarianteBadge =
 export interface EvidenceRequestPayload {
   scenario: 'bueno' | 'mixto' | 'malo';
   weeds_pct?: number;
-  weeds_source?: 'estimated';
+  weeds_source?: 'estimated' | 'simulated';
   amount_ars?: number;
 }
 
