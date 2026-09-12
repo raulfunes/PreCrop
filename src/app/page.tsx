@@ -18,7 +18,6 @@ import { useLotWorkflow } from '@/hooks/useLotWorkflow';
 // ── Layout ────────────────────────────────────────────────────
 import { AppHeader } from '@/components/layout/AppHeader';
 import { LotHeader } from '@/components/layout/LotHeader';
-import { DemoDisclaimer } from '@/components/layout/DemoDisclaimer';
 
 // ── Componentes de dominio ────────────────────────────────────
 import { ConditionSummary } from '@/components/lote/ConditionSummary';
@@ -463,7 +462,6 @@ export default function HomePage() {
         </DashSection>
       </main>
 
-      <DemoDisclaimer />
     </div>
   );
 }

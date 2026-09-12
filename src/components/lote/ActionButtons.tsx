@@ -248,9 +248,6 @@ export function ActionButtons({ publish, disburse, advance, disabled }: ActionBu
                 <span className="font-mono text-[10px] truncate max-w-[120px]">{disburseResult.evidence_sha256}</span>
               </div>
             </div>
-            <p className="text-[11px] text-[var(--color-text-muted)] text-center font-medium mt-1">
-              MOCK · Twin ARGt simulado por el backend.<br/>No se movieron fondos reales.
-            </p>
           </div>
         )}
       </div>

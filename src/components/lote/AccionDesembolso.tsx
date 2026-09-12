@@ -27,7 +27,7 @@ export function AccionDesembolso({ estado, onAccion }: AccionDesembolsoProps) {
       {paso === 'lote_evaluado' && (
         <div className="flex flex-col gap-4">
           <p className="text-[14px] text-[var(--color-text-muted)] leading-5">
-            Comenzá la demo aportando fondos de prueba al lote para habilitar desembolsos.
+            Aportá fondos al lote para habilitar desembolsos.
           </p>
           <Button
             variante="primario"
@@ -38,9 +38,6 @@ export function AccionDesembolso({ estado, onAccion }: AccionDesembolsoProps) {
           >
             Simular aporte de {formatUSD(DEMO.APORTE_USD)}
           </Button>
-          <p className="text-[11px] text-[var(--color-text-muted)]">
-            DEMO · Fondos de prueba · MOCK
-          </p>
         </div>
       )}
 
@@ -50,7 +47,7 @@ export function AccionDesembolso({ estado, onAccion }: AccionDesembolsoProps) {
           <div className="flex items-center gap-2 p-3 bg-[var(--color-brand-soft)] rounded-[var(--radius-badge)]">
             <CheckCircle2 size={16} className="text-[var(--color-positive)] shrink-0" aria-hidden="true" />
             <span className="text-[13px] text-[var(--color-positive)] font-medium">
-              Aporte registrado: {formatUSD(finanzas.fondosAportados)} de prueba disponibles.
+              Aporte registrado: {formatUSD(finanzas.fondosAportados)} disponibles.
             </span>
           </div>
           <p className="text-[14px] text-[var(--color-text-muted)] leading-5">
@@ -65,9 +62,6 @@ export function AccionDesembolso({ estado, onAccion }: AccionDesembolsoProps) {
           >
             Simular desembolso de {formatUSD(DEMO.PRIMER_DESEMBOLSO_USD)}
           </Button>
-          <p className="text-[11px] text-[var(--color-text-muted)]">
-            DEMO · Fondos de prueba · MOCK
-          </p>
         </div>
       )}
 
@@ -170,7 +164,7 @@ export function AccionDesembolso({ estado, onAccion }: AccionDesembolsoProps) {
               <div className="flex items-center gap-2 p-3 bg-[var(--color-brand-soft)] rounded-[var(--radius-badge)]">
                 <CheckCircle2 size={16} className="text-[var(--color-positive)] shrink-0" aria-hidden="true" />
                 <span className="text-[13px] text-[var(--color-positive)] font-semibold">
-                  Repago y distribución simulados
+                  Repago y distribución
                 </span>
               </div>
               <div className="flex flex-col gap-2.5 p-4 bg-[var(--color-neutral-soft)] rounded-[var(--radius-card)] border border-[var(--color-border)]">
@@ -197,9 +191,6 @@ export function AccionDesembolso({ estado, onAccion }: AccionDesembolsoProps) {
                   </span>
                 </div>
               </div>
-              <p className="text-[11px] text-[var(--color-text-muted)]">
-                Escenario de liquidación simulada · Cierre de campaña · DEMO
-              </p>
             </div>
           );
         })()

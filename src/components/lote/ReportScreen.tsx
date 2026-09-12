@@ -59,13 +59,6 @@ export function ReportScreen({ markdown, isLoading, error, onRetry, scenario }: 
         </Button>
       </div>
 
-      {/* Demo banner */}
-      <div className="p-3 bg-[var(--color-warning-soft)] rounded-[var(--radius-badge)] border border-[var(--color-warning)]/20 text-center report-demo-banner">
-        <span className="text-[12px] font-semibold text-[var(--color-warning)]">
-          DEMO · MOCK financiero · Solana devnet
-        </span>
-      </div>
-
       {/* Markdown content */}
       <article
         id="report-content"

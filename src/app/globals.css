@@ -259,17 +259,6 @@ body {
     display: none !important;
   }
 
-  /* Keep the demo banner inside the report visible */
-  .report-demo-banner {
-    display: block !important;
-    border: 1px solid #999 !important;
-    background: #f9f9f9 !important;
-    color: #333 !important;
-  }
-  .report-demo-banner span {
-    color: #333 !important;
-  }
-
   body {
     background: #fff !important;
     color: #000 !important;
