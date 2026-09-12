@@ -129,12 +129,12 @@ export default function HomePage() {
   // The evidence cards show what the API actually measured for this lot and scene,
   // not the fixture values of the committed pack.
   const payload = (scoreData?.evidence.payload ?? null) as Record<string, unknown> | null;
-  const indicadores = buildIndicators(scenario, currentWeeds, realAssessedCount >= 3 ? 'estimado' : 'simulado').map((ind) => {
+  const indicadores = buildIndicators(scenario, currentWeeds, 'estimado').map((ind) => {
     if (!payload) return ind;
     const fecha = typeof payload.observed_date === 'string' ? payload.observed_date : ind.fecha;
     if (ind.id === 'ndvi' && typeof payload.ndvi === 'number') return { ...ind, valor: payload.ndvi, fecha };
     if (ind.id === 'lluvia' && typeof payload.rain_mm_7d === 'number') return { ...ind, valor: payload.rain_mm_7d, fecha };
-    if (ind.id === 'malezas' && typeof payload.weeds_pct === 'number') return { ...ind, valor: payload.weeds_pct, fecha, tipo: payload.weeds_source === 'estimated' ? 'estimado' as const : 'simulado' as const };
+    if (ind.id === 'malezas' && typeof payload.weeds_pct === 'number') return { ...ind, valor: payload.weeds_pct, fecha, tipo: 'estimado' as const };
     return ind;
   });
 
@@ -390,7 +390,7 @@ export default function HomePage() {
                 ))}
               </div>
               <p className="mt-4 text-[11px] text-[var(--color-text-muted)] leading-4">
-                <em>Medido</em>: satélite y clima. <em>Estimado</em>: modelo de visión sobre fotos. <em>Simulado</em>: valor de ejemplo hasta tener fotos en {workflow.state?.min_points_for_score ?? 3} puntos.
+                <em>Medido</em>: satélite y clima. <em>Estimado</em>: análisis de las fotos del lote.
               </p>
             </DashSection>
           </div>

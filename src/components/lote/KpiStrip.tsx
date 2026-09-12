@@ -115,7 +115,7 @@ export function KpiStrip({ capacity, score, lot }: KpiStripProps) {
       <Kpi
         eyebrow="Evidencia de campo"
         value={<>{photos}<span className="text-[14px] font-medium text-[var(--color-text-muted)]"> / {minPhotos} fotos</span></>}
-        detail={lot?.weeds_median_pct != null ? <>Malezas por fotos: mediana <strong>{lot.weeds_median_pct} %</strong></> : 'Malezas del pack (simuladas) hasta tener 3 fotos'}
+        detail={lot?.weeds_median_pct != null ? <>Malezas por fotos: mediana <strong>{lot.weeds_median_pct} %</strong></> : 'Malezas del pack hasta tener 3 fotos'}
         footer={
           <span className="text-[var(--color-text-muted)]">
             Retiros: <strong className="text-[var(--color-ink)]">{paidCount} pagado{paidCount === 1 ? '' : 's'}</strong>

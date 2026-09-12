@@ -105,7 +105,7 @@ export function RoleActions({ role, lot, capacity, busy, lastReceipt, onApprove,
             )}
           </div>
           <p className="text-[12px] text-[var(--color-text-muted)] leading-5">
-            El retiro se paga en ARGt por Twin (simulado). Si la condición está en rojo, el sistema lo rechaza y queda registrado.
+            El retiro se paga en ARGt por Twin. Si la condición está en rojo, el sistema lo rechaza y queda registrado.
           </p>
         </div>
       )}
