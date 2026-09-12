@@ -121,7 +121,7 @@ export function ActionButtons({ publish, disburse, advance, disabled }: ActionBu
                 <span className="text-[var(--color-text-muted)]">Network:</span>
                 <span className="font-mono">{publishResult.anchor.network}</span>
               </div>
-              <div className="flex justify-between items-center bg-white/50 p-2 rounded">
+              <div className="flex justify-between items-center bg-[var(--color-surface)]/50 p-2 rounded">
                 <span className="text-[var(--color-text-muted)]">Hash:</span>
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-[10px] truncate max-w-[150px]">{publishResult.evidence.content_sha256}</span>
@@ -130,13 +130,13 @@ export function ActionButtons({ publish, disburse, advance, disabled }: ActionBu
                   </button>
                 </div>
               </div>
-              <div className="flex justify-between items-center bg-white/50 p-2 rounded">
+              <div className="flex justify-between items-center bg-[var(--color-surface)]/50 p-2 rounded">
                 <span className="text-[var(--color-text-muted)]">Firma:</span>
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-[10px] truncate max-w-[150px]">{publishResult.anchor.signature}</span>
                 </div>
               </div>
-              <a href={publishResult.anchor.explorer_url} target="_blank" rel="noopener noreferrer" className="mt-1 flex items-center justify-center gap-2 text-[var(--color-brand-primary)] font-medium bg-white py-1.5 rounded border border-[var(--color-brand-primary)]/20 hover:bg-[var(--color-brand-soft)] transition-colors">
+              <a href={publishResult.anchor.explorer_url} target="_blank" rel="noopener noreferrer" className="mt-1 flex items-center justify-center gap-2 text-[var(--color-brand-primary)] font-medium bg-[var(--color-surface)] py-1.5 rounded border border-[var(--color-brand-primary)]/20 hover:bg-[var(--color-brand-soft)] transition-colors">
                 Ver en Explorer <ExternalLink size={14} />
               </a>
             </div>
@@ -222,7 +222,7 @@ export function ActionButtons({ publish, disburse, advance, disabled }: ActionBu
               </span>
             </div>
 
-            <div className="flex flex-col gap-2 text-[12px] text-[var(--color-ink)] bg-white p-3 rounded shadow-sm border border-[var(--color-border)]/50">
+            <div className="flex flex-col gap-2 text-[12px] text-[var(--color-ink)] bg-[var(--color-surface)] p-3 rounded shadow-sm border border-[var(--color-border)]/50">
               <div className="flex justify-between items-center border-b pb-2">
                 <span className="text-[var(--color-text-muted)]">Monto:</span>
                 <span className="font-bold text-[14px]">{disburseResult.transfer.amount_ars.toLocaleString('es-AR')} {disburseResult.transfer.asset}</span>
