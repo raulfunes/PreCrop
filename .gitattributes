@@ -1,0 +1,2 @@
+# Preserve exact experiment bytes: manifests and runs verify SHA-256 hashes.
+data/** -text

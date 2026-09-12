@@ -1,0 +1,31 @@
+{
+  "lote_id": "demo-rio-segundo-01",
+  "nombre": "Lote demo Río Segundo / Córdoba",
+  "ha": 100,
+  "cultivo": "soja",
+  "base_valuation_usd": 100000,
+  "haircut": 0.7,
+  "note": "Usar como datos de NDVI/lluvia; no vender feb vs ago barbecho como deterioro de cosecha. Preferir escenarios simulados o fechas misma campaña en el pitch.",
+  "presets": {
+    "fecha_buena": {
+      "date": "2025-02-02",
+      "ndvi": 0.489,
+      "ndvi_source": "measured",
+      "rain_mm_7d": 46.7,
+      "weed_pct": 9,
+      "weed_pct_note": "estimado",
+      "score": 71.85,
+      "cupo_anticipo_simulado_usd": 50298.5
+    },
+    "fecha_mala": {
+      "date": "2024-08-26",
+      "ndvi": 0.151,
+      "ndvi_source": "measured",
+      "rain_mm_7d": 6.9,
+      "weed_pct": 26,
+      "weed_pct_note": "estimado — barbecho; NO usar como prueba de deterioro de una misma cosecha",
+      "score": 41.7,
+      "cupo_anticipo_simulado_usd": 29186.5
+    }
+  }
+}

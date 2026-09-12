@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "lote_id": "demo-rio-segundo-01",
+  "source": "preset",
+  "simulated": true,
+  "valid_photo_evidence": false,
+  "aggregation": "median",
+  "gps_tolerance_m": 30,
+  "note": "Valores sintéticos de malezas por punto. Sin fotos, EXIF ni coordenadas reales; no acreditan evidencia fotográfica ni habilitan verde pleno para el segundo desembolso. Bueno/malo no garantiza un semáforo.",
+  "points": [
+    { "id": "P1", "placement": "centro interior" },
+    { "id": "P2", "placement": "extremo A interior" },
+    { "id": "P3", "placement": "extremo opuesto a A interior" },
+    { "id": "P4", "placement": "extremo B interior" },
+    { "id": "P5", "placement": "extremo opuesto a B interior" }
+  ],
+  "scenarios": {
+    "bueno": {
+      "label": "Escenario simulado: menor presencia de malezas",
+      "weed_pct_by_point": { "P1": 5, "P2": 7, "P3": 9, "P4": 11, "P5": 13 },
+      "expected_median_weed_pct": 9
+    },
+    "malo": {
+      "label": "Escenario simulado: mayor presencia de malezas",
+      "weed_pct_by_point": { "P1": 18, "P2": 22, "P3": 26, "P4": 30, "P5": 34 },
+      "expected_median_weed_pct": 26
+    }
+  }
+}
