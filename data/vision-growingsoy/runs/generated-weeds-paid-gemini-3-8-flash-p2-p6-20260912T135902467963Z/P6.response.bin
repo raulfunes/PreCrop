@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"Se identifican hileras bien definidas del cultivo (girasol/soja en emergencia temprana con hojas opuestas grandes), acompañadas por abundantes malezas gramíneas (hojas lanceoladas y delgadas) y plántulas de hoja ancha ramificadas/dentadas distribuidas en el entresurco y dentro de la hilera.\",\n  \"limitations\": [\n    \"La alta densidad de plántulas diminutas en el entresurco y la distancia focal hacia el fondo dificultan la delimitación individual de cada plántula pequeña lejana.\"\n  ],\n  \"polygons\": [\n    [\n      [554, 672],\n      [580, 686],\n      [640, 755],\n      [602, 874],\n      [578, 864],\n      [590, 765],\n      [538, 715],\n      [500, 747],\n      [502, 693],\n      [523, 672]\n    ],\n    [\n      [841, 638],\n      [898, 638],\n      [937, 729],\n      [964, 829],\n      [935, 843],\n      [891, 804],\n      [873, 706],\n      [794, 693],\n      [712, 679],\n      [770, 646]\n    ],\n    [\n      [800, 483],\n      [840, 483],\n      [885, 532],\n      [873, 622],\n      [814, 631],\n      [835, 597],\n      [796, 568],\n      [741, 563],\n      [745, 517],\n      [787, 513]\n    ],\n    [\n      [180, 355],\n      [215, 360],\n      [243, 445],\n      [209, 485],\n      [194, 537],\n      [169, 526],\n      [181, 461],\n      [145, 432],\n      [149, 388]\n    ],\n    [\n      [0, 526],\n      [42, 532],\n      [63, 608],\n      [71, 712],\n      [66, 785],\n      [44, 763],\n      [50, 674],\n      [12, 635],\n      [0, 603]\n    ],\n    [\n      [165, 501],\n      [191, 507],\n      [218, 566],\n      [226, 619],\n      [186, 613],\n      [170, 582],\n      [188, 542]\n    ],\n    [\n      [521, 462],\n      [574, 469],\n      [616, 517],\n      [632, 574],\n      [587, 614],\n      [554, 590],\n      [542, 539]\n    ],\n    [\n      [440, 755],\n      [512, 752],\n      [540, 801],\n      [540, 856],\n      [496, 853],\n      [456, 829],\n      [449, 787]\n    ],\n    [\n      [761, 888],\n      [811, 891],\n      [841, 959],\n      [806, 995],\n      [770, 969],\n      [764, 929]\n    ],\n    [\n      [411, 936],\n      [465, 939],\n      [494, 982],\n      [448, 997],\n      [416, 983]\n    ]\n  ]\n}",
+            "thoughtSignature": "EmcKZQERTTIPVq+tchBUsQO0fkvdfo3rvJrHfcz1ahTyGasrZwvM+7qDtQZ333cVHC0IROSUbaWDP4yuD8CmDYUnhPF9ctADtrI4ORUTvFgFeNFoatqr0dCZUrOro/ma0vWJlPjCTjGB"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 1161,
+    "totalTokenCount": 3244,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.8-flash",
+  "responseId": "rlqlaq-9Dcac6dkPyIH0iAw"
+}

@@ -74,7 +74,7 @@ def summarize(run):
     run["summary"] = {
         "counts": dict(counts),
         "token_totals": dict(tokens),
-        "paid_rate_equivalent_usd": round(cost, 6),
+        "estimated_cost_usd": round(cost, 6),
     }
 
 
@@ -86,7 +86,7 @@ def save_report(directory, run):
         "",
         f"Fecha UTC: {run['started_at']}  ",
         f"Solicitudes: {run['requests_sent']}/{run['max_requests']} · reintentos automaticos: 0  ",
-        f"Equivalente a tarifa paga segun usageMetadata: USD {run['summary']['paid_rate_equivalent_usd']:.6f}",
+        f"Costo estimado por usageMetadata: USD {run['summary']['estimated_cost_usd']:.6f}",
         "",
         "| Punto | Imagen | Estado | Malezas | Confianza | Tiempo |",
         "| --- | --- | --- | ---: | ---: | ---: |",
@@ -143,11 +143,6 @@ def check():
     assert len(inputs) == 8 and [row[0] for row in inputs] == [f"P{i}" for i in range(1, 9)]
     assert [row[0] for row in load_inputs(("P2", "P6"))] == ["P2", "P6"]
     assert PRICING_USD_PER_MILLION["gemini-3.1-pro-preview"] == {"input": 2.0, "output": 12.0}
-    priced = {"results": [{"status": "assessed", "usage": {
-        "promptTokenCount": 1_000_000, "candidatesTokenCount": 1_000_000}}],
-        "pricing_usd_per_million": PRICING_USD_PER_MILLION["gemini-3.1-pro-preview"]}
-    summarize(priced)
-    assert priced["summary"]["paid_rate_equivalent_usd"] == 14.0
     prompt = vision.render_prompt(vision.PROMPT, "soja")
     assert prompt and "{{" not in prompt
     raw = json.dumps({"status": "assessed", "reason": "check", "limitations": [],

@@ -47,3 +47,21 @@ Imágenes: P2 (limpia) y P6 (maleza media-alta)
 Las dos solicitudes llegaron al endpoint de `gemini-3.8-flash`, pero Google respondió `HTTP 503 UNAVAILABLE`: el modelo estaba experimentando alta demanda y recomendó intentar más tarde. No hubo candidatos, `usageMetadata`, máscaras ni porcentajes. El costo calculable con la respuesta fue USD 0,000000.
 
 [Corrida, respuestas crudas saneadas y lámina](../data/vision-growingsoy/runs/generated-weeds-38-paid-p2-p6-20260912T133933663054Z/report.md). El resultado no permite comparar precisión con `gemini-3.6-flash`; sólo confirma que 3.8 no estuvo disponible durante esta ventana. No se hicieron reintentos para respetar el máximo de dos pruebas.
+
+### Gemini 3.1 Pro Preview
+
+Fecha: 12-sep-2026, 10:52 ART
+Alcance autorizado: P2 y P6, sólo malezas, dos solicitudes sin reintentos
+
+Las dos solicitudes devolvieron `HTTP 429 RESOURCE_EXHAUSTED`. Google identificó las cuotas como `generate_content_free_tier_*`, con límite cero para `gemini-3.1-pro`. Esto confirma que la clave de `.env` no tuvo acceso pago durante las solicitudes. La opción local `--billing-acknowledged` registra autorización para generar gasto, pero no activa la facturación del proyecto en Google AI Studio.
+
+No hubo candidatos, `usageMetadata`, máscaras ni porcentajes; el costo calculable fue USD 0,000000. [Corrida y respuestas saneadas](../data/vision-growingsoy/runs/generated-weeds-paid-gemini-3-1-pro-preview-p2-p6-20260912T135202845417Z/report.md). Para medir la calidad de Pro primero hay que vincular la facturación al proyecto dueño de esta clave o reemplazarla por una clave de un proyecto con nivel pago.
+
+### Segundo intento con Gemini 3.8 Flash
+
+Fecha: 12-sep-2026, 10:59 ART
+Alcance autorizado: P2 y P6, sólo malezas, dos solicitudes sin reintentos
+
+P2 devolvió `HTTP 503 UNAVAILABLE` por alta demanda. P6 sí fue evaluada: **9,13 % de malezas**, confianza calibrada 0,33 (baja), 2083 tokens de entrada y 1161 de salida. A la tarifa paga publicada, ese consumo equivale a USD 0,005916; la respuesta no acredita que se haya cobrado y la clave venía operando en free tier.
+
+En la misma P6, `gemini-3.6-flash` había estimado 11,41 %. La nueva estimación baja 2,28 puntos porcentuales y el overlay de 3.8 todavía omite numerosas malezas pequeñas y gramíneas visibles. No hay una mejora clara; sin máscara humana tampoco se puede decidir cuál de los dos contornos es más preciso. [Corrida, overlay y comparación 3.6/3.8](../data/vision-growingsoy/runs/generated-weeds-paid-gemini-3-8-flash-p2-p6-20260912T135902467963Z/report.md).
