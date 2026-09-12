@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "pack_version": "1.0.0",
+  "lote_id": "demo-rio-segundo-01",
+  "rule_version": "cupo-v1",
+  "purpose": "Inputs for the suggested advance limit (cupo de anticipo sugerido). Every number carries its source. This is a transparent rule, not a credit model: it estimates expected production and applies the coop's haircut; repayment is deducted at delivery settlement.",
+  "ha": 100,
+  "yield_ref_t_ha": {
+    "value": 3.2,
+    "unit": "t/ha",
+    "source": "estimated",
+    "note": "Reference soy yield at full condition. National average 2024/25 was 32.4 qq/ha (Bolsa de Cereales de Buenos Aires, cierre de campana); central-north Cordoba was reported above expectations. No department-level figure for Rio Segundo was found; replace with the BCCBA departmental average when available.",
+    "refs": [
+      "https://www.bolsadecereales.com/imagenes/informes/2024-07/236-informecierrecampsoja_2023_24.pdf",
+      "https://www.infobae.com/revista-chacra/2025/05/10/la-produccion-de-soja-alcanzaria-las-50-millones-de-toneladas/"
+    ]
+  },
+  "price": {
+    "ars_t": 560000,
+    "fx_ars_per_usd": 1535,
+    "usd_t": 364.8,
+    "date": "2026-09-11",
+    "source": "measured",
+    "note": "Pizarra Rosario soja 2026-09-11 (Infocampo). FX = dolar BNA venta 2026-09-11 (El Cronista). usd_t = ars_t / fx, rounded to 1 decimal.",
+    "refs": [
+      "https://www.infocampo.com.ar/precio-de-la-soja-hoy-11-septiembre-2026/",
+      "https://www.cronista.com/finanzas-mercados/dolar-oficial-asi-abre-la-cotizacion-este-viernes-11-de-septiembre/"
+    ]
+  },
+  "haircut": {
+    "value": 0.7,
+    "source": "estimated",
+    "note": "Team policy (Notion v2): cupo = valor de referencia * condicion/100 * 0.7. Rojo blocks new disbursements regardless of the theoretical cupo."
+  },
+  "benchmark": {
+    "flat_advance_pct": 30,
+    "source": "estimated",
+    "note": "What a coop does today: a flat percentage of expected value for every member, decided by eye. Claim from the team's advisor; validate with a real coop before quoting it as fact."
+  },
+  "policy_by_light": {
+    "verde": "new disbursements allowed up to the suggested limit",
+    "amarillo": "review: allowed with an additional limit defined at origination",
+    "rojo": "new disbursements blocked"
+  },
+  "reference_value_usd_note": "reference_value_usd = ha * yield_ref_t_ha * usd_t = 100 * 3.2 * 364.8 = 116736 (computed by the service, not stored)"
+}

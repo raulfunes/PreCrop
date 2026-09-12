@@ -1,0 +1,247 @@
+@import "tailwindcss";
+
+/* ============================================================
+   PreCrop · Tokens visuales (fuente: docs/branding.md §7–9 y §14)
+   ============================================================ */
+
+:root {
+  /* Colores de la referencia visual */
+  --color-brand-primary: #175e36;
+  --color-brand-hover: #124a2b;
+  --color-brand-pressed: #0d3820;
+  --color-brand-soft: #e1f7e6;
+  --color-canvas: #faf9f6;
+  --color-surface: #ffffff;
+
+  /* Texto */
+  --color-ink: #18392b;
+  --color-text-muted: #66675e;
+
+  /* Bordes */
+  --color-border: #e5e1d7;
+  --color-control-border: #82867c;
+
+  /* Estados positivos */
+  --color-positive: #175e36;
+  --color-positive-bright: #22c55e;
+
+  /* Advertencia */
+  --color-warning: #8a5300;
+  --color-warning-soft: #fff3d6;
+
+  /* Peligro / error */
+  --color-danger: #b42318;
+  --color-danger-soft: #feece8;
+
+  /* Neutro */
+  --color-neutral-soft: #f0eee7;
+
+  /* Tipografía */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Radios */
+  --radius-badge: 8px;
+  --radius-control: 12px;
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  /* Espaciado (escala 4px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Sombra de tarjeta */
+  --shadow-card: 0 1px 3px rgb(24 57 43 / 0.06);
+
+  /* Transición estándar */
+  --duration-fast: 160ms;
+}
+
+/* Respeta la preferencia de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+  }
+}
+
+/* ── Tema Tailwind v4 (mapea tokens CSS a utilidades Tailwind) ── */
+@theme inline {
+  --color-brand-primary: var(--color-brand-primary);
+  --color-brand-hover: var(--color-brand-hover);
+  --color-brand-pressed: var(--color-brand-pressed);
+  --color-brand-soft: var(--color-brand-soft);
+  --color-canvas: var(--color-canvas);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-text-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
+  --color-control-border: var(--color-control-border);
+  --color-positive: var(--color-positive);
+  --color-positive-bright: var(--color-positive-bright);
+  --color-warning: var(--color-warning);
+  --color-warning-soft: var(--color-warning-soft);
+  --color-danger: var(--color-danger);
+  --color-danger-soft: var(--color-danger-soft);
+  --color-neutral-soft: var(--color-neutral-soft);
+  --radius-badge: var(--radius-badge);
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-pill: var(--radius-pill);
+  --shadow-card: var(--shadow-card);
+}
+
+/* ── Base global ──────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Foco visible global (accesibilidad) */
+:focus-visible {
+  outline: 3px solid var(--color-brand-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-badge);
+}
+
+/* Números tabulares para métricas y montos */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Escala tipográfica ────────────────────────────────────── */
+
+/* Título de página */
+.text-page-title {
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+/* Título de sección */
+.text-section-title {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* Título de tarjeta */
+.text-card-title {
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* Texto principal */
+.text-body {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+
+/* Etiqueta o botón */
+.text-label {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+/* Texto auxiliar */
+.text-aux {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+/* Score destacado */
+.text-score {
+  font-size: 48px;
+  line-height: 52px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Móvil: reducir título de página */
+@media (max-width: 360px) {
+  .text-page-title {
+    font-size: 28px;
+    line-height: 36px;
+  }
+}
+
+/* ── Tarjeta base ──────────────────────────────────────────── */
+.card {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: var(--space-4);
+  }
+}
+
+/* ── Animación de entrada suave ───────────────────────────── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--duration-fast) ease-out both;
+}
+
+/* ── Scrollbar discreta (WebKit) ──────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-control-border);
+}
