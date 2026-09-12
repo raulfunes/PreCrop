@@ -15,6 +15,9 @@ npm start           # http://localhost:8787
 | GET | `/pack` · `/pack/<archivo>` | Los JSON de `data/` (lista blanca) |
 | POST | `/score` | `{ "scenario": "malo", "weeds_pct": 61 }` → score, banda, `score_bp`, payload de evidencia y `content_sha256` |
 | POST | `/publish` | Lo mismo, y además manda una transacción Memo firmada por la wallet publicadora. Devuelve `signature` y `explorer_url` |
+| POST | `/disburse` | MOCK del pago por Twin en ARGt: valida rojo y límite, devuelve un recibo simulado |
+| GET | `/capacity` | Historial por campaña, peor campaña, estabilidad y cupo pre-siembra (regla `capacidad-v1`); cruza `rindes-oficiales.json` si existe |
+| GET | `/report/<escenario>` | Informe de una página en markdown para el comité (`?signature=&explorer_url=&weeds_pct=` opcionales) |
 
 `weeds_pct` es opcional: si Visión lo manda, se usa y queda etiquetado `estimated`; si no, se usa el valor simulado del pack.
 
