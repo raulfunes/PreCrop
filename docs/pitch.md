@@ -1,44 +1,36 @@
-# PreCrop — pitch de 90 segundos
+# PreCrop — pitch de 60 segundos
 
-> Cronometrado a ~220 palabras. Las marcas de tiempo son para ensayar. Todo cartel dice MOCK / devnet.
+> ~150 palabras. Marcas de tiempo para ensayar. Todo cartel dice MOCK / demo.
 
 **[0:00] El problema**
-Un productor ya gastó toda la campaña en semilla, agroquímicos y labores. Todavía no cosechó y necesita un anticipo. Hoy la cooperativa que se lo presta decide casi a ojo: una visita, un Excel, un PDF. Los grandes ya tienen satélite y crédito. La coop chica, no.
+Un productor ya gastó la campaña y necesita un anticipo antes de cosechar. La cooperativa que se lo presta decide a ojo: una visita, un Excel, el mismo porcentaje para todos.
 
-**[0:15] Qué es PreCrop**
-PreCrop es el semáforo del lote. Mira el cultivo con satélite, cruza el clima y suma fotos de puntos del lote, estima cuánto va a producir y sugiere hasta cuánto anticipar. Verde, la coop suelta el próximo desembolso. Rojo, lo frena. Semanal, sin ir al campo. No es un score de crédito: son reglas visibles que un consejo puede explicarle a sus socios.
+**[0:10] Capacidad: cuánto**
+PreCrop mira ese lote desde el espacio los últimos siete veranos y lo cruza con el mapa oficial de rindes de Córdoba. Antes de sembrar ya sabe cuánto rinde en su peor año: la sequía de 2022/23. Contra ese año, no contra el mejor, sugiere el cupo: veintinueve mil dólares.
 
-**[0:35] La prueba, con un lote real**
-Esto es un lote de soja en Río Segundo, Córdoba, campaña pasada. Dos de febrero: NDVI alto, llovió 47 milímetros, condición 74, verde. Límite sugerido: 52 por ciento del valor esperado. La coop aprueba y el anticipo sale en ARGt a la billetera del productor, en segundos, un sábado a la noche si hace falta. Cinco días después: seca de dos semanas, cero lluvia, malezas creciendo. Condición 48, rojo. El segundo desembolso se frena solo. En la cosecha entrega las toneladas y el anticipo se descuenta de la liquidación. Nadie tuvo que viajar.
+**[0:25] Condición: si sigo**
+Sembró. Es febrero: verde, se libera el primer desembolso. Cinco días después, dos semanas sin lluvia y malezas: rojo, el segundo se frena solo. Nadie viajó.
 
-**[0:55] Por qué se puede confiar**
-Cada número sale de un informe con los datos crudos: la escena de satélite, la lluvia, las fotos, los pesos de la regla y su versión. Ese informe se hashea y se firma en Solana. La coop abre el explorador y verifica que nadie tocó el número después. No usamos la cadena para prestar plata. La usamos como escribano de la evidencia.
+**[0:40] Por qué se puede firmar**
+Cada número sale de un informe con la escena de satélite, la lluvia, las fotos, las reglas y su versión, y termina en una página que el comité firma. No es un score de crédito: son reglas a la vista.
 
-**[1:10] El negocio**
-No somos un banco. Vendemos la verdad del lote a quien ya presta: cooperativas, acopios, fintech. Hoy la coop adelanta un porcentaje plano a todos; nosotros, uno por lote. Y cada anticipo que se origina deja un dato nuevo: cuánto se estimó, cuánto se entregó. Ese dataset hoy no existe en el país.
-
-**[1:20] Cierre**
-Las malezas hoy son estimadas con IA sobre fotos, y lo decimos. Lo demás está medido, calculado con reglas a la vista, y firmado. PreCrop: que el campo hable solo, y que el anticipo deje de ser a ojo.
+**[0:50] Cierre**
+No somos un banco. Le vendemos la decisión ya tomada a quien ya presta. PreCrop: que el campo hable solo, y que el anticipo deje de ser a ojo.
 
 ---
-
-## Notas para el equipo (no van en el pitch)
-
-- **Vocabulario:** "índice de condición del cultivo" y "límite de anticipo sugerido". Nunca "score crediticio", "riesgo" ni "IA" colgada del índice. La IA es la visión de malezas.
-- **Twin / ARGt:** es el riel de pago del paso 3 (la coop paga el anticipo en ARGt, el productor lo usa con Belo). ARGt corre en redes EVM; el ancla de evidencia está en Solana devnet. Son dos rieles distintos y se cuentan así: la evidencia se certifica en uno, la plata viaja por el otro. Twin expone API para partners, no testnet pública, así que en la demo la transferencia es MOCK (`POST /disburse`).
-- **Ojo regulatorio:** en marzo de 2026 la CNV suspendió operaciones de ARGt en Belo por una investigación sobre rendimientos ofrecidos. Confirmar con la gente del track el estado actual antes de afirmar "en producción".
-- **Si preguntan "¿validado contra qué?":** no es un modelo, es una regla versionada (`cupo-v1`) que estima producción. La relación NDVI–rinde está documentada en agronomía hace décadas. El backtest con rindes reales es el siguiente paso, no el de hoy.
-
-## Si el jurado no es web3
-
-Cortá después de "Nadie tuvo que viajar" y saltá al negocio. Quedan 70 segundos y la historia cierra igual.
 
 ## Objeciones cortas
 
 | Pregunta | Respuesta |
 |---|---|
-| ¿Esto ya existe? | Afuera sí, para bancos grandes. Acá la coop chica decide con Excel. Nosotros complementamos, no inventamos la categoría. |
-| ¿El score es probabilidad de cobro? | No. Es condición del cultivo. La regla de desembolso la pone quien presta. |
-| ¿Es legal el token? | En la demo es simulación en testnet. El producto es el score y la evidencia. |
-| ¿Y las malezas? | Hoy estimadas con fotos, sin drone. Se dice en voz alta. |
-| ¿Y si el lote tiene riego? | Más del 95 % de la soja cordobesa es de secano (Córdoba riega ~127.000 ha con pivote sobre más de 7 millones sembradas) y el lote demo también. Hoy el clima se mide por lluvia, así que un lote regado sin malezas cae a amarillo, no a rojo: se revisa, no se bloquea. El riego el satélite lo ve en el vigor; la versión siguiente mide el agua en la planta (índice de humedad NDMI, mismas escenas Sentinel-2) en lugar de la lluvia. |
+| ¿Validado contra qué? | El cupo sale del rinde oficial del departamento, no de un modelo nuestro. El satélite solo verifica que el lote siga a su departamento: siete campañas, ratio mediano 1,04. |
+| ¿Por qué no leen el rinde del satélite? | Lo probamos: el NDVI de pico varía 17 % entre años y el rinde real 214 %. En la sequía la canopia siguió verde. r² 0,43. Lo descartamos y lo mostramos. |
+| ¿Y si el lote tiene riego? | Deja de seguir al departamento: el sistema retiene el cupo y lo dice, no inventa. Más del 95 % de la soja cordobesa es de secano. |
+| ¿Es un score de crédito? | No. Estima producción y sugiere un cupo. El repago se descuenta en la liquidación de la entrega. No predecimos conducta. |
+| ¿Y las malezas? | Estimadas con IA sobre fotos, sin drone, y se dice. Es la única IA del sistema. |
+| ¿Esto ya existe? | Para bancos grandes, sí. La coop chica decide con Excel. Complementamos, no inventamos la categoría. |
+
+## Notas para el equipo (no van en el pitch)
+
+- Números v2 (regla `capacidad-v2` + `cupo-v2`): cupo pre-siembra 29.877 USD; en campaña verde 22.235, amarillo 20.308, rojo 0. Los 70.700 / 60.800 / 52 % anteriores quedaron obsoletos.
+- Web3 y Twin quedan afuera de esta demo. Si vuelven: la evidencia se firma en Solana devnet y el pago viaja por Twin en ARGt (EVM); dos rieles distintos; confirmar el estado regulatorio de ARGt (CNV, marzo 2026) antes de decir "en producción".
