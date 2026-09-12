@@ -22,7 +22,7 @@ export function AppHeader() {
       role="banner"
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-        <div className="h-16 flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3 py-2 md:py-3">
 
           {/* ── Logotipo + descriptor ─────────────────────── */}
           <div className="flex items-center gap-3 min-w-0">
