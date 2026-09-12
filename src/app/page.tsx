@@ -34,6 +34,7 @@ import { TrafficLightGauge } from '@/components/lote/TrafficLightGauge';
 // ── UI ────────────────────────────────────────────────────────
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { AppDialog } from '@/components/ui/AppDialog';
+import { TopProgressBar, Spinner } from '@/components/ui/Loading';
 
 type Scenario = 'bueno' | 'mixto' | 'malo';
 type ModalId = 'capacity' | 'condition' | 'available' | 'evidence' | 'report' | null;
@@ -120,7 +121,6 @@ export default function HomePage() {
   const { markdown: reportMarkdown, isLoading: reportLoading, error: reportError, retry: reportRetry } = useReport(scenario, activeModal === 'report', reportOptions, lot.id);
 
   const currentWeeds = calcularMedianaMalezas(visionResults, scenario);
-  const realAssessedCount = Object.values(visionResults).filter((r) => r.status === 'completed' && r.result?.status === 'assessed' && r.result.source === 'model').length;
   
   const payload = (scoreData?.evidence.payload ?? null) as Record<string, unknown> | null;
   const indicadores = buildIndicators(scenario, currentWeeds, 'estimado').map((ind) => {
@@ -231,8 +231,14 @@ export default function HomePage() {
     }
   };
 
+  // Cualquier peticion en vuelo enciende la barra: el indice, el cupo, el estado del
+  // lote, el informe, el armado de un lote nuevo y las acciones de la coop/productor.
+  const anyRequestInFlight =
+    isLoading || capacityLoading || reportLoading || workflow.isLoading || workflow.busy !== null || creating !== null;
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)]">
+      <TopProgressBar active={anyRequestInFlight} />
       <AppHeader />
 
       <main id="contenido-principal" tabIndex={-1} className="flex-1 w-full max-w-[1920px] mx-auto px-4 md:px-6 2xl:px-10 py-4 outline-none flex flex-col gap-4">
@@ -298,14 +304,16 @@ export default function HomePage() {
             type="button"
             onClick={() => void handleReset()}
             disabled={workflow.busy === 'reset'}
-            className="ml-auto h-8 px-2 lg:px-3 rounded-[var(--radius-control)] text-[12px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-neutral-soft)] disabled:opacity-50"
+            className="ml-auto h-8 px-2 lg:px-3 inline-flex items-center gap-1.5 rounded-[var(--radius-control)] text-[12px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-neutral-soft)] disabled:opacity-50"
           >
-            Reiniciar demo
+            {workflow.busy === 'reset' && <Spinner size={13} />}
+            {workflow.busy === 'reset' ? 'Reiniciando…' : 'Reiniciar demo'}
           </button>
         </div>
 
         {(creating || createError) && (
-          <div role="status" className={`rounded-[var(--radius-card)] px-4 py-2 text-[13px] ${createError ? 'bg-[var(--color-danger-soft)] text-[var(--color-danger)]' : 'bg-[var(--color-brand-soft)] text-[var(--color-brand-primary)]'}`}>
+          <div role="status" aria-live="polite" className={`flex items-center gap-2 rounded-[var(--radius-card)] px-4 py-2 text-[13px] ${createError ? 'bg-[var(--color-danger-soft)] text-[var(--color-danger)]' : 'bg-[var(--color-brand-soft)] text-[var(--color-brand-primary)]'}`}>
+            {!createError && <Spinner size={14} />}
             {createError ?? creating}
           </div>
         )}
@@ -338,7 +346,7 @@ export default function HomePage() {
 
           {/* Columna Derecha: Cuadrícula 2x2 (En móvil pasa arriba) */}
           <div className="flex flex-col min-w-0 order-1 lg:order-2">
-            <MetricGrid capacity={capacityData} score={scoreData} lot={workflow.state} onSelectModal={(id) => setActiveModal(id as ModalId)} />
+            <MetricGrid capacity={capacityData} score={scoreData} lot={workflow.state} onSelectModal={(id) => setActiveModal(id as ModalId)} capacityLoading={capacityLoading} scoreLoading={isLoading} lotLoading={workflow.isLoading} />
           </div>
         </div>
       </main>

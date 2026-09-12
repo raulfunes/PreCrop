@@ -2,6 +2,7 @@ import React from 'react';
 import type { ScoreResponse, CapacityResponse } from '@/types';
 import type { LotStateResponse } from '@/lib/workflowClient';
 import { ArrowRight, Wallet, Activity, ArrowUpRight, Image as ImageIcon } from 'lucide-react';
+import { SkeletonValue } from '@/components/ui/Loading';
 
 const usd = (n: number | null | undefined) => (n === null || n === undefined ? '—' : `USD ${Math.round(n).toLocaleString('es-AR')}`);
 
@@ -52,9 +53,13 @@ interface MetricGridProps {
   score: ScoreResponse | null;
   lot: LotStateResponse | null;
   onSelectModal: (id: string) => void;
+  /** Peticiones en vuelo, para distinguir "todavia no llego" de "no hay dato". */
+  capacityLoading?: boolean;
+  scoreLoading?: boolean;
+  lotLoading?: boolean;
 }
 
-export function MetricGrid({ capacity, score, lot, onSelectModal }: MetricGridProps) {
+export function MetricGrid({ capacity, score, lot, onSelectModal, capacityLoading = false, scoreLoading = false, lotLoading = false }: MetricGridProps) {
   const cap = capacity?.capacity ?? null;
   const preSowing = cap?.pre_sowing_limit.usd ?? null;
   const hasCapacityData = capacity !== null;
@@ -77,7 +82,7 @@ export function MetricGrid({ capacity, score, lot, onSelectModal }: MetricGridPr
         title="Cupo pre-siembra"
         icon={<Wallet size={18} strokeWidth={2.5} />}
         value={
-          !hasCapacityData ? 'Calculando…' :
+          capacityLoading || !hasCapacityData ? <SkeletonValue className="h-[26px] w-36" /> :
           preSowing === null ? 'Sin respaldo' : usd(preSowing)
         }
       />
@@ -89,7 +94,7 @@ export function MetricGrid({ capacity, score, lot, onSelectModal }: MetricGridPr
         title="Condición del cultivo"
         icon={<Activity size={18} strokeWidth={2.5} />}
         value={
-          !score ? '—' :
+          scoreLoading || !score ? <SkeletonValue className="h-[26px] w-24" /> :
           <>{score.result.score_exact.toFixed(1)}<span className="text-[14px] font-medium text-[var(--color-text-muted)]"> / 100</span></>
         }
         indicator={
@@ -108,7 +113,8 @@ export function MetricGrid({ capacity, score, lot, onSelectModal }: MetricGridPr
         title="Disponible para retirar"
         icon={<ArrowUpRight size={18} strokeWidth={2.5} />}
         value={
-          available === null 
+          lotLoading && !lot ? <SkeletonValue className="h-[26px] w-36" /> :
+          available === null
             ? (!lot?.approved ? 'Pendiente' : (score?.advance?.advance_limit.usd != null ? usd(score.advance.advance_limit.usd) : 'Sin respaldo'))
             : usd(available)
         }

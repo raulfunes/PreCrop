@@ -14,14 +14,28 @@ interface AppDialogProps {
   id?: string;
 }
 
+/** Ocupa el alto del contenido durante el unico frame que tarda en montarse. */
+function DialogSkeleton() {
+  return (
+    <div className="flex flex-col gap-3" role="status" aria-label="Cargando contenido">
+      <span className="h-5 w-2/5 rounded-[6px] bg-[var(--color-neutral-soft)] animate-pulse" />
+      <span className="h-24 w-full rounded-[8px] bg-[var(--color-neutral-soft)] animate-pulse" />
+      <span className="h-5 w-3/5 rounded-[6px] bg-[var(--color-neutral-soft)] animate-pulse" />
+    </div>
+  );
+}
+
 export function AppDialog({ isOpen, onClose, title, children, className = '', id }: AppDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [mounted, setMounted] = useState(false);
+  // El contenido entra un frame despues de abrir. Montarlo en el mismo frame que
+  // showModal() metia el render completo (tablas, markdown, panel de fotos) dentro
+  // del frame de apertura y la animacion arrancaba trabada. Con el skeleton, el
+  // modal aparece de inmediato y el contenido lo alcanza sin que se note el corte.
+  const [contentReady, setContentReady] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
+  // Ajuste de estado durante el render, el patron que React recomienda para
+  // derivar de props: al cerrarse, el proximo open vuelve a empezar por el skeleton.
+  if (!isOpen && contentReady) setContentReady(false);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -32,12 +46,17 @@ export function AppDialog({ isOpen, onClose, title, children, className = '', id
         dialog.showModal();
       }
       document.body.style.overflow = 'hidden';
-    } else {
-      if (dialog.open) {
-        dialog.close();
-      }
-      document.body.style.overflow = '';
+      const raf = requestAnimationFrame(() => setContentReady(true));
+      return () => {
+        cancelAnimationFrame(raf);
+        document.body.style.overflow = '';
+      };
     }
+
+    if (dialog.open) {
+      dialog.close();
+    }
+    document.body.style.overflow = '';
 
     return () => {
       document.body.style.overflow = '';
@@ -66,8 +85,6 @@ export function AppDialog({ isOpen, onClose, title, children, className = '', id
     }
   };
 
-  if (!mounted) return null;
-
   return (
     <dialog
       id={id}
@@ -78,7 +95,7 @@ export function AppDialog({ isOpen, onClose, title, children, className = '', id
       aria-modal="true"
       className={`
         bg-[var(--color-surface)] border border-[var(--color-border)] shadow-2xl rounded-[var(--radius-card)]
-        p-0 m-auto backdrop:bg-black/40 backdrop:backdrop-blur-sm
+        p-0 m-auto backdrop:bg-black/50
         w-full max-h-[90vh] sm:max-h-[85vh]
         transform transition-transform motion-reduce:transition-none
         open:animate-in open:fade-in open:zoom-in-95
@@ -100,7 +117,7 @@ export function AppDialog({ isOpen, onClose, title, children, className = '', id
           </button>
         </header>
         <div className="overflow-y-auto p-5">
-          {children}
+          {isOpen && contentReady ? children : isOpen ? <DialogSkeleton /> : null}
         </div>
       </div>
     </dialog>

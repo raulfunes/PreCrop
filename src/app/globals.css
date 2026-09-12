@@ -326,3 +326,17 @@ body {
 .pc-pin:hover { transform: scale(1.12); }
 .pc-pin--photo { background: #2e8b57; }
 .pc-pin--selected { background: #ffd166; color: #18392b; transform: scale(1.18); }
+
+/* Barra de progreso global: recorre el ancho mientras hay peticiones en vuelo. */
+@keyframes precrop-progress {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[precrop-progress_1\.1s_ease-in-out_infinite\] {
+    animation: none;
+    transform: translateX(0);
+    width: 100%;
+  }
+}
