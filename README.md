@@ -4,7 +4,7 @@ Una cooperativa tiene que decidir cuánto anticipar a un productor **antes de la
 
 No es un score crediticio. Es una regla transparente sobre datos publicados, con la fuente de cada número al lado.
 
-**Demo en vivo:** https://precrop-ofnumifo2-raulfunes-projects.vercel.app
+**Demo en vivo:** https://precrop-1n71ira4q-raulfunes-projects.vercel.app
 
 ---
 
