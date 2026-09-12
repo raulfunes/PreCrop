@@ -5,8 +5,8 @@ import { demoReducer, getEstadoInicial } from '@/lib/demoReducer';
 import { loteOficial, buildIndicators } from '@/data/fixtures';
 import { calcularMedianaMalezas } from '@/lib/scoreUtils';
 import { buildEvidenceRequest } from '@/lib/evidenceClient';
-import { workflowClient, type LotPoint } from '@/lib/workflowClient';
-import photoPoints from '../../data/photo-point-presets.json';
+import { workflowClient, type LotPoint, type LotSummary } from '@/lib/workflowClient';
+import demoLotFile from '../../data/lotes/lote-demo-rio-primero.json';
 import type { Lote } from '@/types';
 
 // ── Hooks y API ───────────────────────────────────────────────
@@ -49,14 +49,25 @@ interface LotView {
   points: LotPoint[];
 }
 
+/** Closed GeoJSON ring (lon, lat) -> open Leaflet ring (lat, lon). */
+const ringOf = (geometry: { coordinates: number[][][] }): LatLng[] =>
+  geometry.coordinates[0].slice(0, -1).map(([lon, lat]) => [lat, lon] as LatLng);
+
+const pointsOf = (points: unknown): LotPoint[] =>
+  (Array.isArray(points) ? points : (points as { points: LotPoint[] }).points) as LotPoint[];
+
+// The demo lot is a real, irregular field in Río Primero built through the same
+// pipeline as a drawn polygon and committed under data/lotes/.
 const DEMO_LOT: LotView = {
-  id: photoPoints.lote_id,
-  nombre: 'Lote demo Río Primero / Córdoba',
-  ha: 100,
-  departamento: 'Río Primero',
-  polygon: null,
-  points: photoPoints.points as LotPoint[],
+  id: demoLotFile.lote.id,
+  nombre: demoLotFile.lote.nombre,
+  ha: demoLotFile.lote.ha,
+  departamento: demoLotFile.lote.departamento,
+  polygon: ringOf(demoLotFile.geometry),
+  points: pointsOf(demoLotFile.points),
 };
+
+const LOT_STORAGE_KEY = 'precrop.lote';
 
 // ── Sección de tarjeta del dashboard ─────────────────────────
 interface DashSectionProps {
@@ -101,6 +112,7 @@ export default function HomePage() {
   const [role, setRole] = useState<Role>('coop');
   const [reportOpen, setReportOpen] = useState(false);
   const [lot, setLot] = useState<LotView>(DEMO_LOT);
+  const [lots, setLots] = useState<LotSummary[]>([]);
   const [drawing, setDrawing] = useState(false);
   const [creating, setCreating] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -115,7 +127,17 @@ export default function HomePage() {
 
   const currentWeeds = calcularMedianaMalezas(visionResults, scenario);
   const realAssessedCount = Object.values(visionResults).filter((r) => r.status === 'completed' && r.result?.status === 'assessed' && r.result.source === 'model').length;
-  const indicadores = buildIndicators(scenario, currentWeeds, realAssessedCount >= 3 ? 'estimado' : 'simulado');
+  // The evidence cards show what the API actually measured for this lot and scene,
+  // not the fixture values of the committed pack.
+  const payload = (scoreData?.evidence.payload ?? null) as Record<string, unknown> | null;
+  const indicadores = buildIndicators(scenario, currentWeeds, realAssessedCount >= 3 ? 'estimado' : 'simulado').map((ind) => {
+    if (!payload) return ind;
+    const fecha = typeof payload.observed_date === 'string' ? payload.observed_date : ind.fecha;
+    if (ind.id === 'ndvi' && typeof payload.ndvi === 'number') return { ...ind, valor: payload.ndvi, fecha };
+    if (ind.id === 'lluvia' && typeof payload.rain_mm_7d === 'number') return { ...ind, valor: payload.rain_mm_7d, fecha };
+    if (ind.id === 'malezas' && typeof payload.weeds_pct === 'number') return { ...ind, valor: payload.weeds_pct, fecha, tipo: payload.weeds_source === 'estimated' ? 'estimado' as const : 'simulado' as const };
+    return ind;
+  });
 
   const loteHeader: Lote = useMemo(() => ({
     ...loteOficial,
@@ -161,6 +183,43 @@ export default function HomePage() {
     setSelectedPointId(null);
   };
 
+  const remember = (id: string) => { try { localStorage.setItem(LOT_STORAGE_KEY, id); } catch { /* private mode */ } };
+
+  const refreshLots = async () => {
+    try {
+      const r = await workflowClient.listLots();
+      const known = r.lotes.filter((l) => l.id !== 'demo-rio-segundo-01');
+      known.sort((a, b) => (a.id === DEMO_LOT.id ? -1 : b.id === DEMO_LOT.id ? 1 : a.nombre.localeCompare(b.nombre)));
+      setLots(known);
+    } catch { /* the selector simply shows the current lot */ }
+  };
+
+  const selectLot = async (id: string) => {
+    if (id === lot.id) return;
+    setDrawing(false);
+    if (id === DEMO_LOT.id) { resetDemoState(); setLot(DEMO_LOT); remember(id); return; }
+    try {
+      const d = await workflowClient.getLot(id);
+      resetDemoState();
+      setLot({ id: d.lote.id, nombre: d.lote.nombre, ha: d.lote.ha, departamento: d.lote.departamento, polygon: ringOf(d.geometry), points: pointsOf(d.points) });
+      remember(id);
+    } catch (e) {
+      setCreateError(e instanceof Error ? e.message : 'No se pudo cargar el lote');
+    }
+  };
+
+  // Lots drawn in earlier sessions stay available, and the last one used comes back after a reload.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      void refreshLots();
+      let saved: string | null = null;
+      try { saved = localStorage.getItem(LOT_STORAGE_KEY); } catch { saved = null; }
+      if (saved && saved !== DEMO_LOT.id) void selectLot(saved);
+    }, 0);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleReset = async () => {
     await workflow.reset();
     resetDemoState();
@@ -182,6 +241,8 @@ export default function HomePage() {
       const created = await workflowClient.createLot({ name: `Lote nuevo ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`, geometry: { type: 'Polygon', coordinates: [closed] } });
       resetDemoState();
       setLot({ id: created.lote.id, nombre: created.lote.nombre, ha: created.lote.ha, departamento: created.lote.departamento, polygon: ring, points: created.points });
+      remember(created.lote.id);
+      void refreshLots();
       setRole('coop');
     } catch (e) {
       setCreateError(e instanceof Error ? e.message : 'No se pudo crear el lote');
@@ -238,15 +299,20 @@ export default function HomePage() {
               {drawing ? 'Dibujando… (clic por vértice)' : 'Dibujar lote nuevo'}
             </button>
           )}
-          {lot.id !== DEMO_LOT.id && (
-            <button
-              type="button"
-              onClick={() => { resetDemoState(); setLot(DEMO_LOT); }}
-              className="h-9 px-3 rounded-[var(--radius-control)] text-[13px] font-semibold text-[var(--color-brand-primary)] hover:bg-[var(--color-brand-soft)]"
+          <div className="flex items-center gap-2">
+            <label htmlFor="lote-select" className="text-[12px] font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">Lote</label>
+            <select
+              id="lote-select"
+              className="h-9 max-w-[280px] border border-[var(--color-control-border)] px-2 rounded-[var(--radius-control)] text-[13px] bg-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)]"
+              value={lot.id}
+              disabled={!!creating}
+              onChange={(e) => void selectLot(e.target.value)}
             >
-              Volver al lote demo
-            </button>
-          )}
+              {(lots.some((l) => l.id === lot.id) ? lots : [{ id: lot.id, nombre: lot.nombre, ha: lot.ha, departamento: lot.departamento }, ...lots]).map((l) => (
+                <option key={l.id} value={l.id}>{l.nombre} · {l.ha} ha</option>
+              ))}
+            </select>
+          </div>
 
           <button
             type="button"
@@ -282,6 +348,7 @@ export default function HomePage() {
                   points={lot.points}
                   drawing={drawing}
                   selectedPointId={selectedPointId}
+                  photoPointIds={Object.entries(visionResults).filter(([, st]) => st.status === 'completed' && st.result?.status === 'assessed').map(([id]) => id)}
                   onPointSelect={(id) => setSelectedPointId(id)}
                   onPolygonComplete={(ring) => void handlePolygonComplete(ring)}
                   onCancelDraw={() => setDrawing(false)}

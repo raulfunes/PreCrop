@@ -303,3 +303,24 @@ body {
     text-decoration: underline !important;
   }
 }
+/* Sampling-point pins on the lot map (numbered, three states). */
+.pc-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff;
+  background: #18392b;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+.pc-pin:hover { transform: scale(1.12); }
+.pc-pin--photo { background: #2e8b57; }
+.pc-pin--selected { background: #ffd166; color: #18392b; transform: scale(1.18); }

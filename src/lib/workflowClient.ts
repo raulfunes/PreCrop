@@ -113,7 +113,20 @@ export interface CreatedLot {
 
 export interface LocateResponse { point_id: string; label: string; distance_m: number; tolerance_m: number; within_tolerance: boolean }
 
+export interface LotSummary { id: string; nombre: string; ha: number; departamento: string; source?: string }
+export interface LotDetail {
+  lote: LotSummary & { center?: { lat: number; lon: number } };
+  geometry: { type: 'Polygon'; coordinates: number[][][] };
+  points: LotPoint[] | { points: LotPoint[] };
+}
+
 export const workflowClient = {
+  listLots(): Promise<{ default: string; lotes: LotSummary[] }> {
+    return call('/lotes');
+  },
+  getLot(loteId: string): Promise<LotDetail> {
+    return call<LotDetail>(`/lotes/${encodeURIComponent(loteId)}`);
+  },
   locate(loteId: string, lat: number, lon: number): Promise<LocateResponse> {
     return call<LocateResponse>(`/lotes/${encodeURIComponent(loteId)}/locate?lat=${lat}&lon=${lon}`);
   },
