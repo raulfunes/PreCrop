@@ -432,3 +432,42 @@ Curva: `0,05 + 0,60 · t/(t + 2,05)`, con `t` = parche mayor en % de la imagen. 
 Sin medir: una foto con muchos parches medianos, donde parche mayor y total se separan por primera vez y ninguna medición dice cuál gana. Tampoco hay foto sin maleza en el conjunto, así que una respuesta «no hay maleza» no tiene calibración y sale como banda `sin_calibrar`, no como confianza baja.
 
 Pendiente: revalidar contra el conjunto final (GW10–GW13 más las congeladas) antes de tratar estos números como estables. n=9, un modelo, un cultivo, un dataset.
+
+## Endpoint `POST /api/vision/weeds`
+
+Implementado en [`api/vision_weeds.py`](api/vision_weeds.py), biblioteca estándar más Pillow. Reusa el transporte, la rasterización y la calibración de la prueba pública; no agrega dependencias ni framework.
+
+Petición `multipart/form-data`: `image` (JPEG/PNG/WebP, máx. 12 MB) y `point_id` (alfanumérico con `-`/`_`, máx. 32).
+
+```json
+{
+  "point_id": "P1",
+  "weeds_pct": 18.0,
+  "soy_pct": 76.0,
+  "confidence": 0.58,
+
+  "status": "assessed",
+  "confidence_band": "alta",
+  "confidence_scope": "weeds",
+  "soy_calibrated": false,
+  "model": "gemini-3.6-flash",
+  "review_url": "/api/vision/review/<hex>.png",
+  "gps": {"lat": -33.12, "lon": -61.45},
+  "reason": "…",
+  "limitations": ["…"]
+}
+```
+
+Los cuatro primeros campos son el contrato pedido y no cambian. Los demás se agregan; ninguno los reemplaza.
+
+**Dos llamadas por foto, a propósito.** Malezas usa `prompt-segmentation-v2.txt` byte a byte como se midió, así la confianza calibrada sigue valiendo; cultivo usa [`prompt-soy-v1.txt`](data/vision-growingsoy/prompt-soy-v1.txt), cuyo contrato geométrico es el mismo y solo cambia el objetivo. Mezclar ambas tareas en una sola llamada invalidaría la calibración. Las dos salen en paralelo, así que la latencia es la de una.
+
+**`confidence` habla solo de malezas** (`confidence_scope`). `soy_pct` no tiene ninguna corrida de validación: `soy_calibrated` es `false` y así debe mostrarse. La referencia para medirlo existe —`soy_plant` está anotado en las 9 fotos, con solo 5,4 pp de verde sin anotar—, falta la corrida.
+
+**Un fallo nunca es un número.** Abstención del modelo → `422` con `status: "not_assessable"` y sin `weeds_pct`. Fallo del proveedor → `502` con `status: "provider_error"` y sin `weeds_pct`. Si falla solo el cultivo, sale la maleza y `soy_pct` queda en `null` con una limitación explícita.
+
+`review_url` sirve la foto pintada por `GET`, con nombre hexadecimal validado; no se puede salir del directorio.
+
+Límites vigentes: `gps` se extrae de EXIF pero **no bloquea** —no hay verificación de tolerancia de 30 m, altura, nadir ni horario—, y el servidor escucha solo en `127.0.0.1`, sin autenticación ni persistencia. Comprobación offline en [`api/check_api.py`](api/check_api.py).
+
+**El endpoint no hizo todavía ninguna llamada real.** `prompt-soy-v1.txt` nunca se envió al modelo. La primera prueba contra el proveedor está pendiente.
