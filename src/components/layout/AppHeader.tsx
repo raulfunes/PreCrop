@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Leaf } from 'lucide-react';
+import { useAutoHideHeader } from '@/hooks/useAutoHideHeader';
 
 /**
  * AppHeader — cabecera principal de PreCrop (branding §6, §11).
@@ -16,9 +17,14 @@ import { Leaf } from 'lucide-react';
  *   o en una franja secundaria debajo (mobile).
  */
 export function AppHeader() {
+  const { hidden, scrolled, handleFocusIn } = useAutoHideHeader();
+
   return (
     <header
-      className="sticky top-0 z-30 bg-[var(--color-surface)] border-b border-[var(--color-border)] shadow-[var(--shadow-card)]"
+      className={`sticky top-0 z-50 bg-[var(--color-surface)] border-b border-[var(--color-border)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+        hidden ? '-translate-y-full' : 'translate-y-0'
+      } ${scrolled ? 'shadow-[var(--shadow-card)]' : 'shadow-none'}`}
+      onFocus={handleFocusIn}
       role="banner"
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">

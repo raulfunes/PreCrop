@@ -334,7 +334,7 @@ export default function HomePage() {
         {/* ── Área de Trabajo (Workspace) ─────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-[56%_44%] xl:grid-cols-[58%_42%] gap-5 lg:min-h-[clamp(520px,calc(100vh-280px),760px)]">
           {/* Columna Izquierda: Mapa (En móvil pasa abajo) */}
-          <div className="flex flex-col min-w-0 bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden order-2 lg:order-1">
+          <div className="relative z-0 isolate flex flex-col min-w-0 bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden order-2 lg:order-1">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-sage)]">
               <h2 className="text-[13px] font-bold text-[var(--color-text-muted)] uppercase tracking-wide">
                 {lot.nombre} · {lot.ha} ha · {lot.departamento}
