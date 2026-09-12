@@ -137,8 +137,20 @@ class TestT2Geometry:
 
         bounds = polygon_bounds(ring)
         presets = load("lote-sentinel-presets.json")
+        assert len(presets["bbox"]) == 4, f"bbox must be [minx,miny,maxx,maxy]: {presets['bbox']}"
         for a, b in zip(presets["bbox"], bounds):
             assert abs(a - b) < 1e-9, f"bbox {presets['bbox']} != polygon bounds {bounds}"
+
+    def test_geojson_top_level_bbox_matches_ring_bounds(self):
+        """lote.geojson carries its own top-level `bbox` member (a GeoJSON
+        Feature convention) IN ADDITION to the geometry ring -- nothing
+        previously checked that the two agree with each other."""
+        geojson = load("lote.geojson")
+        ring = geojson["geometry"]["coordinates"][0]
+        bounds = polygon_bounds(ring)
+        assert len(geojson["bbox"]) == 4
+        for a, b in zip(geojson["bbox"], bounds):
+            assert abs(a - b) < 1e-9, f"geojson bbox {geojson['bbox']} != ring bounds {bounds}"
 
 
 class TestT3PointsInsideAOI:
@@ -174,6 +186,12 @@ class TestT4ScoreRecompute:
         assert build_pack.light_for_score(score) == expected["light"]
         assert round(score, 1) == scenario["expected_score"]
         assert build_pack.light_for_score(score) == scenario["expected_band"]
+
+        # expected.score / expected.ndvi_norm are themselves derived fields
+        # (D6 echo) -- assert they match the recomputation too, not just
+        # expected_score/expected_band at the top level.
+        assert expected["score"] == round(score, 1)
+        assert abs(expected["ndvi_norm"] - build_pack.ndvi_norm(preset["ndvi"])) < 1e-4
 
 
 # ---------------------------------------------------------------------------
@@ -234,11 +252,17 @@ class TestT7NoWeedDuplication:
     LABEL_CONTAINERS = {"sources", "weights"}
 
     def test_no_disallowed_weed_keys(self):
+        """Matches both the English root ("weed") and the Spanish root
+        ("malez", as in "malezas") -- this file mixes English JSON keys
+        with Spanish prose fields, so a Spanish-named weeds key would slip
+        past an English-only substring check."""
         scenarios = load("demo-scenarios.json")
         offending = [
             k
             for k in find_keys(
-                scenarios, lambda k: "weed" in k.lower(), skip_dict_keys=self.LABEL_CONTAINERS
+                scenarios,
+                lambda k: "weed" in k.lower() or "malez" in k.lower(),
+                skip_dict_keys=self.LABEL_CONTAINERS,
             )
             if k not in self.ALLOWED_WEED_KEYS
         ]
@@ -257,20 +281,28 @@ class TestT7NoWeedDuplication:
 # ---------------------------------------------------------------------------
 
 class TestT8ForbiddenKeys:
-    FORBIDDEN_ROOT_KEYS = {"formula", "haircut", "base_valuation_usd"}
-    FORBIDDEN_PRESET_KEYS = {"vigor", "climate", "score", "valuation_usd"}
+    # Banned ANYWHERE in the file except inside the two allowlisted
+    # metadata containers below -- a single recursive scan replaces the
+    # old split root-keys / preset-keys checks (which could miss a
+    # forbidden key nested somewhere neither list of paths anticipated).
+    BANNED_KEYS = {"score", "valuation_usd", "vigor", "formula", "haircut", "base_valuation_usd"}
+    # normalization.{ndvi_norm,climate,weeds_norm}.formula documents each
+    # formula as a STRING (not a computed value), and
+    # climate_table.rules[].climate is the per-rule climate SCORE -- both
+    # are legitimate published metadata, not the forbidden per-preset
+    # derived scalars this test guards against.
+    ALLOWED_CONTAINERS = {"normalization", "climate_table"}
 
-    def test_no_forbidden_root_keys(self):
+    def test_no_banned_keys_anywhere(self):
         presets = load("lote-sentinel-presets.json")
-        offending = self.FORBIDDEN_ROOT_KEYS & presets.keys()
-        assert not offending, f"forbidden root keys present: {offending}"
+        offending = [
+            k
+            for k in find_keys(
+                presets, lambda k: k in self.BANNED_KEYS, skip_dict_keys=self.ALLOWED_CONTAINERS
+            )
+        ]
+        assert offending == [], f"forbidden keys present: {offending}"
         assert "geojson" not in presets, "geometry must live in lote.geojson, not embedded"
-
-    def test_no_forbidden_preset_keys(self):
-        presets = load("lote-sentinel-presets.json")
-        for preset_key, preset in presets["presets"].items():
-            offending = self.FORBIDDEN_PRESET_KEYS & preset.keys()
-            assert not offending, f"{preset_key} has forbidden keys {offending}"
 
     def test_climate_table_and_normalization_present(self):
         """climate_table (mapping) and normalization stay -- they are metadata,
@@ -352,6 +384,26 @@ class TestT10EvidenceHash:
         assert digest == expected_digest
         assert digest == "ecf9e98ec0641e23113ff3ce8bdc78d0ddd249886517fd4a7f68cc83d4e65667"
 
+    def test_golden_vector_integral_float(self):
+        """Second frozen vector (2026-09-12), covering the case the first
+        one does NOT: an integral float (100.0) and an int (12) that must
+        canonicalise to the SAME token shape a JS client would produce.
+        Python's `json.dumps` alone would emit `100.0`; JS's
+        `JSON.stringify` of the equivalent numeric value always emits
+        `100`. Chain's TS client must reproduce this exact digest too --
+        if it only matches the first golden vector (all-int payload), the
+        float-normalisation path is unverified."""
+        payload = {"a": 0.1, "b": 100.0, "c": 12, "d": "x"}
+        canonical = build_pack.canonicalize_payload(payload)
+        assert canonical == '{"a":0.1,"b":100,"c":12,"d":"x"}'
+
+        digest = build_pack.hash_payload(payload)
+        assert digest == "4833dae1058c20c0ead97091467a634ebce2e9748d7d134816a2033b7f5e8453"
+
+    def test_negative_zero_canonicalises_to_plain_zero(self):
+        canonical = build_pack.canonicalize_payload({"x": -0.0})
+        assert canonical == '{"x":0}'
+
 
 # ---------------------------------------------------------------------------
 # T11 - payload constraints for cross-language canonicalisation
@@ -381,29 +433,161 @@ class TestT11PayloadConstraints:
                 decimals = as_str.split(".")[1] if "." in as_str else ""
                 assert len(decimals) <= 4, f"{key} has more than 4 decimals: {value}"
 
+                if isinstance(value, float):
+                    assert not value.is_integer(), (
+                        f"{key}={value!r} is an integral float; Python's json.dumps "
+                        "writes it as e.g. '100.0' while JS's JSON.stringify of the "
+                        "same numeric value writes '100' -- this must be an int in "
+                        "the payload (or pass through build_pack.canonicalize_payload, "
+                        "which coerces it)"
+                    )
+                    assert value != 0.0 or math.copysign(1.0, value) == 1.0, (
+                        f"{key} is -0.0, not plain 0"
+                    )
+
 
 # ---------------------------------------------------------------------------
-# T12 - referenced photos exist on disk
+# Evidence <-> build_pack tie: nothing else in this suite proves that the
+# COMMITTED data/evidence/*.json payloads are what build_evidence() would
+# produce today from the committed presets/scenarios/points -- T10 only
+# proves the hash matches whatever payload is already on disk. Without this,
+# presets/scenarios could drift out from under a stale evidence/*.json and
+# every other test would keep passing.
+# ---------------------------------------------------------------------------
+
+class TestEvidenceMatchesBuildPack:
+    @pytest.mark.parametrize("scenario_key", SCENARIO_KEYS)
+    def test_committed_payload_equals_freshly_built(self, scenario_key):
+        presets = load("lote-sentinel-presets.json")
+        scenarios = load("demo-scenarios.json")
+        points = load("photo-point-presets.json")
+
+        rebuilt = build_pack.build_evidence(scenario_key, presets, scenarios, points)
+        committed = load_evidence(scenario_key)["payload"]
+
+        assert rebuilt == committed
+
+
+# ---------------------------------------------------------------------------
+# Formula metadata parity: demo-scenarios.json / lote-sentinel-presets.json
+# publish the scoring formula, thresholds, normalisation anchors and
+# climate_table as DATA (for Front to read) -- nothing previously asserted
+# that published metadata actually equals the constants build_pack.py (and
+# therefore expected_score/T4) uses to compute the same numbers. A drift
+# here would mean Front computes a different score than the evidence
+# reports without any test catching it.
+# ---------------------------------------------------------------------------
+
+class TestFormulaMetadataParity:
+    def test_weights_match(self):
+        scenarios = load("demo-scenarios.json")
+        assert scenarios["scoring"]["weights"] == build_pack.WEIGHTS
+
+    def test_thresholds_match(self):
+        scenarios = load("demo-scenarios.json")
+        assert scenarios["scoring"]["thresholds"] == build_pack.THRESHOLDS
+
+    def test_ndvi_norm_anchors_match(self):
+        presets = load("lote-sentinel-presets.json")
+        norm = presets["normalization"]["ndvi_norm"]
+        assert norm["ndvi_floor"] == build_pack.NDVI_FLOOR
+        assert norm["ndvi_ceiling"] == build_pack.NDVI_CEILING
+
+    def test_climate_table_rules_match(self):
+        presets = load("lote-sentinel-presets.json")
+        published = [
+            (rule["max_mm"], rule["climate"]) for rule in presets["climate_table"]["rules"]
+        ]
+        pinned = [(rule["max_mm"], rule["climate"]) for rule in build_pack.CLIMATE_TABLE]
+        assert published == pinned
+
+
+# ---------------------------------------------------------------------------
+# Provenance: the published ndvi for each LIVE preset must actually be the
+# rounded median of its own ndvi_stats (the file-wide convention), the two
+# live scene ids must differ, each scene id's embedded date must match the
+# preset's own `date`, and the archived preset must stay flagged. The
+# archived preset predates the median convention -- it declares its OWN
+# ndvi_published_stat: "mean" override (see lote-sentinel-presets.json)
+# instead of silently disagreeing with the file-wide "median" one.
+# ---------------------------------------------------------------------------
+
+class TestProvenance:
+    LIVE_PRESET_KEYS = ["fecha_buena", "fecha_mala"]
+
+    @pytest.mark.parametrize("preset_key", LIVE_PRESET_KEYS)
+    def test_live_ndvi_is_rounded_median_of_its_own_stats(self, preset_key):
+        presets = load("lote-sentinel-presets.json")
+        assert presets["ndvi_published_stat"] == "median"
+        preset = presets["presets"][preset_key]
+        assert preset["ndvi"] == round(preset["ndvi_stats"]["median"], 3)
+
+    @pytest.mark.parametrize("preset_key", LIVE_PRESET_KEYS)
+    def test_scene_id_date_matches_preset_date(self, preset_key):
+        presets = load("lote-sentinel-presets.json")
+        preset = presets["presets"][preset_key]
+        scene_id = preset["sentinel2"]["scene_id"]
+        # e.g. S2B_MSIL2A_20250202T140709_... -> "20250202"
+        embedded_date = scene_id.split("_")[2].split("T")[0]
+        assert embedded_date == preset["date"].replace("-", "")
+
+    def test_two_live_scene_ids_differ(self):
+        presets = load("lote-sentinel-presets.json")
+        ids = {presets["presets"][k]["sentinel2"]["scene_id"] for k in self.LIVE_PRESET_KEYS}
+        assert len(ids) == 2
+
+    def test_archived_preset_stays_flagged_and_declares_its_own_stat(self):
+        presets = load("lote-sentinel-presets.json")
+        archived = presets["presets"]["fecha_mala_agosto_barbecho"]
+        assert archived["deprecated_for_pitch"] is True
+        # Overrides the file-wide "median" convention -- see the field's own
+        # note in lote-sentinel-presets.json for why.
+        assert archived["ndvi_published_stat"] == "mean"
+        assert archived["ndvi_published_stat"] != presets["ndvi_published_stat"]
+        assert archived["ndvi_old_method_median_ref"] != archived["ndvi"]
+
+
+# ---------------------------------------------------------------------------
+# T12 - photo contract (unconditional) + on-disk existence (skipped until
+# the photo-owning track drops files in)
 #
 # presets/fotos/* are owned by another track (Vision/photo owner), not
 # generated by this pack (see demo-scenarios.json photos_ownership_note).
-# Skip until that track drops the files in place.
+# Split in two: the CONTRACT (point_ids, weeds_ref, point_id references)
+# is this pack's responsibility and must be checked unconditionally; only
+# the on-disk jpg bytes are the other track's responsibility and skip.
 # ---------------------------------------------------------------------------
 
 class TestT12Photos:
     @pytest.mark.parametrize("scenario_key", SCENARIO_KEYS)
-    def test_photos_exist(self, scenario_key):
+    def test_point_ids_and_weeds_ref_contract(self, scenario_key):
+        """Unconditional -- never skipped, regardless of whether the photo
+        files exist yet."""
+        scenarios = load("demo-scenarios.json")
+        points = load("photo-point-presets.json")
+        scenario = scenarios["scenarios"][scenario_key]
+        valid_point_ids = {p["point_id"] for p in points["points"]}
+
+        assert len(scenario["point_ids"]) == 5
+        assert set(scenario["point_ids"]) == valid_point_ids
+
+        weeds_ref = scenario["weeds_ref"]
+        assert weeds_ref["scenario"] == scenario_key
+        assert (DATA_DIR / weeds_ref["file"]).exists(), f"weeds_ref.file missing: {weeds_ref['file']}"
+
+        for photo in scenario["photos"]:
+            assert photo["point_id"] in valid_point_ids
+
+    @pytest.mark.parametrize("scenario_key", SCENARIO_KEYS)
+    def test_photos_exist_on_disk(self, scenario_key):
         photos_dir = DATA_DIR / "presets" / "fotos"
         if not photos_dir.exists() or not any(photos_dir.glob("*.jpg")):
             pytest.skip("presets/fotos owned by another track; skip until files are present")
 
         scenarios = load("demo-scenarios.json")
-        points = load("photo-point-presets.json")
-        valid_point_ids = {p["point_id"] for p in points["points"]}
         for photo in scenarios["scenarios"][scenario_key]["photos"]:
             path = DATA_DIR / photo["file"]
             assert path.exists() and path.stat().st_size > 0, f"missing {path}"
-            assert photo["point_id"] in valid_point_ids
 
 
 # ---------------------------------------------------------------------------
