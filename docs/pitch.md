@@ -9,7 +9,7 @@ Un productor ya gastó la campaña y necesita un anticipo antes de cosechar. La 
 PreCrop mira ese lote desde el espacio los últimos siete veranos y lo cruza con el mapa oficial de rindes de Córdoba. Antes de sembrar ya sabe cuánto rinde en su peor año: la sequía de 2022/23. Contra ese año, no contra el mejor, sugiere el cupo: veintinueve mil dólares.
 
 **[0:25] Condición: si sigo**
-Sembró. Es febrero: verde, se libera el primer desembolso. Cinco días después, dos semanas sin lluvia y malezas: rojo, el segundo se frena solo. Nadie viajó.
+Tres ojos sobre el lote: el satélite ve el conjunto, el clima explica, la foto de campo confirma. Sembró. Es febrero: verde, se libera el primer desembolso. Cinco días después, dos semanas sin lluvia y malezas: rojo, el segundo se frena solo. Nadie viajó.
 
 **[0:40] Por qué se puede firmar**
 Cada número sale de un informe con la escena de satélite, la lluvia, las fotos, las reglas y su versión, y termina en una página que el comité firma. No es un score de crédito: son reglas a la vista.
