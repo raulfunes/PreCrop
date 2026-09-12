@@ -241,7 +241,11 @@ export default function HomePage() {
 
     setTimeout(() => {
       const elId = id === 'decision' ? 'acciones' : id === 'evidence' ? 'evidencia-lote' : id === 'capacidad' ? 'capacidad-resumen' : 'semaforo';
-      document.getElementById(elId)?.focus();
+      const el = document.getElementById(elId);
+      if (el) {
+        el.focus({ preventScroll: true });
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }, 50);
   };
 
@@ -328,9 +332,9 @@ export default function HomePage() {
         <KpiStrip capacity={capacityData} score={scoreData} lot={workflow.state} activeId={activeKpi} onSelect={handleKpiSelect} />
 
         {/* ── Área de Trabajo (Workspace) ─────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[56%_44%] xl:grid-cols-[58%_42%] gap-5 min-h-[clamp(520px,calc(100vh-280px),760px)]">
-          {/* Columna Izquierda: Mapa */}
-          <div className="flex flex-col min-w-0 bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-[56%_44%] xl:grid-cols-[58%_42%] gap-5 lg:min-h-[clamp(520px,calc(100vh-280px),760px)]">
+          {/* Columna Izquierda: Mapa (En móvil pasa abajo) */}
+          <div className="flex flex-col min-w-0 bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden order-2 lg:order-1">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-sage)]">
               <h2 className="text-[13px] font-bold text-[var(--color-text-muted)] uppercase tracking-wide">
                 {lot.nombre} · {lot.ha} ha · {lot.departamento}
@@ -353,9 +357,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Columna Derecha: Panel Operativo (Tabs) */}
-          <div className="flex flex-col min-w-0 bg-[var(--color-canvas)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden">
-            <div className="flex px-4 pt-3 bg-[var(--color-surface-sage)] border-b border-[var(--color-border)] gap-6 shadow-sm" role="tablist" aria-label="Panel Operativo">
+          {/* Columna Derecha: Panel Operativo (En móvil pasa arriba) */}
+          <div className="flex flex-col min-w-0 bg-[var(--color-canvas)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden order-1 lg:order-2">
+            <div className="flex px-4 pt-3 bg-[var(--color-surface-sage)] border-b border-[var(--color-border)] gap-6 shadow-sm overflow-x-auto" role="tablist" aria-label="Panel Operativo">
               <button
                 role="tab"
                 aria-selected={activeTab === 'condicion'}
