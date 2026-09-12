@@ -1,0 +1,396 @@
+{
+  "experiment": "v2-weeds-36-resto",
+  "started_at": "2026-09-12T05:06:23.202066+00:00",
+  "model": "gemini-3.6-flash",
+  "provider": "Google Gemini API",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+  "configuration": {
+    "candidateCount": 1,
+    "maxOutputTokens": 8192,
+    "thinkingConfig": {
+      "thinkingLevel": "LOW"
+    },
+    "responseMimeType": "application/json",
+    "responseJsonSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason",
+        "limitations",
+        "polygons"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "assessed",
+            "not_assessable"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "timeout_seconds": 30,
+  "automatic_retries": 0,
+  "max_requests": 7,
+  "expected_crop": "soja",
+  "free_project_confirmed_by_operator": false,
+  "billing_acknowledged_by_operator": true,
+  "prompt_sha256": "4639e220b8a5f4c6d84ae3a8ea310f8b4c9351bf486e403b180eec677be1a983",
+  "script_sha256": "e8bb781f09caa24b8b77ca4412b00fccab98b12b3b88a58bb28057c088e7d92d",
+  "manifest_sha256": "c9663bb73ed2e61b45f863d26bbcdd19a1fbb470536b59e955c50d60cd01157c",
+  "pillow": "12.3.0",
+  "requests_sent": 4,
+  "blocked_reason": "HTTP_503",
+  "results": [
+    {
+      "id": "GW04",
+      "status": "assessed",
+      "image_path": "images/desarrollo/GW04.jpg",
+      "image_sha256": "19235011bd650181a1de0a3799dd76a2e98b7f3bde6f18b119907f493cf0d95e",
+      "reference_pct": 5.60791015625,
+      "reference_sha256": "2a3fcf2ab36276d3076f00be37e3b1602bfb722ec9562491af05c5b3feada9e4",
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 11.558532000000014,
+      "credential_redacted": false,
+      "raw_api_response": "GW04.response.bin",
+      "response": {
+        "status": "assessed",
+        "reason": "El cultivo de soja se distingue claramente en hileras con sus característicos trifolios. Se han identificado regiones de malezas gramíneas entre la cobertura de rastrojo en la parte inferior de la imagen.",
+        "limitations": [
+          "Presencia de marcadores artificiales (cintas rojas/naranjas y cinta métrica) que se excluyen de la clasificación.",
+          "Abundante rastrojo seco sobre el suelo que dificulta la detección de plántulas de maleza extremadamente pequeñas."
+        ],
+        "polygons": [
+          [
+            [
+              860,
+              35
+            ],
+            [
+              935,
+              45
+            ],
+            [
+              995,
+              25
+            ],
+            [
+              1000,
+              185
+            ],
+            [
+              915,
+              190
+            ],
+            [
+              870,
+              120
+            ]
+          ],
+          [
+            [
+              820,
+              650
+            ],
+            [
+              890,
+              630
+            ],
+            [
+              975,
+              640
+            ],
+            [
+              1000,
+              700
+            ],
+            [
+              990,
+              790
+            ],
+            [
+              910,
+              775
+            ],
+            [
+              840,
+              725
+            ]
+          ]
+        ]
+      },
+      "weed_pct": 3.929931640625,
+      "absolute_error_pp": 1.677978515625,
+      "iou": 0.0,
+      "both_empty": false,
+      "mask": "GW04.mask.png",
+      "comparison": "GW04.comparison.png"
+    },
+    {
+      "id": "GW05",
+      "status": "assessed",
+      "image_path": "images/desarrollo/GW05.jpg",
+      "image_sha256": "35f27f791b7ab625b9df266c2e1d0c4e95772b3614056fd6ab2dd57172408f95",
+      "reference_pct": 4.4443359375,
+      "reference_sha256": "50f64ecf9277d0dffa89db6582c234074f9b1c91af04c40d5bf3ecb0248baaeb",
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 13.679035499999372,
+      "credential_redacted": false,
+      "raw_api_response": "GW05.response.bin",
+      "response": {
+        "status": "assessed",
+        "reason": "Se identificó correctamente el cultivo de soja en hileras bien definidas, junto con malezas gramíneas presentes principalmente en la esquina superior izquierda del área de cultivo.",
+        "limitations": [
+          "La presencia de rastrojo denso en la entrehilera dificulta ligeramente la detección de plántulas de malezas de tamaño pequeño."
+        ],
+        "polygons": [
+          [
+            [
+              14,
+              0
+            ],
+            [
+              110,
+              2
+            ],
+            [
+              175,
+              59
+            ],
+            [
+              165,
+              126
+            ],
+            [
+              127,
+              203
+            ],
+            [
+              90,
+              212
+            ],
+            [
+              42,
+              192
+            ],
+            [
+              14,
+              150
+            ]
+          ]
+        ]
+      },
+      "weed_pct": 2.767333984375,
+      "absolute_error_pp": 1.677001953125,
+      "iou": 0.27164320461492103,
+      "both_empty": false,
+      "mask": "GW05.mask.png",
+      "comparison": "GW05.comparison.png"
+    },
+    {
+      "id": "GW06",
+      "status": "assessed",
+      "image_path": "images/desarrollo/GW06.jpg",
+      "image_sha256": "aed90ab960acc166e73fd872c08d5bd5121f906c29ea89d8682227b023fc4124",
+      "reference_pct": 2.764892578125,
+      "reference_sha256": "dc34287d7747bd6702679ac2be0624754860501363752e32f0960180fc4bddcf",
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 11.282161999999516,
+      "credential_redacted": false,
+      "raw_api_response": "GW06.response.bin",
+      "response": {
+        "status": "assessed",
+        "reason": "Se identifican plantas de soja en el cultivo (hojas trifoliadas características) y algunas malezas de hoja ancha pequeñas/medias situadas entre el cultivo y cerca del cartel/estaca.",
+        "limitations": [
+          "Presencia de elementos artificiales (cartel 106, varillas, banderas) y sombra que cubren parcialmente la superficie."
+        ],
+        "polygons": [
+          [
+            [
+              630,
+              118
+            ],
+            [
+              667,
+              120
+            ],
+            [
+              758,
+              169
+            ],
+            [
+              758,
+              252
+            ],
+            [
+              738,
+              345
+            ],
+            [
+              664,
+              345
+            ],
+            [
+              637,
+              280
+            ],
+            [
+              633,
+              201
+            ]
+          ],
+          [
+            [
+              881,
+              287
+            ],
+            [
+              937,
+              285
+            ],
+            [
+              944,
+              362
+            ],
+            [
+              888,
+              368
+            ]
+          ],
+          [
+            [
+              860,
+              843
+            ],
+            [
+              901,
+              849
+            ],
+            [
+              949,
+              928
+            ],
+            [
+              951,
+              988
+            ],
+            [
+              879,
+              988
+            ],
+            [
+              864,
+              917
+            ]
+          ]
+        ]
+      },
+      "weed_pct": 3.892333984375,
+      "absolute_error_pp": 1.12744140625,
+      "iou": 0.6005165228620062,
+      "both_empty": false,
+      "mask": "GW06.mask.png",
+      "comparison": "GW06.comparison.png"
+    },
+    {
+      "id": "GW07",
+      "status": "api_error",
+      "image_path": "images/desarrollo/GW07.jpg",
+      "image_sha256": "5ccce302f6ae4ec7ba68f7d3f32bb89d47126d309afa93ca3615a6fbddaf65e9",
+      "reference_pct": 1.8056640625,
+      "reference_sha256": "e136a6d950fcbb652b6b060ad319b432f9e6f686e0d5988b928a50955863207b",
+      "http_status": 503,
+      "api_error": "HTTP_503",
+      "elapsed_seconds": 12.833110700000361,
+      "credential_redacted": false,
+      "raw_api_response": "GW07.response.bin",
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "comparison": "GW07.comparison.png"
+    },
+    {
+      "id": "GW08",
+      "status": "blocked",
+      "image_path": "images/desarrollo/GW08.jpg",
+      "image_sha256": "4ebe3d7c30ee99d554523ec37760d733d8f46c9233bd739366784d0ff0862dd1",
+      "reference_pct": 1.7001953125,
+      "reference_sha256": "b835a8732aafde3f73bfb984ee1b3e02ef43eebbc211ab432bb1016efc3aacfa",
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "comparison": "GW08.comparison.png"
+    },
+    {
+      "id": "GW09",
+      "status": "blocked",
+      "image_path": "images/desarrollo/GW09.jpg",
+      "image_sha256": "7780521a0ea54a9adaca2f2c605f1191d1cb350ed41b0515634f8b61efb0ef89",
+      "reference_pct": 1.2509765625,
+      "reference_sha256": "b80677e1bbc4d4b5a806c98d8dca58df0c2db35f0f3ea5eb949066e03b7f5a90",
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "comparison": "GW09.comparison.png"
+    },
+    {
+      "id": "control",
+      "status": "blocked",
+      "image_path": "controls/no-interpretable.png",
+      "image_sha256": "56e4cd36830ae94733b8e1c3b2fd5141df5ea90bb7a58b4770987fae5b9fcf31",
+      "reference_pct": null,
+      "reference_sha256": null,
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "control_pass": null,
+      "comparison": "control.comparison.png"
+    }
+  ],
+  "summary": {
+    "counts": {
+      "assessed": 3,
+      "api_error": 1,
+      "blocked": 3
+    },
+    "mae_pp": 1.494140625,
+    "mae_n": 3,
+    "mean_iou": 0.2907199091589757,
+    "iou_n": 3,
+    "both_empty_n": 0
+  }
+}

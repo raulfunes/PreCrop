@@ -141,6 +141,34 @@ Total histórico: cinco solicitudes de generación —una con HTTP 400, una con 
 
 `segment.py` acepta `--experiment` para nombrar la corrida sin editar el código, porque cada reintento necesita una reserva nueva. La protección no cambia: un nombre ya reservado sigue bloqueado, y `check_segment.py` comprueba ambas cosas. No se amplió la selección ni se abrieron las fotos del lado final.
 
+### Conjunto de desarrollo completo y control — 12-sep-2026, 02:08 ART
+
+Ocho de las nueve fotos de desarrollo de `weeds-v2` evaluadas con `gemini-3.6-flash` y el prompt v2. GW09 quedó pendiente por timeout. [Consolidado reproducible](data/vision-growingsoy/consolidate.py): `python -B data/vision-growingsoy/consolidate.py`.
+
+| Foto | Referencia | Contornos | Error | IoU |
+| --- | ---: | ---: | ---: | ---: |
+| GW01 | 19,6406% | 17,5002% | 2,1404 pp | 0,7445 |
+| GW02 | 19,3506% | 11,8406% | 7,5100 pp | 0,5762 |
+| GW03 | 10,2043% | 9,4265% | 0,7778 pp | 0,6151 |
+| GW04 | 5,6079% | 3,9299% | 1,6780 pp | **0,0000** |
+| GW05 | 4,4443% | 2,7673% | 1,6770 pp | 0,2716 |
+| GW06 | 2,7649% | 3,8923% | 1,1274 pp | 0,6005 |
+| GW07 | 1,8057% | 0,5366% | 1,2690 pp | 0,2280 |
+| GW08 | 1,7002% | 2,0281% | 0,3279 pp | 0,3766 |
+| GW09 | 1,2510% | — | — | — |
+
+**MAE 2,0634 pp · IoU media 0,4266** (mediana 0,4764; tres de ocho por debajo de 0,3).
+
+**El MAE solo engaña.** GW04 tiene 1,6780 pp de error y **IoU 0**: el modelo marcó rastrojo del borde derecho y se perdió las dos malezas reales de la mitad inferior. El porcentaje coincidió por casualidad. Cualquier informe debe mostrar MAE e IoU juntos; con un solo número, esa foto pasa por acierto.
+
+**La calidad depende del tamaño de la maleza.** Con referencia ≥ 10% la IoU media es 0,6453; por debajo de 10%, 0,2953. El modelo resuelve matas grandes y falla con malezas chicas y dispersas sobre rastrojo, que es justamente el caso de detección temprana con más valor agronómico.
+
+**Subestima de forma sistemática:** sesgo medio **−1,6996 pp**, seis de ocho fotos por debajo de la referencia. Con la transformación propuesta `componente_malezas = 100 − mediana`, subestimar malezas empuja el score hacia verde. Con peso 0,15 el efecto sobre el score es de unas 0,25 décimas, pero es sesgo, no ruido, y no debe corregirse con un factor inventado sin calibración.
+
+**Control aprobado:** ante la imagen uniforme el modelo devolvió `not_assessable` con cero polígonos y motivo legible, sin fabricar un cero. [Corrida](data/vision-growingsoy/runs/v2-control-36-20260912T050536404310Z/report.md).
+
+Límites: ocho fotos, un cultivo, un modelo y una versión de prompt. No hay comparación v1/v2 sobre el mismo conjunto y modelo, así que la mejora no se puede atribuir al prompt. Las seis fotos finales siguen cerradas y no se abren hasta congelar prompt y configuración. Esto no acredita precisión agronómica.
+
 ### Primera detección real de malezas — 12-sep-2026, 02:01 ART
 
 **`gemini-3.6-flash`, prompt v2, conjunto `weeds-v2`: 4/4 solicitudes, tres fotos evaluadas, MAE 3,4761 pp e IoU media 0,6453.** [Reporte y comparaciones](data/vision-growingsoy/runs/v2-weeds-36-20260912T050154101573Z/report.md).

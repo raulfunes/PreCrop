@@ -244,13 +244,13 @@ def save_report(directory, run):
     def number(v):
         return "—" if v is None else f"{v:.4f}"
     lines = [f"# Segmentación — {run['experiment']}", "", f"Modelo: `{run['model']}`. Fecha UTC: {run['started_at']}.",
-             f"Solicitudes realizadas: {run['requests_sent']}/4. Bloqueo: {run['blocked_reason'] or 'ninguno'}.", "",
+             f"Solicitudes realizadas: {run['requests_sent']}/{run['max_requests']}. Bloqueo: {run['blocked_reason'] or 'ninguno'}.", "",
              "| Foto | Estado | Referencia % | Contornos % | Error pp | IoU | Ambas vacías |",
              "| --- | --- | ---: | ---: | ---: | ---: | --- |"]
     for r in rows:
         lines.append(f"| {r['id']} | {r['status']} | {number(r['reference_pct'])} | {number(r['weed_pct'])} | "
                      f"{number(r['absolute_error_pp'])} | {number(r['iou'])} | {r['both_empty']} |")
-    lines += ["", f"MAE: {number(run['summary']['mae_pp'])} pp ({len(errors)}/3 fotos).",
+    lines += ["", f"MAE: {number(run['summary']['mae_pp'])} pp ({len(errors)}/{sum(1 for r in rows if r['id'] != 'control')} fotos).",
               f"IoU media: {number(run['summary']['mean_iou'])} ({len(ious)} pares con unión no vacía).",
               "El control no integra MAE ni IoU. Ambas máscaras vacías se cuentan aparte.", "",
               "## Comparaciones", "", "Rojo: píxeles de la máscara binaria usada en el cálculo. Sin resultado se muestra gris.", ""]
@@ -263,11 +263,11 @@ def save_report(directory, run):
 
 
 def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT, billing_acknowledged=False,
-                   model=MODEL):
+                   model=MODEL, ids=IDS):
     endpoint = f"/v1beta/models/{model}:generateContent"
     manifest = strict_json((SET / "manifest.json").read_text(encoding="utf-8"))
     selected = [dict(next(r for r in manifest["images"] if r["id"] == name and r["split"] == "desarrollo"),
-                     base=SET) for name in IDS]
+                     base=SET) for name in ids]
     control = strict_json((ROOT / "manifest.json").read_text(encoding="utf-8"))["control"]
     selected.append({"id": "control", "image_path": control["path"], "sha256": control["sha256"],
                      "reference_pct": None, "base": ROOT})
@@ -306,12 +306,12 @@ def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT, billing_
     if not blocked:
         try:
             with budget.open("x", encoding="utf-8") as file:
-                json.dump({"run": directory.name, "maximum_requests": 4}, file)
+                json.dump({"run": directory.name, "maximum_requests": len(selected)}, file)
         except FileExistsError:
             blocked = "four_request_experiment_already_reserved"
     run = {"experiment": experiment, "started_at": now.isoformat(), "model": model, "provider": "Google Gemini API",
            "endpoint": f"https://{HOST}{endpoint}", "configuration": CONFIG, "timeout_seconds": TIMEOUT,
-           "automatic_retries": 0, "max_requests": 4, "expected_crop": "soja",
+           "automatic_retries": 0, "max_requests": len(selected), "expected_crop": "soja",
            "free_project_confirmed_by_operator": free_project_confirmed,
            "billing_acknowledged_by_operator": billing_acknowledged,
            "prompt_sha256": digest(PROMPT), "script_sha256": digest(Path(__file__)),
@@ -357,7 +357,7 @@ def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT, billing_
         run["results"].append(result)
         save_report(directory, run)
     print(directory / "report.md")
-    print(f"Requests: {run['requests_sent']}/4; blocked: {run['blocked_reason']}; {run['summary']}")
+    print(f"Requests: {run['requests_sent']}/{run['max_requests']}; blocked: {run['blocked_reason']}; {run['summary']}")
     return run
 
 
@@ -375,5 +375,8 @@ if __name__ == "__main__":
     parser.add_argument("--billing-acknowledged", action="store_true",
                         help="Operator accepts this key may bill a project with credits or billing enabled")
     parser.add_argument("--model", default=MODEL, help="Identificador exacto del modelo; queda en run.json")
+    parser.add_argument("--ids", default=None,
+                        help="Fotos separadas por coma; vacio corre solo el control")
     args = parser.parse_args()
-    run_experiment(args.free_project_confirmed, args.experiment, args.billing_acknowledged, args.model)
+    run_experiment(args.free_project_confirmed, args.experiment, args.billing_acknowledged, args.model,
+                   tuple(n for n in args.ids.split(",") if n) if args.ids is not None else IDS)

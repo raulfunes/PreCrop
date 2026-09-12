@@ -1,0 +1,8 @@
+{
+  "status": "not_assessable",
+  "reason": "La imagen es completamente uniforme y carece de detalles, terreno o vegetación visible, por lo que no es posible realizar la evaluación de cultivo ni la detección de malezas.",
+  "limitations": [
+    "La imagen proporcionada no contiene información visual (superficie gris uniforme)."
+  ],
+  "polygons": []
+}

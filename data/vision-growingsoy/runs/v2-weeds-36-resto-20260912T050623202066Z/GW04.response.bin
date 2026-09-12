@@ -1,0 +1,36 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"El cultivo de soja se distingue claramente en hileras con sus característicos trifolios. Se han identificado regiones de malezas gramíneas entre la cobertura de rastrojo en la parte inferior de la imagen.\",\n  \"limitations\": [\n    \"Presencia de marcadores artificiales (cintas rojas/naranjas y cinta métrica) que se excluyen de la clasificación.\",\n    \"Abundante rastrojo seco sobre el suelo que dificulta la detección de plántulas de maleza extremadamente pequeñas.\"\n  ],\n  \"polygons\": [\n    [\n      [860, 35],\n      [935, 45],\n      [995, 25],\n      [1000, 185],\n      [915, 190],\n      [870, 120]\n    ],\n    [\n      [820, 650],\n      [890, 630],\n      [975, 640],\n      [1000, 700],\n      [990, 790],\n      [910, 775],\n      [840, 725]\n    ]\n  ]\n}",
+            "thoughtSignature": "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"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 309,
+    "totalTokenCount": 3165,
+    "promptTokensDetails": [
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      },
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      }
+    ],
+    "thoughtsTokenCount": 773,
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "0d2kapKaFq-kmtkPof6s4Qc"
+}

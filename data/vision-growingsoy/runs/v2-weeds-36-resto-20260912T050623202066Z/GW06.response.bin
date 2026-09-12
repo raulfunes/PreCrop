@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"Se identifican plantas de soja en el cultivo (hojas trifoliadas características) y algunas malezas de hoja ancha pequeñas/medias situadas entre el cultivo y cerca del cartel/estaca.\",\n  \"limitations\": [\n    \"Presencia de elementos artificiales (cartel 106, varillas, banderas) y sombra que cubren parcialmente la superficie.\"\n  ],\n  \"polygons\": [\n    [\n      [630, 118],\n      [667, 120],\n      [758, 169],\n      [758, 252],\n      [738, 345],\n      [664, 345],\n      [637, 280],\n      [633, 201]\n    ],\n    [\n      [881, 287],\n      [937, 285],\n      [944, 362],\n      [888, 368]\n    ],\n    [\n      [860, 843],\n      [901, 849],\n      [949, 928],\n      [951, 988],\n      [879, 988],\n      [864, 917]\n    ]\n  ]\n}",
+            "thoughtSignature": "EmcKZQERTTIPtaEDKwFHiz6OJgEjOfEY3KhN4/QKNyqetShvZL4mIvKGhpruNuAcyAqUns97d5BjyiD+pwx0ePEJbmk3lshPMvoWdnYJuc4Y0NezVCg6GiV1ZRR5Bkj/FexHqVWxb8/Y"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 346,
+    "totalTokenCount": 2429,
+    "promptTokensDetails": [
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      },
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "692kaq6rJOGeqtsP0MaIEA"
+}

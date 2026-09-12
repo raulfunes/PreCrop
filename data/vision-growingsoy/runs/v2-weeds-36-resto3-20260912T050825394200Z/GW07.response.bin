@@ -1,0 +1,35 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"assessed\",\n  \"reason\": \"Se identificó correctamente el cultivo de soja en hileras y algunas plantas de malezas de hoja fina/angosta entre el rastrojo.\",\n  \"limitations\": [\n    \"Presencia de rastrojo denso y marcadores artificiales (cinta/banderines).\"\n  ],\n  \"polygons\": [\n    [\n      [162, 172],\n      [166, 240],\n      [189, 269],\n      [226, 269],\n      [218, 230],\n      [189, 189],\n      [184, 157]\n    ],\n    [\n      [216, 321],\n      [234, 335],\n      [247, 344],\n      [234, 370],\n      [218, 381]\n    ]\n  ]\n}",
+            "thoughtSignature": "EmcKZQERTTIP27WZDdTwcy7999vTUUmvUcJUxeaD04oAy9pjFV53aCerGqOhS+A0Qbpu9JEMkmpo0DYxj+4shmdpp8oGskEXp5YQiRnlTWFu7EYHG5VTt9sQi/2yJWSKZ+4PPXXhPtkB"
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 248,
+    "totalTokenCount": 2331,
+    "promptTokensDetails": [
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      },
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      }
+    ],
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "TN6kaqOgCeaJz7IPxeXbiQ0"
+}

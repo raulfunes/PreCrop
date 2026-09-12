@@ -1,0 +1,36 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "text": "{\n  \"status\": \"not_assessable\",\n  \"reason\": \"La imagen es completamente uniforme y carece de detalles, terreno o vegetación visible, por lo que no es posible realizar la evaluación de cultivo ni la detección de malezas.\",\n  \"limitations\": [\n    \"La imagen proporcionada no contiene información visual (superficie gris uniforme).\"\n  ],\n  \"polygons\": []\n}",
+            "thoughtSignature": "EoIDCv8CARFNMg+j6YpMXytBvC3jjWZ46xwzBjqPuzmkzv0JUcbse3Sxmp77kvqFgcWQI/sFiDh8mTnMlOTcsBLAmSXlxxHte7p1vZUkc7gzqDcCOrger7b+8kUtQrn+gQbOgzZHMYfIRSeJAQyifuGgxKiASkXKjVdSmVhWBVH255Zrh+fj3ypR9JTjjzKSaQtbcWI3Uep2cjCar01b9oo7gsJJvyqvF2UvswWmdW9yyFXNIyZ+ZKNCDKpBN5p0d6xURmUQAKbg8zQicEqPhSwRiKyq8vE4k4i8Y2WBQdGxy5vPXrI3er4aNeisZGggqpVbKXLA4OckxuTTttDnDJqIHIca+bLzqSySGDnEHYnP8m7fsnCUhmJW2zXUroRC7MmxgxvHcoMEPTiSs+TJYfwnshkpGZA1twsNkvFEdBSzT7BBj7pW4X4spIirylDEetPG8wZ5uhoupwvHeMtG3nwRoED9bB4JT2Fi83YVdVJjMNchk0s8Vfoe3ycUdqcsTcyETQM="
+          }
+        ],
+        "role": "model"
+      },
+      "finishReason": "STOP",
+      "index": 0
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 2083,
+    "candidatesTokenCount": 90,
+    "totalTokenCount": 2235,
+    "promptTokensDetails": [
+      {
+        "modality": "IMAGE",
+        "tokenCount": 1089
+      },
+      {
+        "modality": "TEXT",
+        "tokenCount": 994
+      }
+    ],
+    "thoughtsTokenCount": 62,
+    "serviceTier": "standard"
+  },
+  "modelVersion": "gemini-3.6-flash",
+  "responseId": "ot2katm_MNKhz7IPsLOI-AI"
+}

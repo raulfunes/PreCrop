@@ -1,0 +1,25 @@
+{
+  "status": "assessed",
+  "reason": "Se identificó correctamente el cultivo de soja en hileras y algunas plantas de malezas de hoja fina/angosta entre el rastrojo.",
+  "limitations": [
+    "Presencia de rastrojo denso y marcadores artificiales (cinta/banderines)."
+  ],
+  "polygons": [
+    [
+      [162, 172],
+      [166, 240],
+      [189, 269],
+      [226, 269],
+      [218, 230],
+      [189, 189],
+      [184, 157]
+    ],
+    [
+      [216, 321],
+      [234, 335],
+      [247, 344],
+      [234, 370],
+      [218, 381]
+    ]
+  ]
+}

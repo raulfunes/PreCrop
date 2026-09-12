@@ -1,0 +1,27 @@
+{
+  "status": "assessed",
+  "reason": "El cultivo de soja se distingue claramente en hileras con sus característicos trifolios. Se han identificado regiones de malezas gramíneas entre la cobertura de rastrojo en la parte inferior de la imagen.",
+  "limitations": [
+    "Presencia de marcadores artificiales (cintas rojas/naranjas y cinta métrica) que se excluyen de la clasificación.",
+    "Abundante rastrojo seco sobre el suelo que dificulta la detección de plántulas de maleza extremadamente pequeñas."
+  ],
+  "polygons": [
+    [
+      [860, 35],
+      [935, 45],
+      [995, 25],
+      [1000, 185],
+      [915, 190],
+      [870, 120]
+    ],
+    [
+      [820, 650],
+      [890, 630],
+      [975, 640],
+      [1000, 700],
+      [990, 790],
+      [910, 775],
+      [840, 725]
+    ]
+  ]
+}

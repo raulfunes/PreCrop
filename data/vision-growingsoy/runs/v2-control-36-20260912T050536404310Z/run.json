@@ -1,0 +1,110 @@
+{
+  "experiment": "v2-control-36",
+  "started_at": "2026-09-12T05:05:36.404310+00:00",
+  "model": "gemini-3.6-flash",
+  "provider": "Google Gemini API",
+  "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+  "configuration": {
+    "candidateCount": 1,
+    "maxOutputTokens": 8192,
+    "thinkingConfig": {
+      "thinkingLevel": "LOW"
+    },
+    "responseMimeType": "application/json",
+    "responseJsonSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason",
+        "limitations",
+        "polygons"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "assessed",
+            "not_assessable"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1000
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "timeout_seconds": 30,
+  "automatic_retries": 0,
+  "max_requests": 1,
+  "expected_crop": "soja",
+  "free_project_confirmed_by_operator": false,
+  "billing_acknowledged_by_operator": true,
+  "prompt_sha256": "4639e220b8a5f4c6d84ae3a8ea310f8b4c9351bf486e403b180eec677be1a983",
+  "script_sha256": "6bcb1f16dc3c9cfd75b6e2aaf682035cc6619c13332895dbcd1ff69ce165e812",
+  "manifest_sha256": "c9663bb73ed2e61b45f863d26bbcdd19a1fbb470536b59e955c50d60cd01157c",
+  "pillow": "12.3.0",
+  "requests_sent": 1,
+  "blocked_reason": null,
+  "results": [
+    {
+      "id": "control",
+      "status": "not_assessable",
+      "image_path": "controls/no-interpretable.png",
+      "image_sha256": "56e4cd36830ae94733b8e1c3b2fd5141df5ea90bb7a58b4770987fae5b9fcf31",
+      "reference_pct": null,
+      "reference_sha256": null,
+      "http_status": 200,
+      "api_error": null,
+      "elapsed_seconds": 11.119936300000518,
+      "credential_redacted": false,
+      "raw_api_response": "control.response.bin",
+      "response": {
+        "status": "not_assessable",
+        "reason": "La imagen es completamente uniforme y carece de detalles, terreno o vegetación visible, por lo que no es posible realizar la evaluación de cultivo ni la detección de malezas.",
+        "limitations": [
+          "La imagen proporcionada no contiene información visual (superficie gris uniforme)."
+        ],
+        "polygons": []
+      },
+      "weed_pct": null,
+      "absolute_error_pp": null,
+      "iou": null,
+      "both_empty": false,
+      "control_pass": true,
+      "comparison": "control.comparison.png"
+    }
+  ],
+  "summary": {
+    "counts": {
+      "not_assessable": 1
+    },
+    "mae_pp": null,
+    "mae_n": 0,
+    "mean_iou": null,
+    "iou_n": 0,
+    "both_empty_n": 0
+  }
+}

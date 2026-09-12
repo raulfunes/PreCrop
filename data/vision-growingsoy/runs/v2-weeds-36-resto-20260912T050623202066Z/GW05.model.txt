@@ -1,0 +1,19 @@
+{
+  "status": "assessed",
+  "reason": "Se identificó correctamente el cultivo de soja en hileras bien definidas, junto con malezas gramíneas presentes principalmente en la esquina superior izquierda del área de cultivo.",
+  "limitations": [
+    "La presencia de rastrojo denso en la entrehilera dificulta ligeramente la detección de plántulas de malezas de tamaño pequeño."
+  ],
+  "polygons": [
+    [
+      [14, 0],
+      [110, 2],
+      [175, 59],
+      [165, 126],
+      [127, 203],
+      [90, 212],
+      [42, 192],
+      [14, 150]
+    ]
+  ]
+}
