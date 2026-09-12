@@ -1,153 +1,106 @@
 {
-  "version": 1,
+  "schema_version": 2,
+  "pack_version": "1.0.0",
   "lote_id": "demo-rio-segundo-01",
-  "cultivo": "soja",
-  "how_to_use": "Front loads scenario key. Satellite block from lote-sentinel-presets. Photos from presets/fotos. Vision may call API or use weeds_pct_expected.",
+  "how_to_use": "Front picks a scenario key, resolves satellite_preset against lote-sentinel-presets.json and weeds against photo-point-presets.json, then computes the score with the scoring block below. expected_score is a self-check, not an input.",
+  "scoring": {
+    "owner": "front",
+    "formula": "score = 0.6 * ndvi_norm + 0.25 * climate - 0.15 * weeds_pct",
+    "weights": { "ndvi_norm": 0.6, "climate": 0.25, "weeds_pct": -0.15 },
+    "thresholds": { "verde_min": 70, "amarillo_min": 50, "rojo_below": 50 },
+    "precision_warning": "Margins are 1.5 to 4.4 points. Use the published 3-decimal ndvi as-is. Do NOT round any input before scoring."
+  },
   "scenarios": {
     "bueno": {
-      "label": "Campaña OK — vigor alto, malezas bajas",
+      "label": "Campaña OK - vigor alto, malezas bajas",
       "satellite_preset": "fecha_buena",
-      "ndvi": 0.727,
-      "rain_mm_7d": 46.7,
+      "point_ids": ["P1", "P2", "P3", "P4", "P5"],
+      "weeds_ref": { "file": "photo-point-presets.json", "scenario": "bueno" },
       "photos": [
-        {
-          "point_id": "P1",
-          "file": "presets/fotos/limpio_1.jpg",
-          "tipo": "limpio",
-          "weeds_pct_expected": 12
-        },
-        {
-          "point_id": "P2",
-          "file": "presets/fotos/limpio_2.jpg",
-          "tipo": "limpio",
-          "weeds_pct_expected": 15
-        },
-        {
-          "point_id": "P3",
-          "file": "presets/fotos/limpio_1.jpg",
-          "tipo": "limpio",
-          "weeds_pct_expected": 10
-        },
-        {
-          "point_id": "P4",
-          "file": "presets/fotos/medio_1.jpg",
-          "tipo": "medio",
-          "weeds_pct_expected": 22
-        },
-        {
-          "point_id": "P5",
-          "file": "presets/fotos/limpio_2.jpg",
-          "tipo": "limpio",
-          "weeds_pct_expected": 14
-        }
+        { "point_id": "P1", "file": "presets/fotos/limpio_1.jpg", "tipo": "limpio" },
+        { "point_id": "P2", "file": "presets/fotos/limpio_2.jpg", "tipo": "limpio" },
+        { "point_id": "P3", "file": "presets/fotos/limpio_1.jpg", "tipo": "limpio" },
+        { "point_id": "P4", "file": "presets/fotos/medio_1.jpg", "tipo": "medio" },
+        { "point_id": "P5", "file": "presets/fotos/limpio_2.jpg", "tipo": "limpio" }
       ],
-      "weeds_pct_lote": 14,
-      "score_hint": "verde (~70+)",
-      "ndvi_source": "measured_recalc_offset",
-      "pitch": "Fecha buena 2025-02-02. NDVI puede subir tras offset L2A.",
-      "scene_id": "S2B_MSIL2A_20250202T140709_R110_T20JML_20250202T175010"
-    },
-    "malo": {
-      "label": "Misma campaña — seca + malezas (MOCK funcional)",
-      "satellite_preset": "fecha_mala",
-      "date": "2025-02-07",
-      "ndvi": 0.698,
-      "ndvi_source": "measured_recalc_offset",
-      "rain_mm_7d": 0.1,
-      "photos": [
-        {
-          "point_id": "P1",
-          "file": "presets/fotos/enmalezado_1.jpg",
-          "tipo": "enmalezado",
-          "weeds_pct_expected": 55
-        },
-        {
-          "point_id": "P2",
-          "file": "presets/fotos/enmalezado_2.jpg",
-          "tipo": "enmalezado",
-          "weeds_pct_expected": 70
-        },
-        {
-          "point_id": "P3",
-          "file": "presets/fotos/enmalezado_1.jpg",
-          "tipo": "enmalezado",
-          "weeds_pct_expected": 65
-        },
-        {
-          "point_id": "P4",
-          "file": "presets/fotos/medio_1.jpg",
-          "tipo": "medio",
-          "weeds_pct_expected": 48
-        },
-        {
-          "point_id": "P5",
-          "file": "presets/fotos/enmalezado_2.jpg",
-          "tipo": "enmalezado",
-          "weeds_pct_expected": 72
-        }
-      ],
-      "weeds_pct_lote": 55,
-      "score_hint": "baja por lluvia+malezas (NDVI casi igual) → rojo/amarillo con pesos",
-      "pitch": "2 feb→7 feb misma soja. NDVI ~0.73→0.70; lluvia 46.7→0.1; malezas suben. Gate por score compuesto.",
-      "scene_id": "S2C_MSIL2A_20250207T140811_R110_T20JML_20250207T174511"
+      "expected": {
+        "derived": true,
+        "ndvi_used": 0.782,
+        "ndvi_norm": 89.5385,
+        "climate_used": 90,
+        "weeds_used": 12,
+        "score": 74.4,
+        "score_exact": 74.4231,
+        "light": "verde"
+      },
+      "expected_score": 74.4,
+      "expected_band": "verde",
+      "sources": { "ndvi": "measured", "rain": "measured", "weeds": "simulated" },
+      "narrative_note": "El NDVI apenas cambia entre 'bueno' y 'malo' (0.782 -> 0.763) porque la vegetación es inercial en 5 días. Este escenario de referencia está en verde por lluvia alta (46.7 mm/7d) y malezas simuladas bajas (12%); el satélite solo no alcanza para explicar el semáforo."
     },
     "mixto": {
-      "label": "NDVI bueno pero malezas medias (para mostrar valor de fotos)",
+      "label": "NDVI bueno pero malezas medias - muestra el valor de las fotos",
       "satellite_preset": "fecha_buena",
-      "ndvi": 0.727,
-      "rain_mm_7d": 46.7,
+      "satellite_reuse_note": "Reuses fecha_buena's satellite block on purpose. Only the SIMULATED weeds differ. There is no third satellite date.",
+      "point_ids": ["P1", "P2", "P3", "P4", "P5"],
+      "weeds_ref": { "file": "photo-point-presets.json", "scenario": "mixto" },
       "photos": [
-        {
-          "point_id": "P1",
-          "file": "presets/fotos/limpio_1.jpg",
-          "tipo": "limpio",
-          "weeds_pct_expected": 18
-        },
-        {
-          "point_id": "P2",
-          "file": "presets/fotos/enmalezado_1.jpg",
-          "tipo": "enmalezado",
-          "weeds_pct_expected": 58
-        },
-        {
-          "point_id": "P3",
-          "file": "presets/fotos/medio_1.jpg",
-          "tipo": "medio",
-          "weeds_pct_expected": 35
-        },
-        {
-          "point_id": "P4",
-          "file": "presets/fotos/enmalezado_2.jpg",
-          "tipo": "enmalezado",
-          "weeds_pct_expected": 62
-        },
-        {
-          "point_id": "P5",
-          "file": "presets/fotos/medio_1.jpg",
-          "tipo": "medio",
-          "weeds_pct_expected": 40
-        }
+        { "point_id": "P1", "file": "presets/fotos/limpio_1.jpg", "tipo": "limpio" },
+        { "point_id": "P2", "file": "presets/fotos/enmalezado_1.jpg", "tipo": "enmalezado" },
+        { "point_id": "P3", "file": "presets/fotos/medio_1.jpg", "tipo": "medio" },
+        { "point_id": "P4", "file": "presets/fotos/enmalezado_2.jpg", "tipo": "enmalezado" },
+        { "point_id": "P5", "file": "presets/fotos/medio_1.jpg", "tipo": "medio" }
       ],
-      "weeds_pct_lote": 40,
-      "score_hint": "amarillo / borde",
-      "ndvi_source": "measured_recalc_offset"
+      "expected": {
+        "derived": true,
+        "ndvi_used": 0.782,
+        "ndvi_norm": 89.5385,
+        "climate_used": 90,
+        "weeds_used": 55,
+        "score": 68.0,
+        "score_exact": 67.9731,
+        "light": "amarillo"
+      },
+      "expected_score": 68.0,
+      "expected_band": "amarillo",
+      "sources": { "ndvi": "measured", "rain": "measured", "weeds": "simulated" },
+      "narrative_note": "El satélite del 2 feb es el mismo que en 'bueno' (NDVI 0.782, lluvia 46.7 mm): no cambia nada. Lo único que mueve el semáforo a amarillo son las malezas SIMULADAS al 55%, visibles en las fotos y no en el satélite."
+    },
+    "malo": {
+      "label": "Misma campaña - seca + malezas",
+      "satellite_preset": "fecha_mala",
+      "point_ids": ["P1", "P2", "P3", "P4", "P5"],
+      "weeds_ref": { "file": "photo-point-presets.json", "scenario": "malo" },
+      "photos": [
+        { "point_id": "P1", "file": "presets/fotos/enmalezado_1.jpg", "tipo": "enmalezado" },
+        { "point_id": "P2", "file": "presets/fotos/enmalezado_2.jpg", "tipo": "enmalezado" },
+        { "point_id": "P3", "file": "presets/fotos/enmalezado_1.jpg", "tipo": "enmalezado" },
+        { "point_id": "P4", "file": "presets/fotos/medio_1.jpg", "tipo": "medio" },
+        { "point_id": "P5", "file": "presets/fotos/enmalezado_2.jpg", "tipo": "enmalezado" }
+      ],
+      "expected": {
+        "derived": true,
+        "ndvi_used": 0.763,
+        "ndvi_norm": 86.6154,
+        "climate_used": 25,
+        "weeds_used": 65,
+        "score": 48.5,
+        "score_exact": 48.4692,
+        "light": "rojo"
+      },
+      "expected_score": 48.5,
+      "expected_band": "rojo",
+      "sources": { "ndvi": "measured", "rain": "measured", "weeds": "simulated" },
+      "narrative_note": "5 días después de 'bueno', el NDVI casi no bajó (0.782 -> 0.763): la vegetación es inercial y el satélite solo no muestra daño. La caída de verde a rojo la explican la lluvia (46.7 -> 0.1 mm) y las malezas SIMULADAS (12% -> 65%)."
     }
   },
-  "formula": "score ≈ 0.6*NDVI_norm + 0.25*rain_norm - 0.15*weeds_norm",
+  "photo_honesty_note": "All preset photos are Unsplash stock images of generic fields. They are NOT photographs of this lot. See presets/fotos/ATTRIBUTION.md.",
+  "photos_ownership_note": "data/presets/fotos/* are provided by another track (Vision/photo owner), not generated by this pack; this file only defines the contract (paths + point_id mapping).",
   "owners": {
-    "data_franco": [
-      "lote-sentinel-presets.json",
-      "demo-scenarios.json",
-      "SOURCES.md",
-      "presets/fotos/*"
-    ],
-    "vision": [
-      "api/vision/weeds",
-      "usar weeds_pct_expected si API falla"
-    ],
-    "front": [
-      "toggle escenario bueno|malo|mixto",
-      "pintar mapa + thumbs + score"
-    ]
+    "data": ["lote-sentinel-presets.json", "lote.geojson", "demo-scenarios.json", "photo-point-presets.json", "evidence/*", "SOURCES.md"],
+    "vision": ["/api/vision/weeds"],
+    "photos": ["presets/fotos/* (owned by another track, not generated by this pack)"],
+    "front": ["scenario toggle", "map", "score + traffic light"],
+    "chain": ["evidence/*.json content_sha256"]
   }
 }
