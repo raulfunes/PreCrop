@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { visionBackendUrl, visionBackendHeaders } from '@/lib/visionBackend';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ filename: string }> }) {
   const resolvedParams = await params;
@@ -8,13 +9,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
   }
 
-  const backendUrl = process.env.VISION_BACKEND_URL;
+  const backendUrl = visionBackendUrl();
   if (!backendUrl) {
     return NextResponse.json({ error: 'Backend not configured' }, { status: 404 });
   }
 
   try {
-    const res = await fetch(`${backendUrl}/api/vision/review/${filename}`);
+    const res = await fetch(`${backendUrl}/api/vision/review/${filename}`, {
+      headers: visionBackendHeaders(),
+    });
     if (!res.ok) {
       return NextResponse.json({ error: 'Not found on backend' }, { status: res.status });
     }

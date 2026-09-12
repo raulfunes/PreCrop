@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import photoPresets from '../../../../../data/photo-point-presets.json';
+import { visionBackendUrl, visionBackendHeaders } from '@/lib/visionBackend';
+import visionMock from '../../../../../data/vision-mock.json';
 
 interface PresetsData {
   scenarios: Record<string, {
@@ -20,6 +22,29 @@ const demoGuard = process.env.VISION_DEMO_GUARD !== '0';
 // VISION_DEMO_ONLY=1 never calls the model: instant, deterministic presets.
 const demoOnly = process.env.VISION_DEMO_ONLY === '1';
 const timeoutMs = Number(process.env.VISION_TIMEOUT_MS) > 0 ? Number(process.env.VISION_TIMEOUT_MS) : 45000;
+
+// Mock de vision por nombre de archivo (data/vision-mock.json). Activo por defecto: la
+// demo no depende del tunel, de la PC del equipo ni de la cuota de Gemini. VISION_MOCK=0
+// vuelve a llamar al modelo real.
+//
+// El valor sale de la tabla, no de la foto, asi que viaja como source 'preset' y el front
+// lo rotula "valor de ejemplo". Un archivo que no este en la tabla cae al preset del punto.
+// No pasa por DEMO_BAND: el numero ya esta elegido, no hay respuesta del modelo que vigilar.
+const visionMockOn = process.env.VISION_MOCK !== '0';
+const MOCK_WEEDS: Record<string, number> = visionMock.weeds_pct_by_filename;
+const MOCK_DELAY = visionMock.delay_ms;
+
+/** Nombre de archivo normalizado: sin carpetas, sin extension, en minusculas. */
+function mockKey(fileName: string): string {
+  const base = fileName.split('/').pop()?.split('\\').pop() ?? fileName;
+  return base.replace(/\.[^.]+$/, '').toLowerCase();
+}
+
+/** Latencia parecida a la de una llamada real, para que la demo no responda de golpe. */
+function mockDelay(): Promise<void> {
+  const ms = MOCK_DELAY.min + Math.random() * (MOCK_DELAY.max - MOCK_DELAY.min);
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,13 +100,29 @@ export async function POST(request: NextRequest) {
       });
     };
 
-    let backendUrl = process.env.VISION_BACKEND_URL;
+    if (visionMockOn) {
+      await mockDelay();
+      const key = mockKey(image.name);
+      const mocked = MOCK_WEEDS[key];
+      if (mocked === undefined) return presetFallback('mock_unknown_file', { mock_file: key });
+      return NextResponse.json({
+        point_id: pointId,
+        weeds_pct: mocked,
+        soy_pct: null,
+        confidence: null,
+        status: 'assessed',
+        review_url: null,
+        source: 'preset',
+        fallback_reason: 'mock_by_filename',
+        mock: true,
+        mock_file: key,
+      });
+    }
+
+    const backendUrl = visionBackendUrl();
     if (!backendUrl || demoOnly) {
       return presetFallback(demoOnly ? 'demo_only' : 'no_vision_backend');
     }
-
-    // Normalize URL (remove trailing slash)
-    backendUrl = backendUrl.replace(/\/+$/, '');
 
     const backendFormData = new FormData();
     backendFormData.append('image', image);
@@ -93,6 +134,7 @@ export async function POST(request: NextRequest) {
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       res = await fetch(`${backendUrl}/api/vision/weeds`, {
         method: 'POST',
+        headers: visionBackendHeaders(),
         body: backendFormData,
         signal: controller.signal
       });

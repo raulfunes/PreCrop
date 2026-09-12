@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Next 16 blocks dev resources (HMR, hydration) from an origin other than localhost.
-  allowedDevOrigins: ['127.0.0.1', 'localhost'],
+  // /api/geojson lee data/lote.geojson del disco. En un deploy serverless ese archivo
+  // no entra solo en el bundle de la función: hay que trazarlo explícitamente.
+  outputFileTracingIncludes: {
+    "/api/geojson": ["./data/lote.geojson"],
+  },
 };
 
 export default nextConfig;

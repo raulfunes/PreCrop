@@ -1,0 +1,16 @@
+# El front solo necesita los JSON sueltos de data/ y el geojson del lote.
+# Todo lo demás del repo no entra en el deploy.
+#
+# Los patrones van anclados con / inicial a proposito: sin la barra, la sintaxis
+# gitignore matchea el nombre en CUALQUIER nivel, y "api/" se llevaba puesto
+# src/app/api/ — el deploy quedaba sin route handlers.
+/data/vision-growingsoy/
+/data/lotes/lote-nuevo-*.json
+/services/
+/packages/
+/api/
+/scripts/
+/tests/
+/docs/
+/.venv-check/
+/.pytest_cache/

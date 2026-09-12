@@ -29,3 +29,6 @@ data/fotos-prueba/
 services/evidence-api/api.*.log
 next.*.log
 api/vision.*.log
+
+.vercel
+.env*
