@@ -23,6 +23,7 @@ HOST = "generativelanguage.googleapis.com"
 ENDPOINT = f"/v1beta/models/{MODEL}:generateContent"
 IDS = ("GS08", "GS11", "GS15")
 PROMPT = ROOT / "prompt-segmentation-v1.txt"
+CROPS = ROOT / "crop-morphology.json"
 RUNS = ROOT / "runs"
 TIMEOUT = 30
 MAX_RESPONSE = 1024 * 1024
@@ -147,6 +148,19 @@ def comparison(rgb, mask, reference, labels):
         sheet.paste(panel, (i * rgb.width, 44))
         draw.text((i * rgb.width + 8, 8), labels[i], fill="black")
     return sheet
+
+
+def render_prompt(path, crop):
+    """Resuelve los marcadores del prompt. Falla si queda alguno sin sustituir."""
+    text = path.read_text(encoding="utf-8").replace("{{CULTIVO_ESPERADO}}", crop)
+    if "{{MORFOLOGIA_CULTIVO}}" in text:
+        crops = json.loads(CROPS.read_text(encoding="utf-8"))["crops"]
+        if crop not in crops:
+            raise ValueError(f"Sin morfologia declarada para el cultivo {crop!r}")
+        text = text.replace("{{MORFOLOGIA_CULTIVO}}", crops[crop])
+    if "{{" in text:
+        raise ValueError("Marcador sin resolver en el prompt")
+    return text
 
 
 def payload(image_bytes, mime, prompt):
@@ -277,7 +291,7 @@ def run_experiment(free_project_confirmed=False):
     directory = RUNS / (EXPERIMENT + now.strftime("-%Y%m%dT%H%M%S%fZ"))
     directory.mkdir(parents=True)
     (directory / PROMPT.name).write_bytes(PROMPT.read_bytes())
-    prompt = PROMPT.read_text(encoding="utf-8").replace("{{CULTIVO_ESPERADO}}", "soja")
+    prompt = render_prompt(PROMPT, "soja")
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     blocked = "missing_GEMINI_API_KEY" if not key else (
         None if free_project_confirmed else "project_without_billing_not_confirmed")

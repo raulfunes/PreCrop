@@ -120,7 +120,22 @@ def main():
             assert run["summary"]["counts"] == {"api_error": 1, "blocked": 3}
             assert all(r["weed_pct"] is None for r in run["results"])
         assert not any(b"synthetic-secret" in p.read_bytes() for p in runs.rglob("*") if p.is_file())
-    print("OK: coordinates, union, denominator, zero/abstention, invalid polygons/JSON, IoU, exact paint, transport, free gate and four-request budget. No network.")
+    contract = "Devuelve exclusivamente un objeto JSON"
+    v1 = s.ROOT / "prompt-segmentation-v1.txt"
+    v2 = s.ROOT / "prompt-segmentation-v2.txt"
+    for path in (v1, v2):
+        assert "{{" not in s.render_prompt(path, "soja")
+    # v2 solo cambia la parte discriminante: el contrato debe seguir igual para comparar corridas.
+    texts = [path.read_text(encoding="utf-8") for path in (v1, v2)]
+    assert texts[0][texts[0].index(contract):] == texts[1][texts[1].index(contract):]
+    assert "{{MORFOLOGIA_CULTIVO}}" in texts[1] and "trifolio" in s.render_prompt(v2, "soja")
+    try:
+        s.render_prompt(v2, "maiz")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("Un cultivo sin morfologia declarada debe fallar")
+    print("OK: coordinates, union, denominator, zero/abstention, invalid polygons/JSON, IoU, exact paint, transport, free gate, four-request budget and prompt v1/v2 rendering. No network.")
 
 
 if __name__ == "__main__":

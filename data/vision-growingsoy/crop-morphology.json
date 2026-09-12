@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "note": "Bloque {{MORFOLOGIA_CULTIVO}} de prompt-segmentation-v2.txt, por cultivo esperado. Descripciones botánicas generales, no calibración agronómica. Cada cultivo nuevo exige su propia descripción y sus propias referencias antes de evaluarlo.",
+  "crops": {
+    "soja": "la soja emergente muestra primero dos cotiledones opuestos, redondeados y carnosos; luego un par de hojas unifoliadas opuestas y, más adelante, trifolios de tres foliolos ovalados de borde liso sostenidos por un pecíolo largo. El porte es erecto y las plantas aparecen alineadas en hileras de espaciado regular."
+  }
+}
