@@ -37,3 +37,13 @@ Las categorías "poca", "media" y "alta" describen la intención usada para gene
 - Cinco de ocho fotos dejaron evidencia visual; tres no tienen estimación por saturación o cuota del proveedor. Los errores no se convierten en cero.
 
 Antes de valorar precisión se necesitan máscaras humanas sobre estas mismas imágenes. Esta corrida sólo permite revisar comportamiento y fallos del visor.
+
+## Piloto pago con Gemini 3.8 Flash
+
+Fecha: 12-sep-2026, 10:39 ART
+Alcance autorizado: dos solicitudes, sólo malezas, sin reintentos
+Imágenes: P2 (limpia) y P6 (maleza media-alta)
+
+Las dos solicitudes llegaron al endpoint de `gemini-3.8-flash`, pero Google respondió `HTTP 503 UNAVAILABLE`: el modelo estaba experimentando alta demanda y recomendó intentar más tarde. No hubo candidatos, `usageMetadata`, máscaras ni porcentajes. El costo calculable con la respuesta fue USD 0,000000.
+
+[Corrida, respuestas crudas saneadas y lámina](../data/vision-growingsoy/runs/generated-weeds-38-paid-p2-p6-20260912T133933663054Z/report.md). El resultado no permite comparar precisión con `gemini-3.6-flash`; sólo confirma que 3.8 no estuvo disponible durante esta ventana. No se hicieron reintentos para respetar el máximo de dos pruebas.
