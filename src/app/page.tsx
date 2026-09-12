@@ -28,15 +28,16 @@ import { PhotoBatchUpload } from '@/components/vision/PhotoBatchUpload';
 import type { PhotoGps } from '@/lib/photoGps';
 import { CapacityScreen } from '@/components/lote/CapacityScreen';
 import { ReportScreen } from '@/components/lote/ReportScreen';
-import { KpiStrip } from '@/components/lote/KpiStrip';
+import { MetricGrid } from '@/components/lote/MetricGrid';
 import { RoleActions, type Role } from '@/components/lote/RoleActions';
 import { TrafficLightGauge } from '@/components/lote/TrafficLightGauge';
 
 // ── UI ────────────────────────────────────────────────────────
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { AppDialog } from '@/components/ui/AppDialog';
 
 type Scenario = 'bueno' | 'mixto' | 'malo';
-type TabId = 'condicion' | 'capacidad' | 'informe';
+type ModalId = 'capacity' | 'condition' | 'available' | 'evidence' | 'report' | null;
 
 interface LotView {
   id: string;
@@ -71,14 +72,12 @@ interface DashSectionProps {
   children: React.ReactNode;
   className?: string;
   noPadding?: boolean;
-  tabIndex?: number;
 }
 
-function DashSection({ id, titulo, aside, children, className = '', noPadding, tabIndex }: DashSectionProps) {
+function DashSection({ id, titulo, aside, children, className = '', noPadding }: DashSectionProps) {
   return (
     <section
       id={id}
-      tabIndex={tabIndex}
       className={[
         'bg-[var(--color-surface)] rounded-[var(--radius-card)]',
         'border border-[var(--color-border)] shadow-[var(--shadow-card)]',
@@ -104,8 +103,7 @@ export default function HomePage() {
   const [selectedPointId, setSelectedPointId] = useState<string | null>(null);
   const [role, setRole] = useState<Role>('coop');
   
-  const [activeTab, setActiveTab] = useState<TabId>('condicion');
-  const [activeKpi, setActiveKpi] = useState<string>('score');
+  const [activeModal, setActiveModal] = useState<ModalId>(null);
 
   const [lot, setLot] = useState<LotView>(DEMO_LOT);
   const [lots, setLots] = useState<LotSummary[]>([]);
@@ -119,8 +117,8 @@ export default function HomePage() {
 
   const currentPayload = buildEvidenceRequest(scenario, visionResults);
   const reportOptions = useMemo(() => ({ weeds_pct: currentPayload.weeds_pct }), [currentPayload.weeds_pct]);
-  // Fetch report in background, ready for tab
-  const { markdown: reportMarkdown, isLoading: reportLoading, error: reportError, retry: reportRetry } = useReport(scenario, activeTab === 'informe', reportOptions, lot.id);
+  // Fetch report in background, ready for modal
+  const { markdown: reportMarkdown, isLoading: reportLoading, error: reportError, retry: reportRetry } = useReport(scenario, activeModal === 'report', reportOptions, lot.id);
 
   const currentWeeds = calcularMedianaMalezas(visionResults, scenario);
   const realAssessedCount = Object.values(visionResults).filter((r) => r.status === 'completed' && r.result?.status === 'assessed' && r.result.source === 'model').length;
@@ -234,21 +232,6 @@ export default function HomePage() {
     }
   };
 
-  const handleKpiSelect = (id: string) => {
-    setActiveKpi(id);
-    if (id === 'capacidad') setActiveTab('capacidad');
-    else setActiveTab('condicion');
-
-    setTimeout(() => {
-      const elId = id === 'decision' ? 'acciones' : id === 'evidence' ? 'evidencia-lote' : id === 'capacidad' ? 'capacidad-resumen' : 'semaforo';
-      const el = document.getElementById(elId);
-      if (el) {
-        el.focus({ preventScroll: true });
-        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }, 50);
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)]">
       <AppHeader />
@@ -328,13 +311,10 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── KPIs (Tab triggers) ─────────────────────────── */}
-        <KpiStrip capacity={capacityData} score={scoreData} lot={workflow.state} activeId={activeKpi} onSelect={handleKpiSelect} />
-
         {/* ── Área de Trabajo (Workspace) ─────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[56%_44%] xl:grid-cols-[58%_42%] gap-5 lg:min-h-[clamp(520px,calc(100vh-280px),760px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-[64%_36%] gap-4 lg:gap-5 lg:min-h-[clamp(520px,calc(100vh-280px),760px)]">
           {/* Columna Izquierda: Mapa (En móvil pasa abajo) */}
-          <div className="relative z-0 isolate flex flex-col min-w-0 bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden order-2 lg:order-1">
+          <div className="relative z-0 isolate flex flex-col min-w-0 bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden order-2 lg:order-1 h-[600px] lg:h-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-sage)]">
               <h2 className="text-[13px] font-bold text-[var(--color-text-muted)] uppercase tracking-wide">
                 {lot.nombre} · {lot.ha} ha · {lot.departamento}
@@ -343,7 +323,7 @@ export default function HomePage() {
                 {drawing ? 'Un clic por vértice; doble clic para cerrar' : `${lot.points.length} puntos de muestreo`}
               </span>
             </div>
-            <div className="flex-1 relative min-h-[400px]">
+            <div className="flex-1 relative h-full min-h-[400px]">
               <MapaLote
                 polygon={lot.polygon}
                 points={lot.points}
@@ -357,132 +337,76 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Columna Derecha: Panel Operativo (En móvil pasa arriba) */}
-          <div className="flex flex-col min-w-0 bg-[var(--color-canvas)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden order-1 lg:order-2">
-            <div className="flex px-4 pt-3 bg-[var(--color-surface-sage)] border-b border-[var(--color-border)] gap-6 shadow-sm overflow-x-auto" role="tablist" aria-label="Panel Operativo">
-              <button
-                role="tab"
-                aria-selected={activeTab === 'condicion'}
-                onClick={() => { setActiveTab('condicion'); setActiveKpi('score'); }}
-                className={`pb-2.5 px-1 text-[13px] font-semibold border-b-[3px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)] ${activeTab === 'condicion' ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-control-border)]'}`}
-              >
-                Condición
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'capacidad'}
-                onClick={() => { setActiveTab('capacidad'); setActiveKpi('capacidad'); }}
-                className={`pb-2.5 px-1 text-[13px] font-semibold border-b-[3px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)] ${activeTab === 'capacidad' ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-control-border)]'}`}
-              >
-                Capacidad
-              </button>
-              <button
-                role="tab"
-                aria-selected={activeTab === 'informe'}
-                onClick={() => { setActiveTab('informe'); setActiveKpi(''); }}
-                className={`pb-2.5 px-1 text-[13px] font-semibold border-b-[3px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)] ${activeTab === 'informe' ? 'border-[var(--color-brand-primary)] text-[var(--color-brand-primary)]' : 'border-transparent text-[var(--color-text-muted)] hover:text-[var(--color-ink)] hover:border-[var(--color-control-border)]'}`}
-              >
-                Informe
-              </button>
-            </div>
-
-            <div id="operative-panel" className="flex-1 overflow-y-auto p-4 md:p-5 flex flex-col gap-5">
-              {activeTab === 'condicion' && (
-                <>
-                  <DashSection id="semaforo" titulo="Resumen de Condición" tabIndex={-1}>
-                    <div className="flex items-center gap-6">
-                      <div className="shrink-0">
-                        <TrafficLightGauge value={scoreData?.result.score_exact ?? null} size="lg" />
-                      </div>
-                      <div className="flex-1">
-                        <ConditionSummary scoreData={scoreData} isLoading={isLoading} error={error} onRetry={retry} />
-                      </div>
-                    </div>
-                  </DashSection>
-
-                  <DashSection id="evidencia-lote" titulo="Evidencia Base" tabIndex={-1} aside={<span className="text-[10px] text-[var(--color-text-muted)] bg-[var(--color-neutral-soft)] px-2 py-0.5 rounded-[var(--radius-pill)]">Satélite, clima y fotos</span>}>
-                    <div className="flex flex-col gap-3">
-                      <div className="grid grid-cols-3 gap-2" role="list" aria-label="Indicadores">
-                        {indicadores.map((ind, idx) => (
-                          <div key={ind.id} role="listitem">
-                            <EvidenceCard indicador={ind} primerAparicion={idx === 0 && !!ind.sigla} />
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-[11px] text-[var(--color-text-muted)] leading-tight text-center mt-1">
-                        <em>Medido</em>: satélite y clima. <em>Estimado</em>: visión artificial. <em>Simulado</em>: valores por defecto hasta contar con 3 fotos reales.
-                      </p>
-                    </div>
-                  </DashSection>
-
-                  {role === 'productor' ? (
-                    <DashSection id="fotos-lote" titulo="Fotos de la recorrida" tabIndex={-1}>
-                      <PhotoBatchUpload
-                        lotId={lot.id}
-                        points={lot.points}
-                        scenario={scenario}
-                        visionResults={visionResults}
-                        selectedPointId={selectedPointId}
-                        minPhotos={workflow.state?.min_points_for_score ?? 3}
-                        onAction={(action) => dispatch(action)}
-                        onAssign={(pointId, gps) => { photoGps.current[pointId] = gps; }}
-                        onSelectPoint={(id) => setSelectedPointId((cur) => (cur === id ? null : id))}
-                      />
-                    </DashSection>
-                  ) : (
-                    selectedPointId && (
-                      <p className="text-[12px] text-[var(--color-text-muted)] px-2 bg-[var(--color-neutral-soft)] py-2 rounded">
-                        Punto <strong>{selectedPointId}</strong> seleccionado. Cambiá a “Productor” para gestionar las fotos.
-                      </p>
-                    )
-                  )}
-
-                  <DashSection id="acciones" titulo={role === 'coop' ? 'Decisión de la cooperativa' : 'Solicitud del productor'} tabIndex={-1}>
-                    <RoleActions
-                      role={role}
-                      lot={workflow.state}
-                      capacity={capacityData}
-                      busy={workflow.busy}
-                      lastReceipt={workflow.lastReceipt}
-                      onApprove={() => workflow.approve()}
-                      onDisburse={workflow.disburse}
-                      onClearPhotos={handleClearPhotos}
-                    />
-                  </DashSection>
-
-                  <details className="group bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-card)] shadow-[var(--shadow-card)] overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)]">
-                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--color-neutral-soft)] font-semibold text-[13px] text-[var(--color-text-muted)] uppercase tracking-wide focus:outline-none">
-                      Regla del límite aplicable
-                      <span className="transition group-open:rotate-180 text-[var(--color-brand-primary)]">▼</span>
-                    </summary>
-                    <div className="p-4 pt-2 border-t border-[var(--color-border)]">
-                      <SimulatedLimitCard advance={scoreData?.advance || null} superseded_advance={scoreData?.superseded_advance || undefined} />
-                    </div>
-                  </details>
-                </>
-              )}
-
-              {activeTab === 'capacidad' && (
-                <div id="capacidad-resumen" tabIndex={-1} className="outline-none">
-                  <CapacityScreen data={capacityData} isLoading={capacityLoading} error={capacityError} onRetry={capacityRetry} />
-                </div>
-              )}
-
-              {activeTab === 'informe' && (
-                <div id="informe-resumen" tabIndex={-1} className="flex flex-col gap-4 outline-none">
-                  <div className="bg-[var(--color-surface)] p-5 rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)]">
-                    <h3 className="text-[16px] font-bold text-[var(--color-ink)] mb-2">Informe consolidado</h3>
-                    <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed mb-4">
-                      Este documento resume la capacidad histórica, la condición actual evaluada por satélite e IA, los factores climáticos intervinientes y el cuadro de firmas requerido para la aprobación final.
-                    </p>
-                    <ReportScreen markdown={reportMarkdown} isLoading={reportLoading} error={reportError} onRetry={reportRetry} scenario={scenario} />
-                  </div>
-                </div>
-              )}
-            </div>
+          {/* Columna Derecha: Cuadrícula 2x2 (En móvil pasa arriba) */}
+          <div className="flex flex-col min-w-0 order-1 lg:order-2">
+            <MetricGrid capacity={capacityData} score={scoreData} lot={workflow.state} onSelectModal={(id) => setActiveModal(id as ModalId)} />
           </div>
         </div>
       </main>
+
+      {/* ── Modales ──────────────────────────── */}
+      <AppDialog isOpen={activeModal === 'capacity'} onClose={() => setActiveModal(null)} title="Cupo pre-siembra">
+        <CapacityScreen data={capacityData} isLoading={capacityLoading} error={capacityError} onRetry={capacityRetry} />
+        <div className="mt-6 pt-5 border-t border-[var(--color-border)] text-right">
+          <button type="button" onClick={() => setActiveModal('report')} className="text-[13px] font-semibold text-[var(--color-brand-primary)] hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)] rounded px-1">Ver informe para el comité &rarr;</button>
+        </div>
+      </AppDialog>
+
+      <AppDialog isOpen={activeModal === 'condition'} onClose={() => setActiveModal(null)} title="Condición del cultivo">
+        <div className="flex flex-col gap-5">
+          <DashSection id="semaforo" titulo="Resumen de Condición" noPadding={false}>
+            <div className="flex items-center gap-6">
+              <div className="shrink-0"><TrafficLightGauge value={scoreData?.result.score_exact ?? null} size="lg" /></div>
+              <div className="flex-1"><ConditionSummary scoreData={scoreData} isLoading={isLoading} error={error} onRetry={retry} /></div>
+            </div>
+          </DashSection>
+          <DashSection id="evidencia-lote" titulo="Evidencia Base" aside={<span className="text-[10px] text-[var(--color-text-muted)] bg-[var(--color-neutral-soft)] px-2 py-0.5 rounded-[var(--radius-pill)]">Satélite, clima y fotos</span>}>
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {indicadores.map((ind, idx) => (
+                  <EvidenceCard key={ind.id} indicador={ind} primerAparicion={idx === 0 && !!ind.sigla} />
+                ))}
+              </div>
+              <p className="text-[11px] text-[var(--color-text-muted)] leading-tight text-center mt-1"><em>Medido</em>: satélite y clima. <em>Estimado</em>: visión artificial. <em>Simulado</em>: valores por defecto hasta contar con 3 fotos reales.</p>
+            </div>
+          </DashSection>
+        </div>
+      </AppDialog>
+
+      <AppDialog isOpen={activeModal === 'available'} onClose={() => setActiveModal(null)} title="Disponible para retirar">
+        <div className="flex flex-col gap-5">
+          <DashSection id="acciones" titulo={role === 'coop' ? 'Decisión de la cooperativa' : 'Solicitud del productor'}>
+            <RoleActions role={role} lot={workflow.state} capacity={capacityData} busy={workflow.busy} lastReceipt={workflow.lastReceipt} onApprove={() => workflow.approve()} onDisburse={workflow.disburse} onClearPhotos={handleClearPhotos} />
+          </DashSection>
+          <details className="group bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-card)] shadow-[var(--shadow-card)] overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)]">
+            <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--color-neutral-soft)] font-semibold text-[13px] text-[var(--color-text-muted)] uppercase tracking-wide focus:outline-none">Regla del límite aplicable<span className="transition group-open:rotate-180 text-[var(--color-brand-primary)]">▼</span></summary>
+            <div className="p-4 pt-2 border-t border-[var(--color-border)]">
+              <SimulatedLimitCard advance={scoreData?.advance || null} superseded_advance={scoreData?.superseded_advance || undefined} />
+            </div>
+          </details>
+        </div>
+      </AppDialog>
+
+      <AppDialog isOpen={activeModal === 'evidence'} onClose={() => setActiveModal(null)} title="Evidencia de campo" className="max-w-[1000px]">
+        <div className="flex flex-col gap-5">
+          <DashSection id="fotos-lote" titulo="Fotos de la recorrida">
+            {role === 'productor' ? (
+              <PhotoBatchUpload lotId={lot.id} points={lot.points} scenario={scenario} visionResults={visionResults} selectedPointId={selectedPointId} minPhotos={workflow.state?.min_points_for_score ?? 3} onAction={(action) => dispatch(action)} onAssign={(pointId, gps) => { photoGps.current[pointId] = gps; }} onSelectPoint={(id) => setSelectedPointId((cur) => (cur === id ? null : id))} />
+            ) : (
+              <div className="text-[13px] text-[var(--color-text-muted)] bg-[var(--color-neutral-soft)] px-4 py-3 rounded-[var(--radius-card)] border border-[var(--color-border)]">
+                Cambia al rol <strong>Productor</strong> en la barra de controles para gestionar las fotos.
+              </div>
+            )}
+          </DashSection>
+        </div>
+      </AppDialog>
+
+      <AppDialog isOpen={activeModal === 'report'} onClose={() => setActiveModal(null)} title="Informe consolidado" className="max-w-[1100px]">
+        <div className="flex flex-col gap-4 outline-none">
+          <p className="text-[13px] text-[var(--color-text-muted)] leading-relaxed mb-2">Este documento resume la capacidad histórica, la condición actual evaluada por satélite e IA, los factores climáticos intervinientes y el cuadro de firmas requerido para la aprobación final.</p>
+          <ReportScreen markdown={reportMarkdown} isLoading={reportLoading} error={reportError} onRetry={reportRetry} scenario={scenario} />
+        </div>
+      </AppDialog>
 
       <DemoDisclaimer />
     </div>

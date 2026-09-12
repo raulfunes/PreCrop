@@ -42,9 +42,16 @@ export function useLotWorkflow(loteId: string, scenario: Scenario): UseLotWorkfl
 
   useEffect(() => {
     alive.current = true;
-    setLoading(true);
-    void refresh();
-    return () => { alive.current = false; };
+    const timer = setTimeout(() => {
+      if (alive.current) {
+        setLoading(true);
+        void refresh();
+      }
+    }, 0);
+    return () => { 
+      alive.current = false;
+      clearTimeout(timer);
+    };
   }, [refresh]);
 
   const run = useCallback(async <T,>(kind: UseLotWorkflowResult['busy'], fn: () => Promise<T>): Promise<T> => {
