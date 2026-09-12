@@ -12,6 +12,7 @@ import { loadPack, readPublicFile, PUBLIC_FILES, economicsInputs, historyPeaks }
 import { buildEvidence, memoText } from "./evidence.js";
 import { buildCapacity } from "./capacity.js";
 import { committeeReport } from "./report.js";
+import { registerDemo, getLot, listLots, createLot } from "./lotes.js";
 import { loadKeypair, publishMemo, publisherBalanceSol, DEFAULT_RPC_URL } from "./memo.js";
 
 const PORT = Number(process.env.PORT ?? 8787);
@@ -19,6 +20,7 @@ const RPC_URL = process.env.RPC_URL ?? DEFAULT_RPC_URL;
 const KEYPAIR_PATH = process.env.PUBLISHER_KEYPAIR ?? ".keys/publisher.json";
 
 const pack = loadPack();
+registerDemo(pack);
 const keypair = existsSync(KEYPAIR_PATH) ? loadKeypair(KEYPAIR_PATH) : null;
 
 const CORS = {
@@ -70,6 +72,40 @@ const server = createServer(async (req, res) => {
   try {
     if (req.method === "OPTIONS") return send(res, 204, "", "text/plain");
 
+    // ---- lots: the committed demo lot plus lots built live from a polygon.
+    // Every other route accepts ?lote=<id> and defaults to the demo lot.
+    if (req.method === "GET" && url.pathname === "/lotes") {
+      return send(res, 200, { default: pack.presets.lote_id, lotes: listLots() });
+    }
+    if (req.method === "GET" && url.pathname.startsWith("/lotes/")) {
+      const one = getLot(url.pathname.slice("/lotes/".length));
+      if (!one) return send(res, 404, { error: "unknown lote" });
+      return send(res, 200, { lote: one.lote, geometry: one.geometry ?? null, presets: one.presets, points: one.points.points, official: one.official, history: one.history });
+    }
+    if (req.method === "POST" && url.pathname === "/lotes") {
+      const body = await readBody(req);
+      const started = Date.now();
+      const created = await createLot(body, pack, (p) => console.log("[lotes]", JSON.stringify(p)));
+      const bueno = buildEvidence("bueno", created);
+      const malo = buildEvidence("malo", created);
+      return send(res, 201, {
+        lote: created.lote,
+        elapsed_s: Math.round((Date.now() - started) / 100) / 10,
+        scenario_campaign: created.presets.scenario_campaign,
+        capacity: buildCapacity(created),
+        condition: {
+          bueno: { date: bueno.evidence.payload.observed_date, ndvi: bueno.inputs.ndvi, rain_mm_7d: bueno.inputs.rain_mm_7d, index: bueno.result.score_exact, light: bueno.result.light, advance: bueno.advance?.advance_limit ?? null },
+          malo: { date: malo.evidence.payload.observed_date, ndvi: malo.inputs.ndvi, rain_mm_7d: malo.inputs.rain_mm_7d, index: malo.result.score_exact, light: malo.result.light, advance: malo.advance?.advance_limit ?? null },
+        },
+        points: created.points.points,
+        history: created.history.campaigns.map((c) => ({ campaign: c.campaign, peak: c.peak?.ndvi ?? null, min: c.min?.ndvi ?? null, rain_dec_feb_mm: c.rain_dec_feb_mm ?? null })),
+        official: created.official.campaigns,
+      });
+    }
+
+    const lot = getLot(url.searchParams.get("lote"), pack.presets.lote_id);
+    if (!lot) return send(res, 404, { error: `unknown lote '${url.searchParams.get("lote")}'; see GET /lotes` });
+
     if (req.method === "GET" && url.pathname === "/health") {
       return send(res, 200, {
         ok: true,
@@ -92,17 +128,17 @@ const server = createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && url.pathname === "/capacity") {
-      if (!pack.history) {
-        return send(res, 503, { error: "no lote-history.json in pack; run scripts/build_history.py" });
+      if (!lot.history) {
+        return send(res, 503, { error: "no history for this lote; run scripts/build_history.py or POST /lotes" });
       }
-      return send(res, 200, buildCapacity(pack));
+      return send(res, 200, buildCapacity(lot));
     }
 
     if (req.method === "GET" && url.pathname.startsWith("/report/")) {
       const scenario = url.pathname.slice("/report/".length);
       if (!["bueno", "mixto", "malo"].includes(scenario)) return send(res, 400, { error: "scenario must be one of bueno | mixto | malo" });
       const q = url.searchParams;
-      const md = committeeReport(scenario, pack, {
+      const md = committeeReport(scenario, lot, {
         weeds_pct: q.has("weeds_pct") ? Number(q.get("weeds_pct")) : undefined,
         signature: q.get("signature") ?? undefined,
         explorer_url: q.get("explorer_url") ?? undefined,
@@ -114,7 +150,7 @@ const server = createServer(async (req, res) => {
 
     if (req.method === "POST" && url.pathname === "/score") {
       const { scenario, override } = parseScoreRequest(await readBody(req));
-      return send(res, 200, buildEvidence(scenario, pack, override));
+      return send(res, 200, buildEvidence(scenario, lot, override));
     }
 
     if (req.method === "POST" && url.pathname === "/publish") {
@@ -125,7 +161,7 @@ const server = createServer(async (req, res) => {
         });
       }
       const { scenario, override } = parseScoreRequest(await readBody(req));
-      const ev = buildEvidence(scenario, pack, override);
+      const ev = buildEvidence(scenario, lot, override);
       const text = memoText(ev.evidence);
       const balance = await publisherBalanceSol(keypair, RPC_URL);
       if (balance < 0.001) {
@@ -149,7 +185,7 @@ const server = createServer(async (req, res) => {
       // public testnet, so this returns the shape of a transfer without moving anything.
       const body = await readBody(req);
       const { scenario, override } = parseScoreRequest(body);
-      const ev = buildEvidence(scenario, pack, override);
+      const ev = buildEvidence(scenario, lot, override);
       if (!ev.advance) return send(res, 503, { error: "no lote-economics.json in pack" });
       if (ev.advance.advance_limit.new_disbursements === "blocked") {
         return send(res, 409, {
