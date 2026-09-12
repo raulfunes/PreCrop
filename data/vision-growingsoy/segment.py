@@ -16,6 +16,7 @@ import time
 
 from PIL import Image, ImageChops, ImageDraw
 from overlay import sheet
+from confidence import confianza
 from prepare import ROOT, PILLOW_VERSION, digest, strict_json, union_mask, validate_response, write_json
 
 MODEL = "gemini-3.8-flash"
@@ -246,15 +247,18 @@ def save_report(directory, run):
         return "—" if v is None else f"{v:.4f}"
     lines = [f"# Segmentación — {run['experiment']}", "", f"Modelo: `{run['model']}`. Fecha UTC: {run['started_at']}.",
              f"Solicitudes realizadas: {run['requests_sent']}/{run['max_requests']}. Bloqueo: {run['blocked_reason'] or 'ninguno'}.", "",
-             "| Foto | Estado | Referencia % | Contornos % | Error pp | IoU | Ambas vacías |",
-             "| --- | --- | ---: | ---: | ---: | ---: | --- |"]
+             "| Foto | Estado | Referencia % | Contornos % | Error pp | IoU | Confianza | Ambas vacías |",
+             "| --- | --- | ---: | ---: | ---: | ---: | --- | --- |"]
     for r in rows:
+        conf = "—" if "confidence" not in r else f"{r['confidence']:.2f} ({r['confidence_band']})"
         lines.append(f"| {r['id']} | {r['status']} | {number(r['reference_pct'])} | {number(r['weed_pct'])} | "
-                     f"{number(r['absolute_error_pp'])} | {number(r['iou'])} | {r['both_empty']} |")
+                     f"{number(r['absolute_error_pp'])} | {number(r['iou'])} | {conf} | {r['both_empty']} |")
     lines += ["", f"MAE: {number(run['summary']['mae_pp'])} pp ({len(errors)}/{sum(1 for r in rows if r['id'] != 'control')} fotos).",
               f"IoU media: {number(run['summary']['mean_iou'])} ({len(ious)} pares con unión no vacía).",
               "El control no integra MAE ni IoU. Ambas máscaras vacías se cuentan aparte.", "",
-              "## Comparaciones", "", "Rojo: píxeles de la máscara binaria usada en el cálculo. Sin resultado se muestra gris.", ""]
+              "## Comparaciones", "", "Rojo: píxeles de la máscara binaria usada en el cálculo. Sin resultado se muestra gris.", "",
+              "Confianza: IoU esperado según el parche mayor detectado, no probabilidad de acierto. "
+              "Calibrada sobre 9 fotos; no atrapa el peor fallo (ver `confidence.py`).", ""]
     for r in rows:
         if "comparison" in r:
             lines += [f"![{r['id']}: original, detección y referencia]({r['comparison']})", ""]
@@ -355,6 +359,9 @@ def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT, billing_
             # porcentaje, para que no puedan divergir en produccion.
             result["review"] = f"{row['id']}.review.png"
             sheet(rgb, mask, result["weed_pct"], row["id"]).save(directory / result["review"])
+            # La confianza sale de los mismos poligonos que la mascara y el
+            # porcentaje. Es IoU esperado, no probabilidad de acierto.
+            result["confidence"], result["confidence_band"] = confianza(obj["polygons"])
         result["comparison"] = f"{row['id']}.comparison.png"
         pct = result["weed_pct"]
         comparison(rgb, mask, reference, [f"{row['id']} Original", f"Deteccion: {result['status']}" +

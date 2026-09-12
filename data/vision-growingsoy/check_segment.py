@@ -120,6 +120,12 @@ def main():
             assert not any("review" in r for r in run["results"] if "mask" not in r)
             written = {q.name for q in runs.rglob("*.review.png")}
             assert written == {r["review"] for r in masks}, written
+            # La confianza viaja con la deteccion y solo con ella. Banda declarada,
+            # valor dentro del techo medido.
+            assert all("confidence" in r and "confidence_band" in r for r in masks)
+            assert not any("confidence" in r for r in run["results"] if "mask" not in r)
+            assert all(0.0 <= r["confidence"] <= 0.65 for r in masks)
+            assert all(r["confidence_band"] in ("alta", "baja", "sin_calibrar") for r in masks)
             run = s.run_experiment(True)
             assert run["requests_sent"] == 0 and send.call_count == 4
             assert run["blocked_reason"] == "four_request_experiment_already_reserved"

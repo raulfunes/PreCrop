@@ -339,7 +339,7 @@ Es el contrato mínimo de la prueba, independiente del SDK; no afirmar que un pr
 }
 ```
 
-Ejemplo ilustrativo, no inferencia real ni dato calibrado. Para una imagen no evaluable: `status = "not_assessable"`, `weed_pct = null` y un motivo legible. No incorporar un número de confianza inventado como probabilidad calibrada.
+Ejemplo ilustrativo, no inferencia real ni dato calibrado. Para una imagen no evaluable: `status = "not_assessable"`, `weed_pct = null` y un motivo legible. No incorporar un número de confianza inventado como probabilidad calibrada. El campo `confidence` que sí se emite está medido y no es una probabilidad: ver «Nivel de confianza medido».
 
 Validación de servidor: estado permitido; % numérico finito entre 0 y 100 solamente si `estimated`; null si `not_assessable`; motivo y limitaciones con longitud acotada. Rechazar JSON roto, tipo incorrecto, campos incompatibles o contenido extra fuera del esquema acordado. No convertir strings, null o valores fuera de rango en un éxito silencioso.
 
@@ -404,3 +404,31 @@ La política financiera consume la evaluación publicada vigente; no la respuest
 Los cinco IDs corresponden a posiciones lógicas pendientes de ubicar en el polígono. No incluyen imagen, EXIF ni coordenadas inventadas. “Bueno/malo” describe carga relativa de malezas, no un semáforo financiero garantizado. No asociar los escenarios a febrero/agosto como deterioro real.
 
 El recorrido con presets valida la demo offline. La integración real de visión requiere credenciales, fotos y una llamada completada; son verificaciones diferentes y ambas deben informarse por separado.
+
+## Nivel de confianza medido
+
+`confidence` es el **IoU esperado** contra una anotación humana: cuánto del área que el modelo pinta cae de verdad sobre maleza. No es probabilidad de acierto ni certeza del modelo. Sale de las 9 fotos de desarrollo (`gemini-3.6-flash`, prompt v2); implementación en [`data/vision-growingsoy/confidence.py`](data/vision-growingsoy/confidence.py).
+
+**El predictor es el parche más grande detectado, no el porcentaje total.** El modelo resuelve matas grandes y falla en malezas chicas; el parche mayor mide eso y el total no, porque un total alto puede venir de sumar manchitas — que es justo la forma de los fallos. Correlación de rango con el IoU medido: parche mayor +0,767; total estimado +0,650; mediana de parches +0,533; cantidad de parches −0,317.
+
+Se descartó un cuarto candidato: la cantidad de limitaciones que el modelo declara daba −0,867, pero es un espejismo — 7 de las 9 fotos declaran exactamente una limitación y el rango queda dominado por empates.
+
+Curva: `0,05 + 0,60 · t/(t + 2,05)`, con `t` = parche mayor en % de la imagen. RMSE 0,168 sobre las 9. El techo 0,65 es la media medida del grupo alto, no el mejor caso: no se promete más de lo medido aunque el parche sea enorme.
+
+| Foto | parche % | confianza | IoU real |
+| --- | ---: | ---: | ---: |
+| GW01 | 16,45 | 0,58 | 0,744 |
+| GW02 | 11,73 | 0,56 | 0,576 |
+| GW03 | 7,75 | 0,52 | 0,615 |
+| GW05 | 2,73 | 0,39 | 0,272 |
+| GW06 | 2,38 | 0,37 | 0,601 |
+| GW04 | 2,08 | 0,35 | **0,000** |
+| GW08 | 1,14 | 0,26 | 0,377 |
+| GW07 | 0,41 | 0,15 | 0,228 |
+| GW09 | 0,17 | 0,10 | **0,000** |
+
+**La curva no atrapa el peor fallo.** GW04 recibe 0,35 con IoU 0 real. Siete de los nueve residuos son negativos —la curva promete menos de lo que el modelo dio—, y las dos excepciones son justamente las dos fotos que erraron por completo. Por eso el contrato manda además la foto pintada: el número solo no alcanza para descartar un GW04.
+
+Sin medir: una foto con muchos parches medianos, donde parche mayor y total se separan por primera vez y ninguna medición dice cuál gana. Tampoco hay foto sin maleza en el conjunto, así que una respuesta «no hay maleza» no tiene calibración y sale como banda `sin_calibrar`, no como confianza baja.
+
+Pendiente: revalidar contra el conjunto final (GW10–GW13 más las congeladas) antes de tratar estos números como estables. n=9, un modelo, un cultivo, un dataset.
