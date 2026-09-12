@@ -1,5 +1,5 @@
 // Loads the data pack from disk once. DATA_DIR overrides the default ../../data.
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
@@ -13,6 +13,8 @@ export const PUBLIC_FILES = [
   "photo-point-presets.json",
   "lote.geojson",
   "lote-economics.json",
+  "lote-history.json",
+  "rindes-oficiales.json",
   "evidence/bueno.json",
   "evidence/mixto.json",
   "evidence/malo.json",
@@ -27,7 +29,27 @@ export function loadPack() {
   const economics = readJson("lote-economics.json");
   const versions = new Set([presets.pack_version, scenarios.pack_version, points.pack_version, economics.pack_version]);
   if (versions.size !== 1) throw new Error(`pack_version mismatch across files: ${[...versions].join(", ")}`);
-  return { presets, scenarios, points, economics, pack_version: presets.pack_version };
+  // Optional files: the per-campaign history (scripts/build_history.py) and the
+  // official department yields the team collects by hand:
+  //   data/rindes-oficiales.json = { "source": "...", "unit": "t/ha", "campaigns": { "2018/19": 3.5, ... } }
+  const history = existsSync(join(DATA_DIR, "lote-history.json")) ? readJson("lote-history.json") : null;
+  const official = existsSync(join(DATA_DIR, "rindes-oficiales.json")) ? readJson("rindes-oficiales.json") : null;
+  return { presets, scenarios, points, economics, history, official, pack_version: presets.pack_version };
+}
+
+/** One row per campaign with a valid peak, in the shape capacity() expects. */
+export function historyPeaks(history) {
+  if (!history) return [];
+  return history.campaigns
+    .filter((c) => c.peak)
+    .map((c) => ({
+      campaign: c.campaign,
+      date: c.peak.date,
+      scene_id: c.peak.scene_id,
+      ndvi: c.peak.ndvi,
+      ndvi_min_in_window: c.scenes_evaluated.length ? Math.min(...c.scenes_evaluated.map((s) => s.median)) : null,
+      rain_dec_feb_mm: c.rain_dec_feb_mm ?? null,
+    }));
 }
 
 /** Flat numbers for the advance rule, read from lote-economics.json (each value carries its own source there). */
@@ -44,5 +66,6 @@ export function economicsInputs(economics) {
 
 export function readPublicFile(name) {
   if (!PUBLIC_FILES.includes(name)) return null;
-  return readFileSync(join(DATA_DIR, name), "utf8");
+  const path = join(DATA_DIR, name);
+  return existsSync(path) ? readFileSync(path, "utf8") : null;
 }

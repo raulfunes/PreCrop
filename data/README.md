@@ -60,6 +60,27 @@ limite_usd            = valor_referencia_usd * haircut * condicion / 100     # r
 
 Con los valores publicados: bueno 74.4 → 52 % del valor de referencia (unos 60.800 USD, verde); mixto 68.0 → 48 % (revisar); malo 48.5 → bloqueado. El benchmark es lo que la coop hace hoy: un porcentaje plano para todos. El backend (`services/evidence-api`, `POST /score`) devuelve el límite, los factores que lo movieron, los pesos y la versión de la regla.
 
+## Capacidad: el año malo del lote (regla `capacidad-v1`)
+
+`lote-history.json` (generado por `scripts/build_history.py`) trae el **pico de NDVI por campaña** desde 2018/19 hasta 2024/25, con escena, nubes, offset aplicado, mínimo en la ventana y lluvia diciembre–febrero. Con eso:
+
+```
+rinde_est(campaña)  = rinde_ref_t_ha * ndvi_norm(pico) / 100
+peor campaña        = mínimo de rinde_est
+cupo_pre_siembra    = ha * rinde_est(peor) * precio_usd_t * haircut
+estabilidad         = coeficiente de variación de rinde_est
+```
+
+Con lo medido: peor campaña 2023/24 (NDVI 0.763 → 2.77 t/ha), CV 5.7 %, cupo pre-siembra 70.700 USD (60.6 % del valor de referencia). `GET /capacity` en el backend devuelve todo; `GET /report/<escenario>` arma el informe de una página para el comité.
+
+**Caveat honesto:** el pico mide canopia, no llenado de grano. La seca de 2022/23 se ve en el mínimo de enero (0.556), no en el pico (0.774). Por eso el contraste con los rindes oficiales es obligatorio: dejar `rindes-oficiales.json` con esta forma y el backend lo cruza solo:
+
+```json
+{ "source": "Bolsa de Cereales de Córdoba, informes de cierre por campaña (links)", "unit": "t/ha",
+  "campaigns": { "2018/19": 3.5, "2019/20": 3.4, "2020/21": 3.0, "2021/22": 2.8, "2022/23": 1.7, "2023/24": 3.3, "2024/25": 3.3 } }
+```
+Los números de arriba son un EJEMPLO de forma, no datos. Reemplazar por los oficiales con fuente.
+
 ## La frase honesta del escenario malo
 
 Entre el 2 y el 7 de febrero el NDVI casi no baja (0.782 → 0.763): la vegetación es inercial, en cinco días la planta no se seca. Lo que tira el lote de verde a rojo es la **lluvia** (46.7 → 0.1 mm, seca real de 14 días) y las **malezas simuladas** (12 % → 65 %). El satélite solo lleva el lote a amarillo; las fotos lo llevan a rojo. Decirlo así en el pitch.
