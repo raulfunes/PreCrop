@@ -108,11 +108,22 @@ def main():
             run = s.run_experiment(True)
             assert send.call_count == run["requests_sent"] == 4
             assert [r["id"] for r in run["results"]] == [*s.IDS, "control"]
-            assert run["summary"]["mae_n"] == 2 and run["summary"]["iou_n"] == 1
+            # Dos respuestas evaluables: la abstencion y la respuesta invalida quedan fuera del MAE.
+            # Cada par evaluable cae en IoU o en "ambas vacias", nunca en los dos ni en ninguno.
+            assert run["summary"]["mae_n"] == 2
+            assert run["summary"]["iou_n"] + run["summary"]["both_empty_n"] == 2
             assert run["results"][-1]["control_pass"] is True
             run = s.run_experiment(True)
             assert run["requests_sent"] == 0 and send.call_count == 4
             assert run["blocked_reason"] == "four_request_experiment_already_reserved"
+        # Un nombre distinto reserva su propio presupuesto; la reserva anterior sigue en pie.
+        with (patch.object(s, "RUNS", runs),
+              patch.dict(s.os.environ, {"GEMINI_API_KEY": "synthetic-secret"}),
+              patch.object(s, "request_once", side_effect=list(synthetic)) as send):
+            run = s.run_experiment(True, "otro-experimento")
+            assert run["experiment"] == "otro-experimento" and run["requests_sent"] == 4
+            assert (runs / "otro-experimento.started.json").exists()
+            assert (runs / f"{s.EXPERIMENT}.started.json").exists()
         with patch.object(s, "RUNS", runs / "failure"), patch.dict(s.os.environ, {"GEMINI_API_KEY": "synthetic-secret"}), patch.object(
                 s, "request_once", return_value=({"http_status": 429, "api_error": "HTTP_429"}, b"quota")) as send:
             run = s.run_experiment(True)

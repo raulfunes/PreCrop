@@ -18,11 +18,12 @@ from PIL import Image, ImageChops, ImageDraw
 from prepare import ROOT, PILLOW_VERSION, digest, strict_json, union_mask, validate_response, write_json
 
 MODEL = "gemini-3.8-flash"
-EXPERIMENT = "segmentation-v1-request-v2"
+EXPERIMENT = "segmentation-v2-weeds-retry"
 HOST = "generativelanguage.googleapis.com"
 ENDPOINT = f"/v1beta/models/{MODEL}:generateContent"
-IDS = ("GS08", "GS11", "GS15")
-PROMPT = ROOT / "prompt-segmentation-v1.txt"
+IDS = ("GW02", "GW01", "GW03")
+PROMPT = ROOT / "prompt-segmentation-v2.txt"
+SET = ROOT / "weeds-v2"  # conjunto activo; el control sigue en ROOT
 CROPS = ROOT / "crop-morphology.json"
 RUNS = ROOT / "runs"
 TIMEOUT = 30
@@ -256,20 +257,21 @@ def save_report(directory, run):
         if "comparison" in r:
             lines += [f"![{r['id']}: original, detección y referencia]({r['comparison']})", ""]
     lines += ["## Observaciones", "", "Revisión visual de detección pendiente; no se infieren aciertos por pruebas sintéticas.",
-              "No ampliar a las nueve de desarrollo ni a las seis finales sin revisar esta corrida."]
+              "No ampliar al resto del conjunto de desarrollo ni abrir el final sin revisar esta corrida."]
     (directory / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def run_experiment(free_project_confirmed=False):
-    manifest = strict_json((ROOT / "manifest.json").read_text(encoding="utf-8"))
-    selected = [next(r for r in manifest["images"] if r["id"] == name and r["split"] == "desarrollo") for name in IDS]
-    control = manifest["control"]
+def run_experiment(free_project_confirmed=False, experiment=EXPERIMENT):
+    manifest = strict_json((SET / "manifest.json").read_text(encoding="utf-8"))
+    selected = [dict(next(r for r in manifest["images"] if r["id"] == name and r["split"] == "desarrollo"),
+                     base=SET) for name in IDS]
+    control = strict_json((ROOT / "manifest.json").read_text(encoding="utf-8"))["control"]
     selected.append({"id": "control", "image_path": control["path"], "sha256": control["sha256"],
-                     "reference_pct": None})
+                     "reference_pct": None, "base": ROOT})
     # Validate only authorized inputs before reserving the request budget.
     inputs = []
     for row in selected:
-        path = ROOT / row["image_path"]
+        path = row["base"] / row["image_path"]
         data = path.read_bytes()
         if digest(path) != row["sha256"] or len(data) > 10 * 1024 * 1024:
             raise ValueError("Image hash/size mismatch")
@@ -279,7 +281,7 @@ def run_experiment(free_project_confirmed=False):
             mime, rgb = Image.MIME[image.format], image.copy()
         reference = None
         if row.get("mask_path"):
-            path = ROOT / row["mask_path"]
+            path = row["base"] / row["mask_path"]
             if digest(path) != row["mask_sha256"]:
                 raise ValueError("Reference hash mismatch")
             with Image.open(path) as image:
@@ -288,26 +290,26 @@ def run_experiment(free_project_confirmed=False):
                 raise ValueError("Reference percentage mismatch")
         inputs.append((row, data, mime, rgb, reference))
     now = datetime.now(timezone.utc)
-    directory = RUNS / (EXPERIMENT + now.strftime("-%Y%m%dT%H%M%S%fZ"))
+    directory = RUNS / (experiment + now.strftime("-%Y%m%dT%H%M%S%fZ"))
     directory.mkdir(parents=True)
     (directory / PROMPT.name).write_bytes(PROMPT.read_bytes())
     prompt = render_prompt(PROMPT, "soja")
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     blocked = "missing_GEMINI_API_KEY" if not key else (
         None if free_project_confirmed else "project_without_billing_not_confirmed")
-    budget = RUNS / f"{EXPERIMENT}.started.json"
+    budget = RUNS / f"{experiment}.started.json"
     if not blocked:
         try:
             with budget.open("x", encoding="utf-8") as file:
                 json.dump({"run": directory.name, "maximum_requests": 4}, file)
         except FileExistsError:
             blocked = "four_request_experiment_already_reserved"
-    run = {"experiment": EXPERIMENT, "started_at": now.isoformat(), "model": MODEL, "provider": "Google Gemini API",
+    run = {"experiment": experiment, "started_at": now.isoformat(), "model": MODEL, "provider": "Google Gemini API",
            "endpoint": f"https://{HOST}{ENDPOINT}", "configuration": CONFIG, "timeout_seconds": TIMEOUT,
            "automatic_retries": 0, "max_requests": 4, "expected_crop": "soja",
            "free_project_confirmed_by_operator": free_project_confirmed,
            "prompt_sha256": digest(PROMPT), "script_sha256": digest(Path(__file__)),
-           "manifest_sha256": digest(ROOT / "manifest.json"), "pillow": PILLOW_VERSION,
+           "manifest_sha256": digest(SET / "manifest.json"), "pillow": PILLOW_VERSION,
            "requests_sent": 0, "blocked_reason": blocked, "results": []}
     save_report(directory, run)
     for row, data, mime, rgb, reference in inputs:
@@ -360,7 +362,9 @@ if __name__ == "__main__":
         print(json.dumps([result, base64.b64encode(raw).decode("ascii")]))
         sys.exit(0)
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--experiment", default=EXPERIMENT,
+                        help="Nombre del experimento; su reserva impide repetirlo.")
     parser.add_argument("--free-project-confirmed", action="store_true",
                         help="Operator has verified this key belongs to a project WITHOUT billing in AI Studio")
     args = parser.parse_args()
-    run_experiment(args.free_project_confirmed)
+    run_experiment(args.free_project_confirmed, args.experiment)

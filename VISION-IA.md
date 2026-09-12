@@ -131,6 +131,16 @@ La morfología del cultivo vive fuera del prompt, en `crop-morphology.json`, y s
 
 Dos obstáculos que hubo que resolver. Primero, los clips más ricos en malezas —`20230114-GX010238`, con 38 fotos de tres o más instancias, y `20221221-GX010110`, que contiene la de 93,4673%— están hoy reservados para evaluación final; reasignarlos no cuesta nada mientras ninguna foto final se haya enviado a un modelo, y el clip de GS08 no puede volver al lado final porque ya se envió. Segundo, la referencia de GS08 declara 0% de malezas sobre 33,5% de vegetación visible y nueve instancias anotadas, mientras que su mismo clip tiene 53 fotos de 82 con malezas anotadas y, 140 fotogramas antes, gramíneas de hoja angosta como las que el modelo describió. La métrica de vegetación sin anotar no distingue a GS08 del resto del conjunto, así que esto no prueba una omisión: hasta que un agrónomo la revise, conviene no usar esa foto como vara de medición.
 
+### Corrida con prompt v2 sobre el conjunto ampliado — 12-sep-2026, 01:46 ART
+
+Autorizada por el usuario sobre GW02, GW01 y GW03 más el control, con la clave de `.env` y la misma declaración de proyecto sin facturación de los intentos anteriores. `segment.py` apunta ahora a `prompt-segmentation-v2.txt` y al manifiesto de `weeds-v2/`; el control uniforme sigue en `controls/`.
+
+**Ambos intentos quedaron detenidos por indisponibilidad del proveedor, sin ninguna detección que evaluar.** GW02 recibió HTTP 503 / `UNAVAILABLE` a los 20,27 s en la [primera corrida](data/vision-growingsoy/runs/segmentation-v2-weeds-20260912T044623869091Z/report.md) y otra vez en el [reintento](data/vision-growingsoy/runs/segmentation-v2-weeds-retry-20260912T044721405891Z/report.md); GW01, GW03 y el control no se enviaron. El cuerpo conservado dice: «This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.» Es un fallo de capacidad de `gemini-3.8-flash`, ajeno al prompt, al conjunto y a la clave, y distinto del HTTP 400 por complejidad de esquema del 11-sep.
+
+Total histórico: cinco solicitudes de generación —una con HTTP 400, una con respuesta completa, tres con HTTP 503— más dos consultas de metadatos. Las reservas `segmentation-v2-weeds.started.json` y `segmentation-v2-weeds-retry.started.json` quedan en pie; no se borran para reintentar.
+
+`segment.py` acepta `--experiment` para nombrar la corrida sin editar el código, porque cada reintento necesita una reserva nueva. La protección no cambia: un nombre ya reservado sigue bloqueado, y `check_segment.py` comprueba ambas cosas. No se amplió la selección ni se abrieron las fotos del lado final.
+
 ## Prueba pública preparada
 
 [Conjunto y tabla de comparación](data/vision-growingsoy/EVALUACION.md) · [Manifiesto](data/vision-growingsoy/manifest.json) · [Prompt v1](data/vision-growingsoy/prompt.txt) · [Preparación y comprobación](data/vision-growingsoy/prepare.py).
