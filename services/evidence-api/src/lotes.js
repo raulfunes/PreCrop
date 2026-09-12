@@ -9,6 +9,16 @@ import { ringOf, bboxOf, centroidOf, areaHa, samplingPoints, departmentShares, o
 const LOTES_DIR = join(DATA_DIR, "lotes");
 const registry = new Map();
 
+// Mock del armado de lotes (data/lotes-mock.json). Activo por defecto: construir un lote
+// de verdad son ~5 s de red (Georef + MAGyP + siete campañas de NDVI) y en la demo eso es
+// una pausa muerta. Con el mock, el historial y la serie oficial se clonan del lote demo y
+// solo se recalcula lo que sale del poligono: superficie, centro, bbox y puntos.
+// LOTES_MOCK=0 vuelve a construirlo con datos reales.
+const lotesMock = JSON.parse(readFileSync(join(DATA_DIR, "lotes-mock.json"), "utf8"));
+const lotesMockOn = process.env.LOTES_MOCK !== "0";
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 const slug = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 
 export function registerDemo(pack) {
@@ -80,18 +90,56 @@ export async function createLot(input, demo, onProgress = () => {}) {
   const feature = { type: "Feature", properties: {}, geometry: input.geometry };
 
   const pts = samplingPoints(ring);
+
+  if (lotesMockOn) {
+    const { min, max } = lotesMock.delay_ms;
+    await sleep(min + Math.random() * (max - min));
+    const name = input.name?.trim() || `Lote ${demo.official?.departamento ?? "demo"}`;
+    const id = `${slug(name)}-${Date.now().toString(36).slice(-4)}`;
+    const centerR = { lat: round5(centre.lat), lon: round5(centre.lon) };
+    const saved = {
+      // Lo unico que sale del poligono dibujado: superficie, centro, bbox y puntos.
+      lote: {
+        id, nombre: name, source: "mock (historial y serie oficial del lote demo)",
+        departamento: demo.official?.departamento ?? demo.presets.lote_id,
+        departments: [], provincia: demo.presets.provincia ?? null,
+        ha, center: centerR, created_at_utc: new Date().toISOString(),
+        mock: true, mock_note: lotesMock.department_note,
+      },
+      geometry: input.geometry,
+      presets: { ...demo.presets, lote_id: id, nombre: name, ha, center: centerR, bbox: bbox.map(round5) },
+      history: { ...demo.history, lote_id: id },
+      official: { ...demo.official, lote_id: id },
+      points: { ...demo.points, lote_id: id, points: pts },
+    };
+    mkdirSync(LOTES_DIR, { recursive: true });
+    writeFileSync(join(LOTES_DIR, `${id}.json`), JSON.stringify(saved, null, 2) + "\n", "utf8");
+    const pack = hydrate(saved, demo);
+    registry.set(id, pack);
+    onProgress({ step: "mock", lote_id: id, ha });
+    return pack;
+  }
+
+  // El historial NDVI no necesita saber el departamento, asi que las dos cadenas van a la
+  // vez: Georef -> MAGyP por un lado, Planetary Computer por el otro. El total pasa de ser
+  // la suma a ser la mas lenta de las dos.
   onProgress({ step: "departamento" });
-  const shares = await departmentShares(pts, centre);
+  const [{ shares, official }, history] = await Promise.all([
+    (async () => {
+      const shares = await departmentShares(pts, centre);
+      onProgress({ step: "rindes oficiales", departamentos: shares });
+      return { shares, official: await officialSeriesForShares(shares) };
+    })(),
+    (async () => {
+      onProgress({ step: "historial" });
+      return buildHistory(feature, bbox, centre, (row) => onProgress({ step: "historial", campaign: row.campaign, peak: row.peak?.ndvi ?? null }));
+    })(),
+  ]);
+
   const dept = shares[0];
   const name = input.name?.trim() || `Lote ${dept.departamento}`;
   const id = `${slug(name)}-${Date.now().toString(36).slice(-4)}`;
-
-  onProgress({ step: "rindes oficiales", departamentos: shares });
-  const official = await officialSeriesForShares(shares);
   official.lote_id = id;
-
-  onProgress({ step: "historial" });
-  const history = await buildHistory(feature, bbox, centre, (row) => onProgress({ step: "historial", campaign: row.campaign, peak: row.peak?.ndvi ?? null }));
   history.lote_id = id;
 
   onProgress({ step: "escenarios" });

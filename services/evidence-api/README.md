@@ -71,6 +71,26 @@ El bloque `superseded_advance` de la respuesta trae el número de `cupo-v1` para
 - `usd: 0` con `new_disbursements: "blocked"` → **cero medido**: el lote está en rojo, no sale plata.
 - `usd: null` con `blocked_no_capacity` → **no sabemos el piso**. No es cero y no debe mostrarse como cero.
 
+## Mocks de demo
+
+Dos valores salen de tabla en vez de calcularse, para que la demo no dependa de red ni de cuota. Los dos se apagan con su flag.
+
+| Flag | Default | Qué mockea | Tabla |
+|---|---|---|---|
+| `CAPACITY_MOCK` | `1` (activo) | El cupo pre-siembra de `/capacity`: en vez de cruzar la serie oficial del MAGyP con el NDVI histórico, toma el escalón de superficie más cercano | `data/capacity-mock.json` |
+| `VISION_MOCK` | `1` (activo) | La estimación de malezas del proxy `/api/vision/weeds` del front, por nombre de archivo | `data/vision-mock.json` |
+| `LOTES_MOCK` | `1` (activo) | El armado de un lote dibujado en vivo (`POST /lotes`): clona historial y serie oficial del lote demo en vez de consultar Georef, MAGyP y Planetary Computer | `data/lotes-mock.json` |
+
+`CAPACITY_MOCK=0` vuelve a `capacidad-v2`. La tabla está sembrada con la fórmula real del lote demo (1,769 t/ha × 364,8 USD/t × 0,7), así que **100 ha sigue dando 45.173 USD** y los números publicados no se contradicen. El mock reemplaza sólo el monto: `series`, `worst_year` y `representativeness` se siguen calculando y publicando.
+
+La respuesta trae `source: "mock"`, `step_ha` y la `ha` real del lote, y conserva `usd_if_representative` con lo que la regla real habría publicado, para que la diferencia quede auditable.
+
+`LOTES_MOCK=0` vuelve a construir el lote con datos reales (~5 s). Con el mock, del polígono dibujado se recalcula lo que de verdad sale de él —**superficie, centro, bbox y puntos de muestreo**— y se heredan del lote demo el historial de siete campañas y la serie oficial. El lote queda marcado con `source: "mock (historial y serie oficial del lote demo)"` y `mock: true`: **el departamento que informa es el del lote demo, no el del polígono**.
+
+| | real | mock |
+|---|---|---|
+| `POST /lotes` | ~5 s | **~0,7 s** |
+
 ## GET /capacity
 
 Responde **cuánto se puede anticipar antes de sembrar**. Es la otra mitad de la tesis: capacidad define *cuánto*, condición (`/score`) define *si sigue*. No recibe body ni parámetros.
