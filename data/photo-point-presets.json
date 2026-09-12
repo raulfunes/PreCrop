@@ -33,7 +33,7 @@
       "notes": "manchones - el satélite no lo ve, las fotos sí"
     },
     "malo": {
-      "weeds_pct_by_point": { "P1": 55, "P2": 70, "P3": 65, "P4": 48, "P5": 72 },
+      "weeds_pct_by_point": { "P1": 55, "P2": 70, "P3": 65, "P4": 58, "P5": 72 },
       "weeds_pct_lote": 65,
       "aggregation": "median",
       "source": "simulated",
