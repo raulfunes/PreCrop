@@ -26,3 +26,4 @@ api/reviews/
 data/lotes/
 data/cache/
 data/fotos-prueba/
+services/evidence-api/api.*.log
