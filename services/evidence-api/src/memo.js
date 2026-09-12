@@ -29,6 +29,16 @@ function clusterParam(rpcUrl) {
   return "";
 }
 
+/** SOL balance of the publisher wallet (0 when the RPC is unreachable, so the caller degrades gracefully). */
+export async function publisherBalanceSol(keypair, rpcUrl = DEFAULT_RPC_URL) {
+  try {
+    const lamports = await new Connection(rpcUrl, "confirmed").getBalance(keypair.publicKey);
+    return lamports / 1e9;
+  } catch {
+    return 0;
+  }
+}
+
 /**
  * @param {{ text: string, keypair: Keypair, rpcUrl?: string }} args
  * @returns {Promise<{ signature: string, explorer_url: string, publisher: string, memo: string }>}

@@ -12,7 +12,7 @@ import { loadPack, readPublicFile, PUBLIC_FILES, economicsInputs, historyPeaks }
 import { buildEvidence, memoText } from "./evidence.js";
 import { buildCapacity } from "./capacity.js";
 import { committeeReport } from "./report.js";
-import { loadKeypair, publishMemo, DEFAULT_RPC_URL } from "./memo.js";
+import { loadKeypair, publishMemo, publisherBalanceSol, DEFAULT_RPC_URL } from "./memo.js";
 
 const PORT = Number(process.env.PORT ?? 8787);
 const RPC_URL = process.env.RPC_URL ?? DEFAULT_RPC_URL;
@@ -127,6 +127,18 @@ const server = createServer(async (req, res) => {
       const { scenario, override } = parseScoreRequest(await readBody(req));
       const ev = buildEvidence(scenario, pack, override);
       const text = memoText(ev.evidence);
+      const balance = await publisherBalanceSol(keypair, RPC_URL);
+      if (balance < 0.001) {
+        return send(res, 503, {
+          error: "Firma en cadena no disponible en esta demo: la wallet publicadora no tiene SOL de devnet.",
+          hint: `Cargar SOL en https://faucet.solana.com para ${keypair.publicKey.toBase58()} y reintentar. La evidencia y su hash ya estan calculados.`,
+          publisher: keypair.publicKey.toBase58(),
+          balance_sol: balance,
+          evidence_sha256: ev.evidence.content_sha256,
+          memo: text,
+          mock: true,
+        });
+      }
       const tx = await publishMemo({ text, keypair, rpcUrl: RPC_URL });
       return send(res, 200, { ...ev, anchor: { network: RPC_URL, mock: true, ...tx } });
     }
