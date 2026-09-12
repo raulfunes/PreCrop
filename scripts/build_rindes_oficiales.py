@@ -66,7 +66,14 @@ DATASET_URL = "https://datos.magyp.gob.ar/dataset/soja-siembra-cosecha-produccio
 CSV_ENCODING = "utf-8-sig"  # the file carries a BOM; latin-1 turns "Cordoba" into mojibake
 
 PROVINCE = "Cordoba"
-DEPARTMENT = "Rio Segundo"
+
+# El departamento NO se fija a mano: se resuelve del propio polígono contra
+# Georef, la misma fuente que usa el servicio (services/evidence-api/src/live.js).
+# Hardcodearlo es cómo el dato committeado terminó siendo de un departamento y
+# el script de otro, con --check fallando contra su propio archivo.
+GEOREF_URL = "https://apis.datos.gob.ar/georef/api/ubicacion"
+LOTE_GEOJSON = DATA_DIR / "lote.geojson"
+DEPARTMENT_FALLBACK = "Rio Primero"
 
 CAMPAIGNS = ["2018/19", "2019/20", "2020/21", "2021/22", "2022/23", "2023/24", "2024/25"]
 
@@ -120,8 +127,8 @@ def match_province(row: Dict[str, str]) -> bool:
     return strip_accents(row.get("provincia", "")).strip().lower() == PROVINCE.lower()
 
 
-def match_department(row: Dict[str, str]) -> bool:
-    return strip_accents(row.get("departamento", "")).strip().lower() == DEPARTMENT.lower()
+def match_department(row: Dict[str, str], department: str) -> bool:
+    return strip_accents(row.get("departamento", "")).strip().lower() == department.lower()
 
 
 def provincial_yield(rows: List[Dict[str, str]]) -> Optional[float]:
@@ -138,7 +145,7 @@ def provincial_yield(rows: List[Dict[str, str]]) -> Optional[float]:
     return round(production_t / harvested_ha * 1000, 1)
 
 
-def build_rows(records: List[Dict[str, str]]) -> List[Dict[str, Any]]:
+def build_rows(records: List[Dict[str, str]], department: str = DEPARTMENT_FALLBACK) -> List[Dict[str, Any]]:
     province_rows = [r for r in records if match_province(r)]
     # A decoding slip (reading this UTF-8 file as latin-1) turns "Cordoba"
     # into "CA3rdoba" and every match silently fails, producing a table of
@@ -153,12 +160,12 @@ def build_rows(records: List[Dict[str, str]]) -> List[Dict[str, Any]]:
     for campana in CAMPAIGNS:
         long_name = to_long_campaign(campana)
         season = [r for r in province_rows if r.get("campania", "").strip() == long_name]
-        dept = [r for r in season if match_department(r)]
+        dept = [r for r in season if match_department(r, department)]
 
         row: Dict[str, Any] = {
             "campana": campana,
             "campania_magyp": long_name,
-            "departamento": DEPARTMENT,
+            "departamento": department,
             "provincia": PROVINCE,
         }
 
@@ -178,7 +185,7 @@ def build_rows(records: List[Dict[str, str]]) -> List[Dict[str, Any]]:
                 {
                     "rinde_dpto_kg_ha": None,
                     "dpto_source": "unavailable",
-                    "gap_reason": f"no {DEPARTMENT} row for {long_name} in the MAGyP series",
+                    "gap_reason": f"no {department} row for {long_name} in the MAGyP series",
                 }
             )
 
@@ -202,6 +209,32 @@ def build_rows(records: List[Dict[str, str]]) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Network
 # ---------------------------------------------------------------------------
+
+def lote_centroid(path: Path = None) -> tuple:
+    """(lat, lon) del centroide del polígono del lote."""
+    ring = bp.read_json(path or LOTE_GEOJSON)["geometry"]["coordinates"][0]
+    lons = [pt[0] for pt in ring]
+    lats = [pt[1] for pt in ring]
+    return sum(lats) / len(lats), sum(lons) / len(lons)
+
+
+def resolve_department(lat: float, lon: float) -> str:
+    """Departamento que contiene ese punto, según Georef. Si el servicio no
+    responde se cae al último valor conocido y se avisa: un nombre equivocado
+    acá elige la serie de rindes equivocada."""
+    import requests
+
+    try:
+        resp = requests.get(GEOREF_URL, params={"lat": lat, "lon": lon}, timeout=30)
+        resp.raise_for_status()
+        name = (resp.json().get("ubicacion") or {}).get("departamento") or {}
+        resolved = name.get("nombre")
+        if resolved:
+            return strip_accents(resolved)
+    except Exception as err:  # red caída: no es motivo para fallar el build
+        print(f"aviso: Georef no respondio ({type(err).__name__}); se usa {DEPARTMENT_FALLBACK}", file=sys.stderr)
+    return DEPARTMENT_FALLBACK
+
 
 def fetch_records() -> List[Dict[str, str]]:
     """Download the MAGyP soy series and parse it. Import is local so this
@@ -321,14 +354,12 @@ def summarise(doc: Dict[str, Any]) -> str:
 
 
 def main(argv=None) -> int:
-    global DEPARTMENT
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--write", action="store_true", help="write data/rindes-oficiales.json")
     parser.add_argument("--check", action="store_true", help="compare against the committed file")
     parser.add_argument("--force", action="store_true", help="write even if the target is dirty")
-    parser.add_argument("--departamento", default=DEPARTMENT, help="department of the lote (ASCII, e.g. 'Rio Primero'); default keeps the module constant")
+    parser.add_argument("--departamento", default=None, help="fuerza el departamento (ASCII, p.ej. 'Rio Primero'); por defecto se resuelve del poligono")
     args = parser.parse_args(argv)
-    DEPARTMENT = args.departamento
 
     try:
         records = fetch_records()
@@ -342,7 +373,14 @@ def main(argv=None) -> int:
             return 2
         raise
 
-    doc = build_document(build_rows(records))
+    if args.departamento:
+        department = args.departamento
+    else:
+        lat, lon = lote_centroid()
+        department = resolve_department(lat, lon)
+        print(f"departamento resuelto del poligono ({lat:.4f}, {lon:.4f}): {department}")
+
+    doc = build_document(build_rows(records, department))
     print(summarise(doc))
 
     if args.check:

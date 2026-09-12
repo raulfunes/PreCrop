@@ -48,7 +48,7 @@ class TestMatching:
     def test_matches_accented_source_values(self):
         row = {"provincia": "Córdoba", "departamento": "Río Segundo"}
         assert br.match_province(row)
-        assert br.match_department(row)
+        assert br.match_department(row, "Rio Segundo")
 
     def test_mojibake_does_not_match(self):
         # What latin-1 decoding of this UTF-8 file produces. It must NOT
@@ -56,7 +56,7 @@ class TestMatching:
         # province selection precisely so this fails loudly.
         row = {"provincia": "CÃ³rdoba", "departamento": "RÃ\xado Segundo"}
         assert not br.match_province(row)
-        assert not br.match_department(row)
+        assert not br.match_department(row, "Rio Segundo")
 
     def test_other_provinces_are_rejected(self):
         assert not br.match_province({"provincia": "Santa Fe"})
@@ -99,14 +99,24 @@ class TestBuildRows:
             "superficie_cosechada_ha": cos,
         }
 
+    def test_department_comes_from_the_polygon_not_a_constant(self):
+        # El JSON committeado y el script tienen que hablar del mismo
+        # departamento. Cuando estaba fijo a mano quedaron desalineados y
+        # --check fallaba contra su propio archivo.
+        import json
+        doc = json.loads((ROOT / "data" / "rindes-oficiales.json").read_text(encoding="utf-8"))
+        committed = doc["campaigns"][0]["departamento"]
+        lat, lon = br.lote_centroid()
+        assert br.resolve_department(lat, lon) == committed
+
     def test_raises_when_no_province_matches(self):
         records = [{"provincia": "CÃ³rdoba", "departamento": "x", "campania": "2018/2019"}]
         with pytest.raises(RuntimeError, match="no rows matched"):
-            br.build_rows(records)
+            br.build_rows(records, "Rio Segundo")
 
     def test_missing_department_becomes_a_declared_gap(self):
         records = [self._record("2018/2019", "Juarez Celman", "3000", "3000", "1000")]
-        rows = br.build_rows(records)
+        rows = br.build_rows(records, "Rio Segundo")
         first = next(r for r in rows if r["campana"] == "2018/19")
         assert first["rinde_dpto_kg_ha"] is None
         assert first["dpto_source"] == "unavailable"
@@ -116,7 +126,7 @@ class TestBuildRows:
 
     def test_department_row_is_carried_through(self):
         records = [self._record("2022/2023", "Río Segundo", "1170", "200000", "170940")]
-        rows = br.build_rows(records)
+        rows = br.build_rows(records, "Rio Segundo")
         row = next(r for r in rows if r["campana"] == "2022/23")
         assert row["rinde_dpto_kg_ha"] == 1170.0
         assert row["dpto_source"] == "measured"
@@ -127,6 +137,6 @@ class TestBuildRows:
             self._record("2022/2023", "Río Segundo", "1170", "200000", "170940"),
             self._record("2018/2019", "Río Segundo", "3673", "983648", "267800"),
         ]
-        rows = {r["campana"]: r for r in br.build_rows(records)}
+        rows = {r["campana"]: r for r in br.build_rows(records, "Rio Segundo")}
         assert "bccba_cross_check" in rows["2022/23"]
         assert "bccba_cross_check" not in rows["2018/19"]
