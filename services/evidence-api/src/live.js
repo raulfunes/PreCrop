@@ -147,6 +147,49 @@ export async function departmentFor(lat, lon) {
   return { departamento: u.departamento?.nombre ?? null, departamento_id: u.departamento?.id ?? null, provincia: u.provincia?.nombre ?? null };
 }
 
+/**
+ * Department shares of a lot, estimated from the centroid plus the sampling
+ * points (six probes). A lot on a boundary comes back as two departments with
+ * their share; a lot inside one department comes back as a single 100 % row.
+ */
+export async function departmentShares(points, centre) {
+  const probes = [centre, ...points.map((p) => ({ lat: p.lat, lon: p.lon }))];
+  const found = await Promise.all(probes.map((p) => departmentFor(p.lat, p.lon).catch(() => null)));
+  const counts = new Map();
+  for (const d of found) {
+    if (!d?.departamento) continue;
+    const prev = counts.get(d.departamento);
+    counts.set(d.departamento, { ...d, n: (prev?.n ?? 0) + 1 });
+  }
+  const total = [...counts.values()].reduce((a, d) => a + d.n, 0);
+  if (!total) throw new Error("could not resolve the department for the polygon");
+  return [...counts.values()]
+    .map((d) => ({ departamento: d.departamento, departamento_id: d.departamento_id, provincia: d.provincia, share: round(d.n / total, 2), probes: d.n }))
+    .sort((a, b) => b.share - a.share);
+}
+
+/** Official series for a lot: one department, or the share-weighted blend when the lot straddles a boundary. */
+export async function officialSeriesForShares(shares) {
+  const series = await Promise.all(shares.map((s) => officialSeries(s.provincia, s.departamento)));
+  if (shares.length === 1) return { ...series[0], departments: shares };
+  const campaigns = series[0].campaigns.map((row, i) => {
+    let acc = 0, w = 0, prov = null;
+    shares.forEach((s, k) => {
+      const v = series[k].campaigns[i].rinde_dpto_kg_ha;
+      if (v != null) { acc += v * s.share; w += s.share; }
+      prov = series[k].campaigns[i].rinde_prov_kg_ha ?? prov;
+    });
+    return { campana: row.campana, rinde_dpto_kg_ha: w ? round(acc / w, 1) : null, rinde_prov_kg_ha: prov };
+  });
+  return {
+    ...series[0],
+    departamento: shares.map((s) => `${s.departamento} ${Math.round(s.share * 100)} %`).join(" + "),
+    departments: shares,
+    campaigns,
+    method_note: "the lot straddles a department boundary: shares estimated from the centroid and the five sampling points; the official series is the share-weighted blend of the departments' series",
+  };
+}
+
 // ---------------------------------------------------------------- official yields (MAGyP CSV, cached)
 let csvRows = null;
 

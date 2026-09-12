@@ -12,7 +12,7 @@ import { loadPack, readPublicFile, PUBLIC_FILES, economicsInputs, historyPeaks }
 import { buildEvidence, memoText } from "./evidence.js";
 import { buildCapacity } from "./capacity.js";
 import { committeeReport } from "./report.js";
-import { registerDemo, getLot, listLots, createLot } from "./lotes.js";
+import { registerDemo, resolveDemoDepartment, getLot, listLots, createLot } from "./lotes.js";
 import { loadKeypair, publishMemo, publisherBalanceSol, DEFAULT_RPC_URL } from "./memo.js";
 
 const PORT = Number(process.env.PORT ?? 8787);
@@ -21,6 +21,9 @@ const KEYPAIR_PATH = process.env.PUBLISHER_KEYPAIR ?? ".keys/publisher.json";
 
 const pack = loadPack();
 registerDemo(pack);
+resolveDemoDepartment(pack)
+  .then((r) => r && console.log(`[lotes] demo lot department resolved live: ${r.departamento} (committed file: ${r.committed ?? "n/a"}); worst official ${r.worst.campana} ${r.worst.rinde_dpto_kg_ha} kg/ha`))
+  .catch((err) => console.log(`[lotes] demo department not resolved (offline?): ${err.message}; using committed rindes-oficiales.json`));
 const keypair = existsSync(KEYPAIR_PATH) ? loadKeypair(KEYPAIR_PATH) : null;
 
 const CORS = {

@@ -8,7 +8,7 @@
 |---|---|---|
 | Pack de datos v1: NDVI medido (2 fechas 2025), lluvia, puntos, economía del lote, evidencia con hash | `data/` | ✅ |
 | Historial de 7 campañas (pico y mínimo de NDVI, lluvia dic–feb) | `data/lote-history.json`, `scripts/build_history.py` | ✅ |
-| Rindes oficiales del dpto. Río Segundo (MAGyP) | `data/rindes-oficiales.json`, `scripts/build_rindes_oficiales.py` | ✅ |
+| Rindes oficiales del dpto. Río Primero (MAGyP) | `data/rindes-oficiales.json`, `scripts/build_rindes_oficiales.py` | ✅ |
 | Fórmula compartida + hash + `capacidad-v2` + `cupo-v2` (v1 servida como alternativa rechazada) | `packages/score` | ✅ 25 tests |
 | Backend: `/score`, `/capacity`, `/report/<escenario>`, `/disburse` (mock), `/publish` (parado) | `services/evidence-api` | ✅ 4 tests |
 | Validación del pack sin red | `tests/` | ✅ 92 tests |
@@ -18,13 +18,13 @@
 | Tira de imágenes NDVI (7 veranos, pico y mínimo) | `data/history-images/` | ✅ generada, local |
 | Web3 (firma en devnet) y Twin (pago en ARGt) | `services/evidence-api` | ⏸️ afuera de la demo |
 
-**Fuente de verdad de los datos: `data/`.** Los números vigentes son los de `capacidad-v2` y `cupo-v2`: cupo pre-siembra **29.877 USD**; en campaña verde **22.235**, amarillo 20.308, rojo 0. Cualquier 70.700, 60.800 o 52 % es un documento viejo.
+**Fuente de verdad de los datos: `data/`.** Los números vigentes son los de `capacidad-v2` y `cupo-v2`: cupo pre-siembra **45.173 USD**; en campaña verde **33.619**, amarillo 30.705, rojo 0. Cualquier 70.700, 60.800 o 52 % es un documento viejo.
 
 ## Lo que falta
 
 ### Front (lo único que bloquea la demo)
 
-1. **Tomar los números del backend.** El cupo de Front sale hoy de una base fija de 100.000 USD (52.100). El backend da 22.235 en verde. Leer `advance.advance_limit.usd` de `POST /score` y `capacity.pre_sowing_limit.usd` de `GET /capacity`. Regla: `usd: null` es "sin respaldo", no cero; se muestra `representativeness.reasons`.
+1. **Tomar los números del backend.** El cupo de Front sale hoy de una base fija de 100.000 USD (52.100). El backend da 33.619 en verde. Leer `advance.advance_limit.usd` de `POST /score` y `capacity.pre_sowing_limit.usd` de `GET /capacity`. Regla: `usd: null` es "sin respaldo", no cero; se muestra `representativeness.reasons`.
 2. **Pantalla Capacidad:** la tira de siete veranos (o la tabla), el peor año oficial resaltado, el cupo pre-siembra en grande con la frase "contra el peor año que este departamento ya tuvo".
 3. **Factores y versión de regla** al lado del semáforo (`factors[]`, `rule_version`).
 4. **Vista Informe:** renderiza `GET /report/<escenario>` con botón de imprimir. Cierra el pitch.

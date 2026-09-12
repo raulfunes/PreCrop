@@ -4,7 +4,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { DATA_DIR } from "./pack.js";
-import { ringOf, bboxOf, centroidOf, areaHa, samplingPoints, departmentFor, officialSeries, buildHistory, buildPresets } from "./live.js";
+import { ringOf, bboxOf, centroidOf, areaHa, samplingPoints, departmentShares, officialSeriesForShares, buildHistory, buildPresets } from "./live.js";
 
 const LOTES_DIR = join(DATA_DIR, "lotes");
 const registry = new Map();
@@ -22,6 +22,23 @@ export function registerDemo(pack) {
       } catch { /* ignore broken file */ }
     }
   }
+}
+
+/**
+ * The demo lot goes through the same path as a live polygon: its department is
+ * resolved from the centroid and the official series comes from the MAGyP CSV.
+ * The committed data/rindes-oficiales.json stays as the offline fallback.
+ */
+export async function resolveDemoDepartment(pack) {
+  const shares = await departmentShares(pack.points.points, pack.presets.center);
+  const series = await officialSeriesForShares(shares);
+  const entry = registry.get(pack.presets.lote_id);
+  const committed = pack.official?.departamento ?? pack.official?.campaigns?.[0]?.departamento ?? null;
+  entry.official = { ...series, lote_id: pack.presets.lote_id, committed_department: committed };
+  entry.lote.departamento = series.departamento;
+  entry.lote.departments = shares;
+  entry.lote.provincia = shares[0].provincia;
+  return { departamento: series.departamento, committed, worst: series.campaigns.filter((x) => x.rinde_dpto_kg_ha != null).reduce((a, b) => (b.rinde_dpto_kg_ha < a.rinde_dpto_kg_ha ? b : a)) };
 }
 
 export function getLot(id, fallbackId) {
@@ -62,14 +79,15 @@ export async function createLot(input, demo, onProgress = () => {}) {
   if (ha < 5 || ha > 2000) throw new Error(`polygon area ${ha} ha is outside 5-2000 ha`);
   const feature = { type: "Feature", properties: {}, geometry: input.geometry };
 
+  const pts = samplingPoints(ring);
   onProgress({ step: "departamento" });
-  const dept = await departmentFor(centre.lat, centre.lon);
-  if (!dept.departamento) throw new Error("could not resolve the department for the polygon centroid");
+  const shares = await departmentShares(pts, centre);
+  const dept = shares[0];
   const name = input.name?.trim() || `Lote ${dept.departamento}`;
   const id = `${slug(name)}-${Date.now().toString(36).slice(-4)}`;
 
-  onProgress({ step: "rindes oficiales", departamento: dept.departamento });
-  const official = await officialSeries(dept.provincia, dept.departamento);
+  onProgress({ step: "rindes oficiales", departamentos: shares });
+  const official = await officialSeriesForShares(shares);
   official.lote_id = id;
 
   onProgress({ step: "historial" });
@@ -92,8 +110,8 @@ export async function createLot(input, demo, onProgress = () => {}) {
     ndvi_published_stat: "median",
   });
 
-  const points = { ...demo.points, lote_id: id, points: samplingPoints(ring) };
-  const lote = { id, nombre: name, source: "live polygon", departamento: dept.departamento, departamento_id: dept.departamento_id, provincia: dept.provincia, ha, center: presets.center, created_at_utc: new Date().toISOString() };
+  const points = { ...demo.points, lote_id: id, points: pts };
+  const lote = { id, nombre: name, source: "live polygon", departamento: official.departamento, departments: shares, provincia: dept.provincia, ha, center: presets.center, created_at_utc: new Date().toISOString() };
   const saved = { lote, geometry: input.geometry, presets, history, official, points };
   mkdirSync(LOTES_DIR, { recursive: true });
   writeFileSync(join(LOTES_DIR, `${id}.json`), JSON.stringify(saved, null, 2) + "\n", "utf8");

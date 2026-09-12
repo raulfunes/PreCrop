@@ -29,13 +29,13 @@ npm start           # http://localhost:8787
 
 ### El cupo de `/score` cuelga del techo de `/capacity`
 
-Las dos reglas estaban dando respuestas distintas para el mismo lote: `cupo-v1` calculaba sobre el rinde de referencia a condición plena (3,2 t/ha → 116.736 USD de base) y autorizaba ~54–61k USD, mientras capacidad leía el peor año real del departamento y ponía el piso en 29.877 USD. Un comité encuentra esa contradicción enseguida.
+Las dos reglas estaban dando respuestas distintas para el mismo lote: `cupo-v1` calculaba sobre el rinde de referencia a condición plena (3,2 t/ha → 116.736 USD de base) y autorizaba ~54–61k USD, mientras capacidad leía el peor año real del departamento y ponía el piso en 45.173 USD. Un comité encuentra esa contradicción enseguida.
 
 `cupo-v2` conserva **toda** la fórmula de condición —malezas de Visión incluidas, con su peso −0,15— y solo cambia la base:
 
 ```
-piso   = ha × rinde_peor_año_oficial × precio   = 100 × 1,17 × 364,8 = 42.682 USD
-techo  = piso × haircut                         = 29.877 USD   ← lo que publica /capacity
+piso   = ha × rinde_peor_año_oficial × precio   = 100 × 1,77 × 364,8 = 64.533 USD
+techo  = piso × haircut                         = 45.173 USD   ← lo que publica /capacity
 cupo   = techo × condición/100
 ```
 
@@ -43,8 +43,8 @@ cupo   = techo × condición/100
 
 | malezas (Visión) | score | cupo `cupo-v2` | % del techo | `cupo-v1` daba |
 |---|---|---|---|---|
-| 12 % | 74,4 verde | 22.235 USD | 74,4 % | 60.819 USD |
-| 65 % | 66,5 amarillo | 19.860 USD | 66,5 % | 54.282 USD |
+| 12 % | 74,4 verde | 33.619 USD | 74,4 % | 60.819 USD |
+| 65 % | 66,5 amarillo | 30.040 USD | 66,5 % | 54.282 USD |
 
 El bloque `superseded_advance` de la respuesta trae el número de `cupo-v1` para que el cambio sea auditable.
 
@@ -61,14 +61,14 @@ El cupo se dimensiona contra **el peor año que el departamento realmente tuvo**
 
 ```
 cupo_usd = ha × rinde_peor_año_oficial_t_ha × precio_usd_t × haircut
-         = 100 × 1.17 × 364.8 × 0.7 = 29 877 USD
+         = 100 × 1.769 × 364.8 × 0.7 = 45 173 USD
 ```
 
 ### Qué hace el NDVI acá
 
 **Habilita la regla, no multiplica el cupo.** Por cada campaña se calcula el índice NDVI del lote sobre el índice de rinde oficial; la **mediana** de esos ratios dice si el lote sigue a su departamento. Si cae dentro de la banda 0.85–1.15, el rinde departamental es un proxy legítimo para este lote y el cupo se publica. Si no, se retiene con el motivo.
 
-Se usa mediana y no media a propósito: en 2022/23 el ratio da **2.36**, porque el NDVI se mantuvo alto mientras el rinde se desplomaba por la sequía. Ese outlier queda visible en `series` pero no mueve la mediana. Su dispersión (CV 0.44) es la razón por la que este ratio nunca escala el cupo — corregiría un 3.7 % con un 44 % de ruido.
+Se usa mediana y no media a propósito: en 2022/23 el ratio da **1.83**, porque el NDVI se mantuvo alto mientras el rinde se desplomaba por la sequía. Ese outlier queda visible en `series` pero no mueve la mediana. Su dispersión (CV 0.28) es la razón por la que este ratio nunca escala el cupo — corregiría un 2 % con un 28 % de ruido.
 
 ### Respuesta
 
@@ -81,33 +81,33 @@ Se usa mediana y no media a propósito: en 2022/23 el ratio da **2.36**, porque 
     "series": [                          // una fila por campaña 2018/19–2024/25
       {
         "campana": "2022/23",
-        "official_dpto_kg_ha": 1170,
+        "official_dpto_kg_ha": 1769,
         "ndvi_peak": 0.7741,
         "ndvi_index": 0.9507,            // ndvi_peak / mediana de la serie
-        "official_index": 0.4026,        // rinde / mediana de la serie
-        "lote_vs_district": 2.3614,       // el outlier de la sequía, visible
+        "official_index": 0.5191,        // rinde / mediana de la serie
+        "lote_vs_district": 1.8314,       // el outlier de la sequía, visible
         "status": "paired"               // "unpaired" si falta NDVI o rinde
       }
     ],
     "worst_year": {
       "campana": "2022/23",
-      "official_dpto_kg_ha": 1170,
-      "yield_t_ha": 1.17,
+      "official_dpto_kg_ha": 1769,
+      "yield_t_ha": 1.769,
       "source": "measured"               // dato publicado, no estimado
     },
     "district_volatility": { "cv": 0.2912 },      // cuánto oscila el departamento
     "representativeness": {
       "representative": true,
-      "lote_vs_district_median": 1.0368,
-      "lote_vs_district_cv": 0.4393,
+      "lote_vs_district_median": 1.0227,
+      "lote_vs_district_cv": 0.2785,
       "band": { "min": 0.85, "max": 1.15 },
       "paired_campaigns": 7,
       "reasons": []                      // poblado solo cuando bloquea
     },
     "pre_sowing_limit": {
-      "usd": 29877,                      // null si no es representativo
-      "ars": 45861195,
-      "usd_if_representative": 29877,    // siempre presente, para auditar la brecha
+      "usd": 45173,                      // null si no es representativo
+      "ars": 69340555,
+      "usd_if_representative": 45173,    // siempre presente, para auditar la brecha
       "status": "allowed",               // o "blocked_unrepresentative"
       "formula": "ha * worst_official_yield_t_ha * price_usd_t * haircut"
     }

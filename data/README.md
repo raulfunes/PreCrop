@@ -1,6 +1,6 @@
 # Pack de evidencia del lote demo
 
-Este directorio es la **fuente de verdad del lote demo** (`demo-rio-segundo-01`, Río Segundo, Córdoba, 100 ha de soja). Publica los inputs medidos y la metadata para calcular el score. **No calcula el score**: eso lo hace Front. Es JSON estático: el día de la demo no se llama a ningún satélite ni API.
+Este directorio es la **fuente de verdad del lote demo** (`demo-rio-segundo-01`, departamento Río Primero, Córdoba, 100 ha de soja; el id conserva el nombre original del pack). Publica los inputs medidos y la metadata para calcular el score. **No calcula el score**: eso lo hace Front. Es JSON estático: el día de la demo no se llama a ningún satélite ni API.
 
 Versión del pack: `pack_version 1.0.0`. Si cambia el schema, sube `pack_version` y se avisa en standup.
 
@@ -50,21 +50,21 @@ Los márgenes son finos (1.5 a 4 puntos). **No redondear ningún input antes de 
 
 ## Capacidad: cuánto se puede anticipar antes de sembrar (regla `capacidad-v2`)
 
-El cupo pre-siembra se dimensiona contra **el peor año que el departamento Río Segundo realmente tuvo**, según la serie oficial de rindes (`rindes-oficiales.json`, MAGyP, licencia CC-BY, generada por `scripts/build_rindes_oficiales.py`):
+El cupo pre-siembra se dimensiona contra **el peor año que el departamento Río Primero realmente tuvo**, según la serie oficial de rindes (`rindes-oficiales.json`, MAGyP, licencia CC-BY, generada por `scripts/build_rindes_oficiales.py`):
 
 | Campaña | Rinde oficial dpto. | Campaña | Rinde oficial dpto. |
 |---|---|---|---|
-| 2018/19 | 3.673 kg/ha | 2022/23 | **1.170 kg/ha (peor, sequía)** |
-| 2019/20 | 2.906 | 2023/24 | 2.505 |
-| 2020/21 | 3.236 | 2024/25 | 3.121 |
-| 2021/22 | 2.597 | | |
+| 2018/19 | 3.669 kg/ha | 2022/23 | **1.769 kg/ha (peor, sequía)** |
+| 2019/20 | 3.248 | 2023/24 | 3.408 |
+| 2020/21 | 3.651 | 2024/25 | 3.558 |
+| 2021/22 | 3.011 | | |
 
 ```
 cupo_pre_siembra_usd = ha * rinde_peor_año_oficial * precio_usd_t * haircut
-                     = 100 * 1.17 * 364.8 * 0.7 = 29.877 USD  (≈ $ 45,9 M)
+                     = 100 * 1.769 * 364.8 * 0.7 = 45.173 USD  (≈ $ 69,3 M)
 ```
 
-**Qué hace el NDVI acá: habilita, no multiplica.** `lote-history.json` (pico de NDVI por campaña, `scripts/build_history.py`) sirve para comprobar que este lote *sigue a su departamento*: se compara, campaña por campaña, cuánto se aparta el NDVI del lote de su propia mediana contra cuánto se aparta el rinde del departamento de la suya. Si la mediana de ese cociente cae en la banda 0,85–1,15, el rinde departamental es un proxy legítimo para el lote y el cupo se publica. Para el lote demo dio **1,04**: representativo. Si no lo fuera (por ejemplo un lote con riego que sigue verde en sequía), el cupo se **retiene** con el motivo, y `usd` vuelve `null`: "sin respaldo", que no es cero.
+**Qué hace el NDVI acá: habilita, no multiplica.** `lote-history.json` (pico de NDVI por campaña, `scripts/build_history.py`) sirve para comprobar que este lote *sigue a su departamento*: se compara, campaña por campaña, cuánto se aparta el NDVI del lote de su propia mediana contra cuánto se aparta el rinde del departamento de la suya. Si la mediana de ese cociente cae en la banda 0,85–1,15, el rinde departamental es un proxy legítimo para el lote y el cupo se publica. Para el lote demo dio **1,02**: representativo. Si no lo fuera (por ejemplo un lote con riego que sigue verde en sequía), el cupo se **retiene** con el motivo, y `usd` vuelve `null`: "sin respaldo", que no es cero.
 
 **Por qué no se estima el rinde desde el satélite (regla `capacidad-v1`, rechazada).** El pico de NDVI varía 17 % entre campañas mientras el rinde real varía 214 %; en 2022/23 la canopia siguió verde en febrero aunque no llenó grano. Contra la serie oficial esa regla dio r² 0,43 y habría publicado 70.735 USD, 2,4 veces lo que soporta el peor año real. Se sirve en `GET /capacity` como `rejected_alternative` para poder contestarlo con el número medido.
 
@@ -73,14 +73,14 @@ cupo_pre_siembra_usd = ha * rinde_peor_año_oficial * precio_usd_t * haircut
 El índice de condición no es un score de crédito. **Capacidad pone el techo; condición libera una porción:**
 
 ```
-techo_usd  = cupo_pre_siembra (29.877 USD)
+techo_usd  = cupo_pre_siembra (45.173 USD)
 limite_usd = techo_usd * condicion / 100          # rojo bloquea desembolsos nuevos (usd = 0)
 ```
 
 | Escenario | Condición | Semáforo | Límite sugerido | Desembolsos |
 |---|---|---|---|---|
-| bueno | 74,4 | verde | **22.235 USD** (≈ $ 34,1 M) | habilitados |
-| mixto | 68,0 | amarillo | 20.308 USD | revisar |
+| bueno | 74,4 | verde | **33.619 USD** (≈ $ 51,6 M) | habilitados |
+| mixto | 68,0 | amarillo | 30.705 USD | revisar |
 | malo | 48,5 | rojo | 0 | bloqueados |
 
 Si capacidad no pudo fijar un piso, el límite es `null` con `new_disbursements: "blocked_no_capacity"`: distinto de cero, no se muestra como cero. El benchmark es lo que la coop hace hoy: un porcentaje plano para todos. `POST /score` devuelve el límite, los factores con su aporte, los pesos y la versión de la regla; `GET /capacity` el cupo pre-siembra con su serie; `GET /report/<escenario>` el informe de una página para el comité. Contrato completo para Front en `services/evidence-api/README.md`.

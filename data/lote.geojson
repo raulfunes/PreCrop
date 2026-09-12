@@ -5,7 +5,7 @@
     "schema_version": 1,
     "pack_version": "1.0.0",
     "lote_id": "demo-rio-segundo-01",
-    "nombre": "Lote demo Río Segundo",
+    "nombre": "Lote demo Río Primero",
     "ha": 100,
     "cultivo": "soja",
     "geometry_kind": "analysis_box",

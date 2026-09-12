@@ -1,6 +1,6 @@
 # Cómo funciona PreCrop
 
-Un solo lote de soja, real, de 100 ha en Río Segundo, Córdoba. Dos preguntas que hoy la coop contesta a ojo:
+Un solo lote de soja, real, de 100 ha en Río Primero, Córdoba. Dos preguntas que hoy la coop contesta a ojo:
 
 - **¿Cuánto?** Capacidad: contra el peor año que el departamento ya tuvo, verificado con siete veranos de satélite. Se decide antes de sembrar.
 - **¿Sigo?** Condición: un semáforo en campaña que libera o frena el próximo desembolso.
@@ -8,7 +8,7 @@ Un solo lote de soja, real, de 100 ha en Río Segundo, Córdoba. Dos preguntas q
 ```mermaid
 flowchart LR
     HIST["🛰️ 7 veranos de Sentinel-2<br/>NDVI del lote por campaña"]
-    OFI["📊 Rindes oficiales<br/>dpto. Río Segundo (MAGyP)"]
+    OFI["📊 Rindes oficiales<br/>dpto. Río Primero (MAGyP)"]
     SAT["🛰️ Satélite hoy<br/>NDVI de la escena"]
     CLI["🌧️ Clima Open-Meteo<br/>lluvia 7 días"]
     FOT["📷 Fotos en 5 puntos<br/>% malezas (estimado)"]
@@ -24,7 +24,7 @@ flowchart LR
     SAT --> CON
     CLI --> CON
     FOT --> CON
-    CAP -->|"techo: 29.877 USD"| CON
+    CAP -->|"techo: 45.173 USD"| CON
     CAP --> WEB
     CON --> WEB
     WEB --> REP
@@ -35,8 +35,8 @@ flowchart LR
 
 | Momento | Dato | Resultado |
 |---|---|---|
-| Antes de sembrar | Peor año oficial del dpto.: 2022/23, 1,17 t/ha. El lote sigue al dpto. (ratio 1,04) | **Cupo pre-siembra 29.877 USD** |
-| 2 de febrero | NDVI 0.782 · lluvia 46.7 mm · malezas 12 % | Condición 74 → **verde**, límite 22.235 USD, primer desembolso |
+| Antes de sembrar | Peor año oficial del dpto.: 2022/23, 1,77 t/ha. El lote sigue al dpto. (ratio 1,02) | **Cupo pre-siembra 45.173 USD** |
+| 2 de febrero | NDVI 0.782 · lluvia 46.7 mm · malezas 12 % | Condición 74 → **verde**, límite 33.619 USD, primer desembolso |
 | 7 de febrero | NDVI 0.763 · lluvia 0.1 mm · malezas 65 % | Condición 48 → **rojo**, límite 0, segundo desembolso frenado |
 | Cosecha | Entrega en el acopio | El anticipo se descuenta en la liquidación |
 

@@ -321,11 +321,14 @@ def summarise(doc: Dict[str, Any]) -> str:
 
 
 def main(argv=None) -> int:
+    global DEPARTMENT
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--write", action="store_true", help="write data/rindes-oficiales.json")
     parser.add_argument("--check", action="store_true", help="compare against the committed file")
     parser.add_argument("--force", action="store_true", help="write even if the target is dirty")
+    parser.add_argument("--departamento", default=DEPARTMENT, help="department of the lote (ASCII, e.g. 'Rio Primero'); default keeps the module constant")
     args = parser.parse_args(argv)
+    DEPARTMENT = args.departamento
 
     try:
         records = fetch_records()
