@@ -1,15 +1,19 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle2, AlertTriangle, XOctagon, Clock, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
-import type { CondicionLote, EstadoLote } from '@/types';
+import { CheckCircle2, AlertTriangle, XOctagon, Clock, RefreshCw, AlertCircle } from 'lucide-react';
+import type { ScoreResponse, EstadoLote, ApiError } from '@/types';
 import { getLabelEstado } from '@/lib/scoreUtils';
+import { Button } from '@/components/ui/Button';
 
 interface ConditionSummaryProps {
-  condicion: CondicionLote;
+  scoreData: ScoreResponse | null;
+  isLoading: boolean;
+  error: ApiError | null;
+  onRetry: () => void;
 }
 
-// ── Configuración de estado (color + icono + semántica) ──────
+// ── Configuración de estado ──────
 interface ConfigEstado {
   Icono: React.ElementType;
   claseIcono: string;
@@ -54,111 +58,70 @@ const CONFIG_ESTADO: Record<EstadoLote, ConfigEstado> = {
   },
 };
 
-/**
- * ConditionSummary — punto 2 del orden de lectura (branding §11).
- *
- * Comunica en ≤5 segundos:
- *   - Score numérico prominente (48px bold)
- *   - Estado con color + icono + etiqueta de texto (nunca solo color)
- *   - Explicación del score como condición del cultivo
- *   - Tendencia respecto al score anterior (si existe)
- *   - Motivo principal del estado
- *   - Fecha de actualización visible
- *
- * No usa términos crediticios ni probabilidades de cobro.
- */
-export function ConditionSummary({ condicion }: ConditionSummaryProps) {
-  const {
-    score,
-    scoreAnterior,
-    estado,
-    motivoPrincipal,
-    fechaActualizacion,
-    desactualizado,
-  } = condicion;
+export function ConditionSummary({ scoreData, isLoading, error, onRetry }: ConditionSummaryProps) {
+  if (isLoading && !scoreData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 gap-3 text-[var(--color-text-muted)]">
+        <RefreshCw className="animate-spin" size={24} />
+        <p className="text-[14px] font-medium">Calculando condición...</p>
+      </div>
+    );
+  }
 
-  const cfg = CONFIG_ESTADO[estado];
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
+        <AlertCircle size={32} className="text-[var(--color-danger)]" />
+        <div>
+          <p className="text-[14px] font-semibold text-[var(--color-danger)]">Error al calcular la condición</p>
+          <p className="text-[13px] text-[var(--color-danger)]/80 mt-1 max-w-[250px] mx-auto">{error.message}</p>
+        </div>
+        <Button onClick={onRetry} variante="secundario" tamanio="sm">
+          Reintentar
+        </Button>
+      </div>
+    );
+  }
+
+  if (!scoreData) return null;
+
+  const { condition, factors } = scoreData;
+  const cfg = CONFIG_ESTADO[condition.status];
   const { Icono } = cfg;
-  const label = getLabelEstado(estado);
-
-  const diferencia = scoreAnterior !== undefined ? parseFloat((score - scoreAnterior).toFixed(1)) : null;
-  const subio = diferencia !== null && diferencia > 0;
+  const label = getLabelEstado(condition.status);
 
   return (
-    <section
-      aria-labelledby="condition-summary-heading"
-      className="flex flex-col gap-5"
-    >
+    <section aria-labelledby="condition-summary-heading" className={`flex flex-col gap-5 ${isLoading ? 'opacity-50 pointer-events-none' : 'transition-opacity duration-300'}`}>
       <h2 id="condition-summary-heading" className="sr-only">
         Resumen de condición del lote
       </h2>
 
       {/* ── Score + badge de estado ─────────────────────── */}
       <div className="flex items-start gap-5 flex-wrap" aria-live="polite" aria-atomic="true">
-        {/* Score destacado */}
         <div>
-          <div
-            className="flex items-baseline gap-1"
-            aria-label={`Score de condición del cultivo: ${score.toFixed(1)} sobre 100`}
-          >
-            <span
-              className={`text-[56px] leading-none font-bold tabular-nums ${cfg.claseScore}`}
-              aria-hidden="true"
-            >
-              {score.toFixed(1)}
+          <div className="flex items-baseline gap-1" aria-label={`Score de condición del cultivo: ${condition.score.toFixed(1)} sobre 100`}>
+            <span className={`text-[56px] leading-none font-bold tabular-nums ${cfg.claseScore}`} aria-hidden="true">
+              {condition.score.toFixed(1)}
             </span>
             <span className="text-[24px] font-semibold text-[var(--color-text-muted)] leading-none" aria-hidden="true">
               /100
             </span>
           </div>
-          {/* Aclaración semántica del score */}
           <p className="text-[11px] text-[var(--color-text-muted)] mt-1 max-w-[160px] leading-4">
             Condición del cultivo, no un score crediticio
           </p>
         </div>
 
-        {/* Badge de estado: color + icono + texto (nunca solo color) */}
         <div className="flex flex-col gap-2 pt-1">
-          <div
-            className={[
-              'inline-flex items-center gap-2 px-3 py-2',
-              'rounded-[var(--radius-control)] border',
-              cfg.claseFondo,
-              cfg.claseBorde,
-            ].join(' ')}
-            role="status"
-            aria-label={`Estado de condición: ${label}`}
-          >
+          <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-[var(--radius-control)] border ${cfg.claseFondo} ${cfg.claseBorde}`} role="status">
             <Icono size={18} className={cfg.claseIcono} aria-hidden="true" />
             <span className={`text-[14px] font-semibold leading-5 ${cfg.claseTexto}`}>
               {label}
             </span>
           </div>
-
-          {/* Tendencia vs. score anterior */}
-          {diferencia !== null && diferencia !== 0 && (
-            <div
-              className={[
-                'flex items-center gap-1.5 text-[13px] font-medium',
-                subio ? 'text-[var(--color-positive)]' : 'text-[var(--color-danger)]',
-              ].join(' ')}
-              aria-label={`Score anterior: ${scoreAnterior}. ${subio ? 'Subió' : 'Bajó'} ${Math.abs(diferencia!)} puntos.`}
-            >
-              {subio ? (
-                <TrendingUp size={15} aria-hidden="true" />
-              ) : (
-                <TrendingDown size={15} aria-hidden="true" />
-              )}
-              <span>{subio ? '+' : ''}{diferencia} pts</span>
-              <span className="text-[var(--color-text-muted)] font-normal">
-                (anterior: {scoreAnterior?.toFixed(1)}/100)
-              </span>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* ── Separador ────────────────────────────────────── */}
       <hr className="border-[var(--color-border)]" aria-hidden="true" />
 
       {/* ── Motivo principal ─────────────────────────────── */}
@@ -167,23 +130,34 @@ export function ConditionSummary({ condicion }: ConditionSummaryProps) {
           ¿Por qué este estado?
         </h3>
         <p className="text-[14px] text-[var(--color-ink)] leading-[22px]">
-          {motivoPrincipal}
+          {condition.reason}
         </p>
       </div>
 
-      {/* ── Fecha de actualización ───────────────────────── */}
-      <div className={[
-        'flex items-center gap-2 text-[12px]',
-        desactualizado
-          ? 'text-[var(--color-warning)] font-medium'
-          : 'text-[var(--color-text-muted)]',
-      ].join(' ')}>
-        <Calendar size={13} aria-hidden="true" />
-        <span>
-          {desactualizado && <span className="mr-1">⚠ Dato desactualizado ·</span>}
-          Actualizado: {fechaActualizacion}
-        </span>
-      </div>
+      {/* ── Factores ───────────────────────────────────────── */}
+      {factors && factors.length > 0 && (
+        <div className="flex flex-col gap-3 mt-2">
+          <h3 className="text-[12px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">
+            Factores del índice
+          </h3>
+          <div className="flex flex-col gap-2">
+            {factors.map((f, i) => {
+              const isNegative = f.contribution < 0;
+              return (
+                <div key={i} className="flex justify-between items-center bg-[var(--color-neutral-soft)] p-2 rounded border border-[var(--color-border)]">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[13px] font-medium text-[var(--color-ink)]">{f.label}</span>
+                    <span className="text-[11px] text-[var(--color-text-muted)]">{f.value} · peso: {f.weight}</span>
+                  </div>
+                  <span className={`text-[13px] font-bold tabular-nums ${isNegative ? 'text-[var(--color-danger)]' : 'text-[var(--color-positive)]'}`}>
+                    {isNegative ? '' : '+'}{f.contribution.toFixed(1)} pts
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

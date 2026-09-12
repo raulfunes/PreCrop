@@ -2,13 +2,11 @@
 
 import React from 'react';
 import { Info, TrendingUp, AlertCircle } from 'lucide-react';
-import type { FinanzasDemo, EstadoLote } from '@/types';
-import { formatUSD, calcularCupoSimulado } from '@/lib/scoreUtils';
+import { formatUSD } from '@/lib/scoreUtils';
+import type { ScoreResponse } from '@/types';
 
 interface SimulatedLimitCardProps {
-  finanzas: FinanzasDemo;
-  score: number;
-  estado: EstadoLote;
+  advance: ScoreResponse['advance'];
 }
 
 // ── Fila de dato financiero ─────────────────────────────────
@@ -67,112 +65,49 @@ function FilaDato({
   );
 }
 
-/**
- * SimulatedLimitCard — efecto sobre el anticipo (branding §11 punto 4).
- *
- * Separa con claridad los cuatro conceptos del branding §3:
- *   - Cupo de anticipo simulado  (tope teórico calculado)
- *   - Fondos de prueba aportados (total de prueba)
- *   - Capital desembolsado       (fondos ya entregados)
- *   - Fondos disponibles         (saldo sin desembolsar)
- *
- * En el estado inicial solo existe el cupo; el resto aparece en cero.
- * Los ceros son explícitos: no se ocultan para no confundir al jurado.
- *
- * No usa "Aprobado 100%", "salud óptima", "inversión segura" ni "score crediticio".
- */
-export function SimulatedLimitCard({ finanzas, score, estado }: SimulatedLimitCardProps) {
-  const cupoCalculado = calcularCupoSimulado(finanzas.cosechaEstimadaBase, score);
-  const porcentajeUso =
-    cupoCalculado > 0
-      ? Math.min(100, Math.round((finanzas.capitalDesembolsado / cupoCalculado) * 100))
-      : 0;
+export function SimulatedLimitCard({ advance }: SimulatedLimitCardProps) {
+  if (!advance) {
+    return (
+      <section aria-labelledby="simulated-limit-heading" className="flex flex-col gap-4 items-center justify-center py-6 text-center">
+        <h2 id="simulated-limit-heading" className="sr-only">
+          Cupo de anticipo simulado
+        </h2>
+        <AlertCircle size={24} className="text-[var(--color-text-muted)] mb-2" />
+        <p className="text-[14px] font-medium text-[var(--color-ink)]">
+          Límite no disponible
+        </p>
+        <p className="text-[13px] text-[var(--color-text-muted)] max-w-[200px]">
+          El estado actual del lote no habilita el cálculo de un límite de anticipo.
+        </p>
+      </section>
+    );
+  }
 
-  const hayDesembolso = finanzas.capitalDesembolsado > 0;
-  const hayFondos = finanzas.fondosAportados > 0;
+  const { advance_limit, reference, rule_version } = advance;
+  const isBlocked = advance_limit.new_disbursements === 'blocked';
 
   return (
     <section aria-labelledby="simulated-limit-heading" className="flex flex-col gap-0">
       <h2 id="simulated-limit-heading" className="sr-only">
-        Cupo de anticipo simulado y estado de fondos de prueba
+        Cupo de anticipo simulado
       </h2>
 
-      {/* ── Cupo simulado + fórmula ─────────────────────── */}
       <FilaDato
-        etiqueta="Cupo de anticipo simulado"
-        descripcion={`cosecha_base × (${score.toFixed(1)}/100) × 0,7 = ${formatUSD(cupoCalculado)}`}
-        valor={formatUSD(cupoCalculado)}
+        etiqueta="Límite de anticipo sugerido"
+        descripcion={`Referencia: ${formatUSD(reference.reference_value_usd)} · ${advance_limit.pct_of_reference_value}`}
+        valor={formatUSD(advance_limit.usd)}
         esDestacado
         colorValor="text-[var(--color-brand-primary)]"
         icono={<TrendingUp size={14} className="text-[var(--color-brand-primary)]" />}
       />
 
-      {/* ── Fondos aportados ─────────────────────────────── */}
       <FilaDato
-        etiqueta="Fondos de prueba aportados"
-        descripcion="DEMO · Fondos simulados · MOCK"
-        valor={hayFondos ? formatUSD(finanzas.fondosAportados) : '–'}
-        muted={!hayFondos}
-        colorValor={hayFondos ? 'text-[var(--color-ink)]' : undefined}
+        etiqueta="Límite en ARGt"
+        descripcion="Conversión simulada a tasa actual"
+        valor={`ARGt ${advance_limit.ars.toLocaleString('es-AR')}`}
       />
 
-      {/* ── Capital desembolsado ─────────────────────────── */}
-      <FilaDato
-        etiqueta="Capital desembolsado"
-        descripcion={hayDesembolso ? 'Fondos de prueba entregados en la simulación' : 'Aún sin desembolsos en esta simulación'}
-        valor={hayDesembolso ? formatUSD(finanzas.capitalDesembolsado) : '–'}
-        muted={!hayDesembolso}
-        colorValor={hayDesembolso ? 'text-[var(--color-brand-primary)]' : undefined}
-        esDestacado={hayDesembolso}
-      />
-
-      {/* ── Fondos disponibles ───────────────────────────── */}
-      <FilaDato
-        etiqueta="Fondos disponibles"
-        descripcion="Saldo de prueba sin desembolsar"
-        valor={hayFondos ? formatUSD(finanzas.fondosDisponibles) : '–'}
-        muted={!hayFondos || finanzas.fondosDisponibles === 0}
-        colorValor={
-          finanzas.fondosDisponibles > 0
-            ? 'text-[var(--color-positive)]'
-            : undefined
-        }
-      />
-
-      {/* ── Barra de uso del cupo ────────────────────────── */}
-      {hayDesembolso && (
-        <div className="pt-4 pb-1">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] text-[var(--color-text-muted)] font-medium">
-              Uso del cupo simulado
-            </span>
-            <span className="text-[12px] font-bold tabular-nums text-[var(--color-ink)]">
-              {porcentajeUso} %
-            </span>
-          </div>
-          <div
-            className="h-2.5 rounded-[var(--radius-pill)] bg-[var(--color-neutral-soft)] overflow-hidden"
-            role="progressbar"
-            aria-valuenow={porcentajeUso}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Uso del cupo simulado: ${porcentajeUso} por ciento`}
-          >
-            <div
-              className={[
-                'h-full rounded-[var(--radius-pill)] transition-all duration-700 ease-out',
-                estado === 'rojo'   ? 'bg-[var(--color-danger)]'
-                : estado === 'amarillo' ? 'bg-[var(--color-warning)]'
-                : 'bg-[var(--color-brand-primary)]',
-              ].join(' ')}
-              style={{ width: `${porcentajeUso}%` }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ── Bloqueo en rojo ──────────────────────────────── */}
-      {estado === 'rojo' && (
+      {isBlocked && (
         <div className="mt-4 flex items-start gap-2 p-3 bg-[var(--color-danger-soft)] rounded-[var(--radius-badge)] border border-[var(--color-danger)]/20">
           <AlertCircle size={14} className="text-[var(--color-danger)] shrink-0 mt-0.5" aria-hidden="true" />
           <p className="text-[12px] text-[var(--color-danger)] leading-[18px]">
@@ -182,13 +117,11 @@ export function SimulatedLimitCard({ finanzas, score, estado }: SimulatedLimitCa
         </div>
       )}
 
-      {/* ── Nota aclaratoria (tasa + simulación) ─────────── */}
       <div className="mt-4 flex items-start gap-2 p-3 bg-[var(--color-neutral-soft)] rounded-[var(--radius-badge)]">
         <Info size={13} className="text-[var(--color-text-muted)] shrink-0 mt-0.5" aria-hidden="true" />
         <p className="text-[11px] text-[var(--color-text-muted)] leading-[17px]">
-          <strong className="text-[var(--color-ink)]">{finanzas.tasaCampana * 100} % por campaña sobre capital desembolsado · Simulación.</strong>{' '}
-          No es una tasa anual. Se aplica al capital efectivamente entregado.
-          Cosecha estimada base: {formatUSD(finanzas.cosechaEstimadaBase)}.
+          <strong className="text-[var(--color-ink)]">Regla de capacidad: {rule_version}</strong><br/>
+          Simulación. El monto definitivo depende de la cotización al momento del contrato.
         </p>
       </div>
     </section>

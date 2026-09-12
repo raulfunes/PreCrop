@@ -203,3 +203,84 @@ export type VarianteBadge =
   | 'estimado'
   | 'simulado'
   | 'demo';
+
+// ── Evidence API Types ───────────────────────────────────────
+
+export interface EvidenceRequestPayload {
+  scenario: 'bueno' | 'mixto' | 'malo';
+  weeds_pct?: number;
+  weeds_source?: 'estimated';
+  amount_ars?: number;
+}
+
+export interface ScoreResponse {
+  condition: {
+    status: EstadoLote;
+    score: number;
+    reason: string;
+  };
+  factors: Array<{
+    label: string;
+    value: string;
+    weight: string;
+    contribution: number;
+    source: string;
+  }>;
+  advance: {
+    advance_limit: {
+      usd: number;
+      ars: number;
+      pct_of_reference_value: string;
+      new_disbursements: 'allowed' | 'review' | 'blocked';
+    };
+    reference: {
+      reference_value_usd: number;
+    };
+    rule_version: string;
+  } | null;
+}
+
+export interface PublishResponse {
+  evidence: {
+    content_sha256: string;
+  };
+  anchor: {
+    network: string;
+    mock: boolean;
+    signature: string;
+    explorer_url: string;
+  };
+}
+
+export interface DisburseResponse {
+  receipt: {
+    asset: string;
+    amount_ars: number;
+    from: string;
+    to: string;
+    reference: string;
+    status: string;
+    settled_in_seconds: number;
+    note: string;
+    evidence_sha256: string;
+  };
+}
+
+export interface ApiErrorResponse {
+  error: string;
+  status?: number;
+  reason?: string;
+  hint?: string;
+  detail?: string;
+  advance?: Record<string, unknown>; // To hold potential block details for disburse
+}
+
+export class ApiError extends Error {
+  public data: ApiErrorResponse;
+  constructor(data: ApiErrorResponse) {
+    super(data.error || 'Unknown API Error');
+    this.name = 'ApiError';
+    this.data = data;
+  }
+}
+
