@@ -3,18 +3,37 @@
 import React from 'react';
 import { RefreshCw, AlertCircle, TrendingUp, BarChart3, Info, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { YieldSeriesChart } from './YieldSeriesChart';
 import { formatUSD } from '@/lib/scoreUtils';
 import type { CapacityResponse, ApiError } from '@/types';
+import type { Role } from './RoleActions';
 
 interface CapacityScreenProps {
   data: CapacityResponse | null;
   isLoading: boolean;
   error: ApiError | null;
   onRetry: () => void;
+  role: Role;
 }
 
-export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScreenProps) {
+/**
+ * La coop lee este modal para decidir cuanto autoriza; el productor, para entender
+ * cuanto le pueden anticipar y por que. Mismos numeros, distinto sujeto.
+ */
+const TEXTOS: Record<Role, { titulo: string; pie: string; sinRespaldo: string }> = {
+  coop: {
+    titulo: 'Cupo pre-siembra sugerido',
+    pie: 'Contra el peor año que el departamento realmente tuvo',
+    sinRespaldo: 'Este lote no es estadísticamente representativo de su departamento. No se puede establecer un cupo seguro basado en la historia departamental oficial.',
+  },
+  productor: {
+    titulo: 'Cupo que te pueden anticipar',
+    pie: 'Calculado contra el peor año que tu departamento realmente tuvo',
+    sinRespaldo: 'Tu lote no acompaña lo suficiente a la historia de su departamento, así que todavía no hay un cupo respaldado que la coop pueda ofrecerte.',
+  },
+};
+
+export function CapacityScreen({ data, isLoading, error, onRetry, role }: CapacityScreenProps) {
+  const t = TEXTOS[role];
   if (isLoading && !data) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3 text-[var(--color-text-muted)]">
@@ -63,7 +82,7 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
       {/* Resumen principal (Siempre visible) */}
       <section className="bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] p-4 md:p-5">
         <h2 className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">
-          Cupo pre-siembra sugerido
+          {t.titulo}
         </h2>
 
         {representativeness.representative ? (
@@ -80,7 +99,7 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
               </p>
             )}
             <p className="text-[13px] text-[var(--color-text-muted)] mt-1">
-              Contra el peor año que el departamento realmente tuvo
+              {t.pie}
             </p>
           </div>
         ) : (
@@ -88,7 +107,7 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
             <div className="p-3 bg-[var(--color-warning-soft)] border border-[var(--color-warning)]/30 rounded mb-3">
               <p className="text-[13px] font-bold text-[var(--color-warning)] mb-1">Sin respaldo suficiente</p>
               <p className="text-[12px] text-[var(--color-ink)] leading-snug">
-                Este lote no es estadísticamente representativo de su departamento. No se puede establecer un cupo seguro basado en la historia departamental oficial.
+                {t.sinRespaldo}
               </p>
               <ul className="list-disc pl-5 mt-2 text-[11px] text-[var(--color-text-muted)]">
                 {representativeness.reasons.map((r, i) => <li key={i}>{r}</li>)}
@@ -145,52 +164,6 @@ export function CapacityScreen({ data, isLoading, error, onRetry }: CapacityScre
           </div>
         </div>
       </section>
-
-      {/* Historial de campañas (Plegable) */}
-      <details className="group bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-card)] shadow-[var(--shadow-card)] overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)]">
-        <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--color-neutral-soft)] font-bold text-[12px] text-[var(--color-text-muted)] uppercase tracking-wide focus:outline-none">
-          Serie oficial y respuesta satelital ({series.length} campañas)
-          <span className="transition group-open:rotate-180 text-[var(--color-brand-primary)]">▼</span>
-        </summary>
-        
-        <div className="p-4 pt-0 border-t border-[var(--color-border)]">
-          <div className="mt-4">
-            <YieldSeriesChart series={series} worstCampana={worst_year?.campana ?? null} height={96} />
-          </div>
-
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full text-[11px] leading-5 tabular-nums">
-              <thead>
-                <tr className="text-left uppercase tracking-wide text-[var(--color-text-muted)] border-b border-[var(--color-border)]">
-                  <th className="py-1 pr-2 font-semibold">Campaña</th>
-                  <th className="py-1 pr-2 font-semibold text-right">Rinde dpto.</th>
-                  <th className="py-1 pr-2 font-semibold text-right">NDVI lote</th>
-                  <th className="py-1 pr-2 font-semibold text-right">Lote/dpto.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {series.map((c) => {
-                  const isWorst = c.campana === worst_year?.campana;
-                  return (
-                    <tr key={c.campana} className={`border-b border-[var(--color-border)] last:border-0 ${isWorst ? 'bg-[var(--color-danger-soft)] text-[var(--color-danger)] font-semibold' : 'text-[var(--color-ink)]'}`}>
-                      <td className="py-1.5 pr-2">{c.campana}{isWorst && <span className="ml-1 text-[9px] uppercase">peor</span>}</td>
-                      <td className="py-1.5 pr-2 text-right">{c.official_dpto_kg_ha !== null ? `${c.official_dpto_kg_ha.toLocaleString('es-AR')}` : 's/d'}</td>
-                      <td className="py-1.5 pr-2 text-right">{c.ndvi_peak !== null ? c.ndvi_peak.toFixed(3) : 's/d'}</td>
-                      <td className="py-1.5 text-right">{c.lote_vs_district !== null ? `${c.lote_vs_district.toFixed(2)}x` : 's/d'}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-3 p-2.5 bg-[var(--color-neutral-soft)] rounded border border-[var(--color-border)]">
-            <p className="text-[11px] text-[var(--color-text-muted)]">
-              <strong className="text-[var(--color-ink)]">Representatividad estadística:</strong> {representativeness.basis} {representativeness.note}
-            </p>
-          </div>
-        </div>
-      </details>
 
       {/* Alternativa Rechazada (Plegable) */}
       <details className="group bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-card)] shadow-[var(--shadow-card)] overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-primary)]">

@@ -319,7 +319,7 @@ export default function HomePage() {
         )}
 
         {/* ── Área de Trabajo (Workspace) ─────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[64%_36%] gap-4 lg:gap-5 lg:min-h-[clamp(520px,calc(100vh-280px),760px)]">
+        <div className="grid grid-cols-1 lg:grid-cols-[64%_36%] gap-4 lg:gap-5 lg:min-h-[clamp(400px,calc(100vh-280px),760px)]">
           {/* Columna Izquierda: Mapa (En móvil pasa abajo) */}
           <div className="relative z-0 isolate flex flex-col min-w-0 bg-[var(--color-surface)] rounded-[var(--radius-card)] border border-[var(--color-border)] shadow-[var(--shadow-card)] overflow-hidden order-2 lg:order-1 h-[600px] lg:h-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)] bg-[var(--color-surface-sage)]">
@@ -346,20 +346,20 @@ export default function HomePage() {
 
           {/* Columna Derecha: Cuadrícula 2x2 (En móvil pasa arriba) */}
           <div className="flex flex-col min-w-0 order-1 lg:order-2">
-            <MetricGrid capacity={capacityData} score={scoreData} lot={workflow.state} onSelectModal={(id) => setActiveModal(id as ModalId)} capacityLoading={capacityLoading} scoreLoading={isLoading} lotLoading={workflow.isLoading} />
+            <MetricGrid capacity={capacityData} score={scoreData} lot={workflow.state} onSelectModal={(id) => setActiveModal(id as ModalId)} role={role} capacityLoading={capacityLoading} scoreLoading={isLoading} lotLoading={workflow.isLoading} />
           </div>
         </div>
       </main>
 
       {/* ── Modales ──────────────────────────── */}
-      <AppDialog isOpen={activeModal === 'capacity'} onClose={() => setActiveModal(null)} title="Cupo pre-siembra">
-        <CapacityScreen data={capacityData} isLoading={capacityLoading} error={capacityError} onRetry={capacityRetry} />
+      <AppDialog isOpen={activeModal === 'capacity'} onClose={() => setActiveModal(null)} title={role === 'coop' ? 'Cupo pre-siembra' : 'Tu cupo pre-siembra'}>
+        <CapacityScreen data={capacityData} isLoading={capacityLoading} error={capacityError} onRetry={capacityRetry} role={role} />
         <div className="mt-6 pt-5 border-t border-[var(--color-border)] text-right">
-          <button type="button" onClick={() => setActiveModal('report')} className="text-[13px] font-semibold text-[var(--color-brand-primary)] hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)] rounded px-1">Ver informe para el comité &rarr;</button>
+          <button type="button" onClick={() => setActiveModal('report')} className="text-[13px] font-semibold text-[var(--color-brand-primary)] hover:underline focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-primary)] rounded px-1">{role === 'coop' ? 'Ver informe para el comité' : 'Ver informe de tu lote'} &rarr;</button>
         </div>
       </AppDialog>
 
-      <AppDialog isOpen={activeModal === 'condition'} onClose={() => setActiveModal(null)} title="Condición del cultivo">
+      <AppDialog isOpen={activeModal === 'condition'} onClose={() => setActiveModal(null)} title={role === 'coop' ? 'Condición del cultivo' : 'Condición de tu lote'}>
         <div className="flex flex-col gap-5">
           <DashSection id="semaforo" titulo="Resumen de Condición" noPadding={false}>
             <div className="flex items-center gap-6">
@@ -380,7 +380,7 @@ export default function HomePage() {
         </div>
       </AppDialog>
 
-      <AppDialog isOpen={activeModal === 'available'} onClose={() => setActiveModal(null)} title="Disponible para retirar">
+      <AppDialog isOpen={activeModal === 'available'} onClose={() => setActiveModal(null)} title={role === 'coop' ? 'Disponible para desembolsar' : 'Disponible para retirar'}>
         <div className="flex flex-col gap-5">
           <DashSection id="acciones" titulo={role === 'coop' ? 'Decisión de la cooperativa' : 'Solicitud del productor'}>
             <RoleActions role={role} lot={workflow.state} capacity={capacityData} busy={workflow.busy} lastReceipt={workflow.lastReceipt} onApprove={() => workflow.approve()} onDisburse={workflow.disburse} onClearPhotos={handleClearPhotos} />
@@ -394,7 +394,7 @@ export default function HomePage() {
         </div>
       </AppDialog>
 
-      <AppDialog isOpen={activeModal === 'evidence'} onClose={() => setActiveModal(null)} title="Evidencia de campo" className="max-w-[1000px]">
+      <AppDialog isOpen={activeModal === 'evidence'} onClose={() => setActiveModal(null)} title={role === 'coop' ? 'Evidencia de campo' : 'Tus fotos del lote'} className="max-w-[1000px]">
         <div className="flex flex-col gap-5">
           <DashSection id="fotos-lote" titulo="Fotos de la recorrida">
             {role === 'productor' ? (
