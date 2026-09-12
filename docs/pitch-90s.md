@@ -34,3 +34,4 @@ Cortá después de "Nadie tuvo que viajar" y saltá al negocio. Quedan 70 segund
 | ¿El score es probabilidad de cobro? | No. Es condición del cultivo. La regla de desembolso la pone quien presta. |
 | ¿Es legal el token? | En la demo es simulación en testnet. El producto es el score y la evidencia. |
 | ¿Y las malezas? | Hoy estimadas con fotos, sin drone. Se dice en voz alta. |
+| ¿Y si el lote tiene riego? | Más del 95 % de la soja cordobesa es de secano (Córdoba riega ~127.000 ha con pivote sobre más de 7 millones sembradas) y el lote demo también. Hoy el clima se mide por lluvia, así que un lote regado sin malezas cae a amarillo, no a rojo: se revisa, no se bloquea. El riego el satélite lo ve en el vigor; la versión siguiente mide el agua en la planta (índice de humedad NDMI, mismas escenas Sentinel-2) en lugar de la lluvia. |
