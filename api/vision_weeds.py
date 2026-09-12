@@ -37,6 +37,61 @@ MIME = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 POINT_ID_MAX = 32
 REVIEW_NAME_LEN = 36  # 32 hexadecimales + ".png"
 
+# ---- Proveedor alternativo: OpenRouter (API compatible con OpenAI). Se activa con
+# OPENROUTER_API_KEY en el entorno; sin esa variable el servicio sigue llamando a
+# Gemini directo. Mismo prompt, misma imagen, misma forma de respuesta para el parser.
+OPENROUTER_HOST = "openrouter.ai"
+OPENROUTER_PATH = "/api/v1/chat/completions"
+OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "google/gemini-2.5-flash")
+PROVIDER = "openrouter" if os.environ.get("OPENROUTER_API_KEY") else "gemini"
+if PROVIDER == "openrouter":
+    MODEL = f"openrouter:{OPENROUTER_MODEL}"
+
+
+def request_openrouter(body, key):
+    """Envia el pedido de Gemini (texto + imagen) por OpenRouter y devuelve
+    (transport, raw) con raw en la forma que espera vision.response_text."""
+    import http.client
+    import re
+    import time
+    start = time.monotonic()
+    content = []
+    for part in body["contents"][0]["parts"]:
+        if "text" in part:
+            content.append({"type": "text", "text": part["text"]})
+        elif "inlineData" in part:
+            inline = part["inlineData"]
+            content.append({"type": "image_url", "image_url": {
+                "url": f"data:{inline['mimeType']};base64,{inline['data']}"}})
+    request = {"model": OPENROUTER_MODEL, "messages": [{"role": "user", "content": content}],
+               "temperature": 0, "max_tokens": 8192, "response_format": {"type": "json_object"}}
+    result = {"http_status": None, "api_error": None}
+    text = ""
+    connection = http.client.HTTPSConnection(OPENROUTER_HOST, timeout=90)
+    try:
+        connection.request("POST", OPENROUTER_PATH, json.dumps(request).encode("utf-8"),
+                           {"Content-Type": "application/json", "Authorization": f"Bearer {key}",
+                            "HTTP-Referer": "https://github.com/raulfunes/PreCrop", "X-Title": "PreCrop vision"})
+        response = connection.getresponse()
+        result["http_status"] = response.status
+        data = response.read(MAX_BODY)
+        if response.status != 200:
+            result["api_error"] = f"HTTP_{response.status}"
+        else:
+            obj = json.loads(data.decode("utf-8"))
+            text = (obj.get("choices") or [{}])[0].get("message", {}).get("content") or ""
+            if not text:
+                result["api_error"] = "empty_response"
+    except Exception:  # noqa: BLE001 - no registrar detalle: puede traer la credencial
+        result["api_error"] = "transport_error_or_timeout"
+    finally:
+        connection.close()
+    result["elapsed_seconds"] = time.monotonic() - start
+    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text.strip())
+    wrapped = json.dumps({"candidates": [{"finishReason": "STOP",
+                                          "content": {"parts": [{"text": text}]}}]}).encode("utf-8")
+    return result, wrapped
+
 
 def parse_multipart(body, content_type):
     """Partes de un multipart/form-data acotado. Solo lo que este endpoint recibe:
@@ -108,7 +163,11 @@ def gps(data):
 def estimate(kind, data, mime, size, key, out):
     """Una llamada al modelo. Deja en out el objeto y la mascara, o un error."""
     prompt = vision.render_prompt(PROMPTS[kind], "soja")
-    transport, raw = vision.request_once(vision.payload(data, mime, prompt), key, ENDPOINT)
+    body = vision.payload(data, mime, prompt)
+    if PROVIDER == "openrouter":
+        transport, raw = request_openrouter(body, key)
+    else:
+        transport, raw = vision.request_once(body, key, ENDPOINT)
     if transport["api_error"]:
         out[kind] = {"error": transport["api_error"]}
         return
@@ -245,14 +304,14 @@ def main():
     parser.add_argument("--billing-acknowledged", action="store_true",
                         help="El operador acepta que la clave puede facturar")
     args = parser.parse_args()
-    key = os.environ.get("GEMINI_API_KEY", "")
+    key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("GEMINI_API_KEY", "")
     if not key:
-        sys.exit("Falta GEMINI_API_KEY en el entorno.")
+        sys.exit("Falta GEMINI_API_KEY u OPENROUTER_API_KEY en el entorno.")
     if not (args.free_project_confirmed or args.billing_acknowledged):
         sys.exit("Declarar --free-project-confirmed o --billing-acknowledged antes de servir.")
     from http.server import ThreadingHTTPServer
     servidor = ThreadingHTTPServer(("127.0.0.1", args.port), build_handler(key))
-    print(f"POST http://127.0.0.1:{args.port}/api/vision/weeds  modelo {MODEL}")
+    print(f"POST http://127.0.0.1:{args.port}/api/vision/weeds  proveedor {PROVIDER}  modelo {MODEL}")
     servidor.serve_forever()
 
 
